@@ -1017,7 +1017,8 @@ function app() {
     confirmOpen: false, confirmMsg: '', confirmAction: ()=>{},
 
     // ==================== INIT ====================
-    
+    trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
+zkSelectedTrainingId: '',
     async init() {
     await this.fetchData();
     await this.fetchZKTecoData();

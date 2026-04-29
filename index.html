@@ -526,8 +526,8 @@
               <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
             </select>
             <select x-model="zkSelectedTrainingId" @change="syncZkWithSchedule" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
-  <option value="">-- Select From Google Sheet --</option>
-  <template x-for="t in trainingSchedule" :key="t.id">
+  <option value="">-- Select Training (Up to Today) --</option>
+  <template x-for="t in filteredZkScheduleOptions" :key="t.id">
     <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
   </template>
 </select>

@@ -796,33 +796,24 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 try { localStorage.removeItem('managerRemember'); } catch(e) {}
             },
 
-            fetchData(onComplete = null) {
-                this.isLoading = true;
-                this.loadingMessage = 'Loading Settings...';
-                google.script.run.withSuccessHandler(settings => {
-                    this.settings = settings;
-                    this.loadingMessage = 'Loading Training Records...';
-                    google.script.run.withSuccessHandler(recs => {
-                        this.records = recs;
-                        this.loadingMessage = 'Loading Lock Status...';
-                        google.script.run.withSuccessHandler(times => {
-                            this.resetTimes = times || {};
-                            this.isLoading = false;
-                            if(onComplete) onComplete();
-                        }).withFailureHandler(() => {
-                            this.resetTimes = {};
-                            this.isLoading = false;
-                            if(onComplete) onComplete();
-                        }).getResetTimesForManager(this.loggedInManagerName);
-                    }).withFailureHandler(e => { 
-                        this.isLoading = false;
-                        alert("Failed to load records: " + e.message); 
-                    }).getRecordsData();
-                }).withFailureHandler(e => { 
-                    this.isLoading = false;
-                    alert("Failed to load settings: " + e.message); 
-                }).getSettingsData();
-            },
+            async fetchData(onComplete = null) {
+    this.isLoading = true;
+    this.loadingMessage = 'Loading Data...';
+    
+    try {
+        const { data: settings } = await supabase.from('Settings').select('*');
+        if(settings) this.settings = settings;
+
+        const { data: records } = await supabase.from('TrainingRecord').select('*');
+        if(records) this.records = records;
+
+        this.isLoading = false;
+        if(onComplete) onComplete();
+    } catch(err) {
+        this.isLoading = false;
+        alert("Failed to load data: " + err.message);
+    }
+},
 
             updateMonths() {
                 this.selectedMonth = '';
@@ -977,39 +968,38 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
             },
 
-            executeSubmit() {
-                this.showConfirmModal = false;
-                let updatesToSave = [];
-                
-                this.localRecords.forEach(rec => {
-                    if (rec.isAlreadyReviewed) return;
-                    
-                    let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
-                    let finalNote = rec.managerNote ? rec.managerNote.trim() : '';
-                    
-                    // Auto-fill with a dot "." if the manager left the note empty
-                    if (finalNote === '') {
-                        finalNote = '.';
-                    }
+            async executeSubmit() {
+    this.showConfirmModal = false;
+    this.isLoading = true;
+    let hasError = false;
 
-                    updatesToSave.push({
-                        rowIndex: rec.rowIndex,
-                        note: finalNote,
-                        status: finalStatus,
-                        managerName: this.loggedInManagerName 
-                    });
-                });
-                
-                if(updatesToSave.length === 0) { this.notify("No changes."); return; }
-                
-                this.isLoading = true;
-                google.script.run.withSuccessHandler(msg => {
-                    this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
-                    this.notify("Submitted successfully!"); 
-                    this.selectedTraining = ''; 
-                    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
-                }).saveManagerNotes(updatesToSave);
-            },
+    // لەبەر ئەوەی چەند ڕیکۆردێک دەگۆڕدرێت، یەکە یەکە ئیپدەیت دەکەین
+    for (let rec of this.localRecords) {
+        if (rec.isAlreadyReviewed) continue;
+        
+        let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+        let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
+
+        const { error } = await supabase
+            .from('TrainingRecord')
+            .update({ 
+                Status: finalStatus, 
+                Manager_Note: finalNote + ` (By: ${this.loggedInManagerName})`
+            })
+            .eq('id', rec.id); // دڵنیابە ناوی ستوونی id دروستە
+            
+        if (error) hasError = true;
+    }
+    
+    if (hasError) {
+        this.notify("Some records failed to update.");
+    } else {
+        this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
+        this.notify("Submitted successfully!"); 
+        this.selectedTraining = ''; 
+        this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
+    }
+},
 
             formatDuration(mins) {
                 if(!mins || mins <= 0) return '0m';

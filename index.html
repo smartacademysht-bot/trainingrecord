@@ -962,8 +962,7 @@ function app() {
   const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
-  trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
-zkSelectedTrainingId: '',
+ 
 
   return {
     currentTab: 'dashboard', dashView: 'home', isLoading: false, loadingProgress: 0,
@@ -1018,6 +1017,8 @@ zkSelectedTrainingId: '',
     confirmOpen: false, confirmMsg: '', confirmAction: ()=>{},
 
     // ==================== INIT ====================
+     trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
+zkSelectedTrainingId: '',
     async init() {
     await this.fetchData();
     await this.fetchZKTecoData();

@@ -525,6 +525,12 @@
               <option value="">All Departments</option>
               <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
             </select>
+            <select x-model="zkSelectedTrainingId" @change="syncZkWithSchedule" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
+  <option value="">-- Select From Google Sheet --</option>
+  <template x-for="t in trainingSchedule" :key="t.id">
+    <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
+  </template>
+</select>
             <input type="date" x-model="zktecoFilterDate" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
             <div class="flex items-center gap-1 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
               <input type="month" x-model="zkFromMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
@@ -956,6 +962,8 @@ function app() {
   const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+  trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
+zkSelectedTrainingId: '',
 
   return {
     currentTab: 'dashboard', dashView: 'home', isLoading: false, loadingProgress: 0,
@@ -1011,10 +1019,55 @@ function app() {
 
     // ==================== INIT ====================
     async init() {
-      await this.fetchData();
-      await this.fetchZKTecoData();
-    },
+    await this.fetchData();
+    await this.fetchZKTecoData();
+    await this.fetchExternalGoogleSheet(); // هێنانی دەورەکان لە کاتی کردنەوە
+},
+async fetchExternalGoogleSheet() {
+    const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';
+    // لینکی هەناردەکردنی فایلی CSV
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
 
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
+        
+        // پارسکردنی CSV بە شێوەیەکی سادە
+        const rows = data.split('\n').map(row => {
+            // ئەمە یارمەتیدەرە بۆ جیاکردنەوەی خانەکان کە کۆمایان تێدایە
+            return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        });
+
+        // گۆڕینی ڕیزەکان بۆ ئۆبجێکت (دەستپێکردن لە ڕیزی ٢ چونکە ١ هێدەرە)
+        this.trainingSchedule = rows.slice(1).map(r => {
+            if (!r[2]) return null; // ئەگەر ناوی دەورەکە نەبوو فەرامۆشی بکە
+            return {
+                id: r[0]?.replace(/"/g, ''),        // ستوونی A: ID
+                date: r[1]?.replace(/"/g, ''),      // ستوونی B: Date
+                course: r[2]?.replace(/"/g, ''),    // ستوونی C: Course
+                trainer: r[3]?.replace(/"/g, ''),   // ستوونی D: Trainer
+                startTime: r[6]?.replace(/"/g, ''), // ستوونی G: Start
+                endTime: r[7]?.replace(/"/g, '')    // ستوونی H: End
+            };
+        }).filter(item => item !== null);
+
+        console.log("External Schedule Loaded:", this.trainingSchedule);
+    } catch (error) {
+        console.error("Error fetching Google Sheet:", error);
+        this.showNotification("Could not load external schedule", "error");
+    }
+},
+
+syncZkWithSchedule() {
+    if(!this.zkSelectedTrainingId) return;
+    const selected = this.trainingSchedule.find(t => t.id === this.zkSelectedTrainingId);
+    if(selected) {
+        // فۆرماتکردنی بەروار ئەگەر پێویست بکات (بۆ ئەوەی لەگەڵ ZKTeco بگونجێت)
+        // گریمان بەرواری شیتەکە وەک 2026-04-29 ـە
+        this.zktecoFilterDate = selected.date.trim();
+        this.showNotification(`Linked with: ${selected.course}`);
+    }
+}
     // ==================== LOADING ====================
     startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
     stopLoading() { this.loadingProgress=100; setTimeout(()=>{this.isLoading=false; this.loadingProgress=0;}, 400); },

@@ -1024,46 +1024,49 @@ function app() {
     async fetchData() {
       this.startLoading(5);
       try {
-        // Settings (departments)
+        // Settings 
         const {data: settingsData, error: sErr} = await sb.from('Settings').select('*');
         if(sErr) throw sErr;
-        this.settings = settingsData || [];
+        this.settings = settingsData ||[];
         this.loadingProgress = 30;
 
-        // Employees
-        const {data: empData, error: eErr} = await sb.from('Empolyees').select('*');
+        // Employees - لێرەدا هەڵەی ڕێنووسەکە چاککرا
+        const {data: empData, error: eErr} = await sb.from('Employees').select('*');
         if(eErr) throw eErr;
-        this.employees = (empData || []).map(e => ({
-          db_id: e.db_id,
-          ID: e.ID,
-          name: e.Name,
-          department: e.Department,
-          status: e.Status || 'Active'
+        
+        this.employees = (empData ||[]).map(e => ({
+          db_id: e.db_id || e.id, 
+          ID: e.ID || e.id,
+          name: e.Name || e.name,
+          department: e.Department || e.department,
+          status: e.Status || e.status || 'Active'
         }));
         this.loadingProgress = 60;
 
-        // Training Records
-        const {data: recData, error: rErr} = await sb.from('TrainingRecord').select('*').order('Date', {ascending: false});
+        // Training Records - لێرەدا .order لامان برد بۆ ئەوەی کێشەی Capital/Small دروست نەکات
+        const {data: recData, error: rErr} = await sb.from('TrainingRecord').select('*');
         if(rErr) throw rErr;
-        this.records = (recData || []).map(r => ({
-          db_id: r.db_id,
-          no: r.id,
-          empId: r.Userid,
-          department: r.Department,
-          empName: r.Name,
-          trainer: r.Trainer,
-          trainerType: r['Trainer Type'],
-          course: r.Topic,
-          date: r.Date,
-          totalDuration: r['Duration of training'],
-          start: r['Check in'],
-          end: r['Check out'],
-          partDuration: r['Emp. Duration'],
-          status: r.Status,
-          managerNote: r['M.not'],
-          mStatus: r['M.status'],
-          seen: r.seen
-        }));
+
+        this.records = (recData ||[]).map(r => ({
+          db_id: r.db_id || r.id,
+          no: r.id || r.no,
+          empId: r.Userid || r.empId,
+          department: r.Department || r.department,
+          empName: r.Name || r.empName,
+          trainer: r.Trainer || r.trainer,
+          trainerType: r['Trainer Type'] || r.trainerType,
+          course: r.Topic || r.course,
+          date: r.Date || r.date,
+          totalDuration: r['Duration of training'] || r.totalDuration,
+          start: r['Check in'] || r.start,
+          end: r['Check out'] || r.end,
+          partDuration: r['Emp. Duration'] || r.partDuration,
+          status: r.Status || r.status,
+          managerNote: r['M.not'] || r.managerNote,
+          mStatus: r['M.status'] || r.mStatus,
+          seen: r.seen || r.seenStatus
+        })).sort((a,b) => new Date(b.date) - new Date(a.date)); // ڕیزکردنەکە بە جاڤاسکریپت دەکەین
+        
         this.loadingProgress = 90;
         this.calculateStats();
         this.dbStatus = 'online';
@@ -1071,7 +1074,9 @@ function app() {
       } catch(e) {
         this.stopLoading();
         this.dbStatus = 'offline';
-        this.showNotification('Error loading data: ' + e.message, 'error');
+        // لێرەدا کێشەکە فڕێدەداتە سەر شاشەکە بۆ ئەوەی بیبینین
+        console.error("Supabase Error Details:", e);
+        this.showNotification('Database Error: ' + e.message, 'error');
       }
     },
 

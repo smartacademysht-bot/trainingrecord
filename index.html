@@ -1024,48 +1024,58 @@ function app() {
     async fetchData() {
       this.startLoading(5);
       try {
-        // Settings 
+        // ١. هێنانی ڕێکخستنەکان (Settings)
         const {data: settingsData, error: sErr} = await sb.from('Settings').select('*');
         if(sErr) throw sErr;
-        this.settings = settingsData ||[];
+        
+        // یەکخستنی ناوەکان بۆ ئەوەی پیتی گەورە و بچووک کێشە دروست نەکات بۆ Settings و Dashboard
+        this.settings = (settingsData ||[]).map(s => ({
+            ...s,
+            department: String(s.Department || s.department || '').trim(),
+            category: String(s.Category || s.category || '').trim(),
+            manager: String(s.Manager || s.manager || '').trim(),
+            Department: String(s.Department || s.department || '').trim() 
+        }));
         this.loadingProgress = 30;
 
-        // Employees - لێرەدا هەڵەی ڕێنووسەکە چاککرا
+        // ٢. هێنانی کارمەندان (Employees)
         const {data: empData, error: eErr} = await sb.from('Employees').select('*');
         if(eErr) throw eErr;
         
         this.employees = (empData ||[]).map(e => ({
+          ...e,
           db_id: e.db_id || e.id, 
-          ID: e.ID || e.id,
-          name: e.Name || e.name,
-          department: e.Department || e.department,
-          status: e.Status || e.status || 'Active'
+          ID: e.ID || e.id || '',
+          name: String(e.Name || e.name || '').trim(),
+          department: String(e.Department || e.department || '').trim(),
+          status: String(e.Status || e.status || 'Active').trim()
         }));
         this.loadingProgress = 60;
 
-        // Training Records - لێرەدا .order لامان برد بۆ ئەوەی کێشەی Capital/Small دروست نەکات
+        // ٣. هێنانی تۆمارەکان (Training Record) بۆ ئەوەی Punishments کاری پێ بکات
         const {data: recData, error: rErr} = await sb.from('TrainingRecord').select('*');
         if(rErr) throw rErr;
 
         this.records = (recData ||[]).map(r => ({
+          ...r,
           db_id: r.db_id || r.id,
-          no: r.id || r.no,
-          empId: r.Userid || r.empId,
-          department: r.Department || r.department,
-          empName: r.Name || r.empName,
-          trainer: r.Trainer || r.trainer,
-          trainerType: r['Trainer Type'] || r.trainerType,
-          course: r.Topic || r.course,
-          date: r.Date || r.date,
-          totalDuration: r['Duration of training'] || r.totalDuration,
-          start: r['Check in'] || r.start,
-          end: r['Check out'] || r.end,
-          partDuration: r['Emp. Duration'] || r.partDuration,
-          status: r.Status || r.status,
-          managerNote: r['M.not'] || r.managerNote,
-          mStatus: r['M.status'] || r.mStatus,
-          seen: r.seen || r.seenStatus
-        })).sort((a,b) => new Date(b.date) - new Date(a.date)); // ڕیزکردنەکە بە جاڤاسکریپت دەکەین
+          no: r.id || r.no || '',
+          empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
+          department: String(r.Department || r.department || '').trim(),
+          empName: String(r.Name || r.empName || '').trim(),
+          trainer: String(r.Trainer || r.trainer || '').trim(),
+          trainerType: String(r['Trainer Type'] || r.trainerType || '').trim(),
+          course: String(r.Topic || r.course || r.topic || '').trim(),
+          date: String(r.Date || r.date || '').trim(),
+          totalDuration: Number(r['Duration of training'] || r.totalDuration || 0),
+          start: String(r['Check in'] || r.start || '').trim(),
+          end: String(r['Check out'] || r.end || '').trim(),
+          partDuration: Number(r['Emp. Duration'] || r.partDuration || 0),
+          status: String(r.Status || r.status || '').trim(), // سپەیسە زیادەکان لادەبات کە دەبووە هۆی کێشەی Punishments
+          managerNote: String(r['M.not'] || r.managerNote || ''),
+          mStatus: String(r['M.status'] || r.mStatus || ''),
+          seen: String(r.seen || r.seenStatus || '')
+        })).sort((a,b) => new Date(b.date) - new Date(a.date)); 
         
         this.loadingProgress = 90;
         this.calculateStats();
@@ -1074,7 +1084,6 @@ function app() {
       } catch(e) {
         this.stopLoading();
         this.dbStatus = 'offline';
-        // لێرەدا کێشەکە فڕێدەداتە سەر شاشەکە بۆ ئەوەی بیبینین
         console.error("Supabase Error Details:", e);
         this.showNotification('Database Error: ' + e.message, 'error');
       }

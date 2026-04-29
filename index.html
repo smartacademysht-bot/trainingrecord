@@ -1021,62 +1021,36 @@ function app() {
     askConfirm(msg, cb) { this.confirmMsg=msg; this.confirmAction=cb; this.confirmOpen=true; },
 
     // ==================== FETCH DATA ====================
+    // ئەم فەنکشنە یارمەتیدەرە بۆ هێنانی داتا بەبێ کێشەی لیمتی ١٠٠٠ دانەیی
+    async fetchAllRows(table) {
+      let data =[], from = 0, size = 1000, more = true;
+      while(more) {
+          const res = await sb.from(table).select('*').range(from, from + size - 1);
+          if(res.error) throw res.error;
+          data.push(...(res.data ||[]));
+          if(res.data.length < size) more = false;
+          else from += size;
+      }
+      return data;
+    },
+
     async fetchData() {
       this.startLoading(5);
       try {
-        // ١. هێنانی ڕێکخستنەکان (Settings)
-        const {data: settingsData, error: sErr} = await sb.from('Settings').select('*');
-        if(sErr) throw sErr;
-        
-        // یەکخستنی ناوەکان بۆ ئەوەی پیتی گەورە و بچووک کێشە دروست نەکات بۆ Settings و Dashboard
-        this.settings = (settingsData ||[]).map(s => ({
-            ...s,
-            department: String(s.Department || s.department || '').trim(),
-            category: String(s.Category || s.category || '').trim(),
-            manager: String(s.Manager || s.manager || '').trim(),
-            Department: String(s.Department || s.department || '').trim() 
-        }));
+        // ١. Settings
+        const settingsData = await this.fetchAllRows('Settings');
+        this.settings = settingsData.map(s => ({ ...s, department: String(s.Department||s.department||'').trim(), category: String(s.Category||s.category||'').trim(), manager: String(s.Manager||s.manager||'').trim(), Department: String(s.Department||s.department||'').trim() }));
         this.loadingProgress = 30;
 
-        // ٢. هێنانی کارمەندان (Employees)
-        const {data: empData, error: eErr} = await sb.from('Employees').select('*');
-        if(eErr) throw eErr;
-        
-        this.employees = (empData ||[]).map(e => ({
-          ...e,
-          db_id: e.db_id || e.id, 
-          ID: e.ID || e.id || '',
-          name: String(e.Name || e.name || '').trim(),
-          department: String(e.Department || e.department || '').trim(),
-          status: String(e.Status || e.status || 'Active').trim()
-        }));
+        // ٢. Employees
+        const empData = await this.fetchAllRows('Employees');
+        this.employees = empData.map(e => ({ ...e, db_id: e.db_id||e.id, ID: e.ID||e.id||'', name: String(e.Name||e.name||'').trim(), department: String(e.Department||e.department||'').trim(), status: String(e.Status||e.status||'Active').trim() }));
         this.loadingProgress = 60;
 
-        // ٣. هێنانی تۆمارەکان (Training Record) بۆ ئەوەی Punishments کاری پێ بکات
-        const {data: recData, error: rErr} = await sb.from('TrainingRecord').select('*');
-        if(rErr) throw rErr;
+        // ٣. Training Records
+        const recData = await this.fetchAllRows('TrainingRecord');
+        this.records = recData.map(r => ({ ...r, db_id: r.db_id||r.id, no: r.id||r.no||'', empId: String(r.Userid||r.empId||r.User_ID||'').trim(), department: String(r.Department||r.department||'').trim(), empName: String(r.Name||r.empName||'').trim(), trainer: String(r.Trainer||r.trainer||'').trim(), trainerType: String(r['Trainer Type']||r.trainerType||'').trim(), course: String(r.Topic||r.course||r.topic||'').trim(), date: String(r.Date||r.date||'').trim(), totalDuration: Number(r['Duration of training']||r.totalDuration||0), start: String(r['Check in']||r.start||'').trim(), end: String(r['Check out']||r.end||'').trim(), partDuration: Number(r['Emp. Duration']||r.partDuration||0), status: String(r.Status||r.status||'').trim(), managerNote: String(r['M.not']||r.managerNote||''), mStatus: String(r['M.status']||r.mStatus||''), seen: String(r.seen||r.seenStatus||'') })).sort((a,b) => new Date(b.date) - new Date(a.date)); 
 
-        this.records = (recData ||[]).map(r => ({
-          ...r,
-          db_id: r.db_id || r.id,
-          no: r.id || r.no || '',
-          empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
-          department: String(r.Department || r.department || '').trim(),
-          empName: String(r.Name || r.empName || '').trim(),
-          trainer: String(r.Trainer || r.trainer || '').trim(),
-          trainerType: String(r['Trainer Type'] || r.trainerType || '').trim(),
-          course: String(r.Topic || r.course || r.topic || '').trim(),
-          date: String(r.Date || r.date || '').trim(),
-          totalDuration: Number(r['Duration of training'] || r.totalDuration || 0),
-          start: String(r['Check in'] || r.start || '').trim(),
-          end: String(r['Check out'] || r.end || '').trim(),
-          partDuration: Number(r['Emp. Duration'] || r.partDuration || 0),
-          status: String(r.Status || r.status || '').trim(), // سپەیسە زیادەکان لادەبات کە دەبووە هۆی کێشەی Punishments
-          managerNote: String(r['M.not'] || r.managerNote || ''),
-          mStatus: String(r['M.status'] || r.mStatus || ''),
-          seen: String(r.seen || r.seenStatus || '')
-        })).sort((a,b) => new Date(b.date) - new Date(a.date)); 
-        
         this.loadingProgress = 90;
         this.calculateStats();
         this.dbStatus = 'online';
@@ -1084,7 +1058,7 @@ function app() {
       } catch(e) {
         this.stopLoading();
         this.dbStatus = 'offline';
-        console.error("Supabase Error Details:", e);
+        console.error(e);
         this.showNotification('Database Error: ' + e.message, 'error');
       }
     },
@@ -1284,11 +1258,12 @@ function app() {
       this.startLoading();
       try {
         for(const u of updates) {
-          const payload = {Status: u.status};
+          const payload = { 'Status': u.status };
           if(u.start !== undefined) payload['Check in'] = u.start;
           if(u.end !== undefined) payload['Check out'] = u.end;
           if(u.partDuration !== undefined) payload['Emp. Duration'] = u.partDuration;
           if(u.managerNote !== undefined) payload['M.not'] = u.managerNote;
+          
           await sb.from('TrainingRecord').update(payload).eq('db_id', u.db_id);
         }
         this.pendingUpdates = {};
@@ -1470,22 +1445,31 @@ function app() {
     // ==================== SETTINGS ====================
     async saveDeptSettings(dept) {
       try {
-        const {error} = await sb.from('Settings').update({Manager:dept.manager, category:dept.category}).eq('Department', dept.Department||dept.department);
+        // لێرەدا پیتەکانمان گەورە کرد بۆ 'Category' و 'Manager'
+        const {error} = await sb.from('Settings')
+           .update({ 'Manager': dept.manager, 'Category': dept.category })
+           .eq('Department', dept.Department || dept.department);
+           
         if(error) throw error;
         this.showNotification('Settings saved!');
         await this.fetchData();
       } catch(e) {
-        this.showNotification('Save failed: '+e.message,'error');
+        this.showNotification('Save failed: '+e.message, 'error');
       }
     },
 
     async toggleEmpStatus(emp, newStatus) {
       try {
-        await sb.from('Empolyees').update({Status:newStatus}).eq('db_id', emp.db_id);
+        // لێرەدا پیتی S گەورە کرا بۆ 'Status'
+        const {error} = await sb.from('Employees')
+           .update({ 'Status': newStatus })
+           .eq('db_id', emp.db_id);
+           
+        if(error) throw error;
         emp.status = newStatus;
         this.showNotification(`${emp.name} → ${newStatus}`);
       } catch(e) {
-        this.showNotification('Update failed: '+e.message,'error');
+        this.showNotification('Update failed: '+e.message, 'error');
       }
     },
 
@@ -1548,15 +1532,30 @@ function app() {
 
     get filteredPunishments() {
       if(!this.punishmentFilterMonth) return [];
-      const [year,month]=this.punishmentFilterMonth.split('-').map(Number);
-      let filtered=this.records.filter(r=>{
+      const [year,month] = this.punishmentFilterMonth.split('-').map(Number);
+      
+      let filtered = this.records.filter(r => {
         if(!r.date) return false;
-        const rd=new Date(r.date);
-        return rd.getFullYear()===year&&(rd.getMonth()+1)===month&&(r.status==='No'||r.status==='Late');
+        
+        // سیستەمی زیرەک بۆ پارسکردنی بەروار (بۆ ئەوەی بەرواری ئەکسڵ نەبێتە کێشە)
+        let rd = new Date(r.date);
+        if(isNaN(rd.getTime()) && r.date.includes('/')) {
+            const parts = r.date.split('/');
+            if(parts.length === 3) rd = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // جۆری DD/MM/YYYY
+        }
+        
+        if(isNaN(rd.getTime())) return false; // ئەگەر هەر کێشەی تیا بوو با نەیخوێنێتەوە
+        
+        return rd.getFullYear() === year && (rd.getMonth() + 1) === month && (r.status === 'No' || r.status === 'Late');
       });
-      if(this.punishmentSearch){const q=this.punishmentSearch.toLowerCase();filtered=filtered.filter(r=>(r.empName||'').toLowerCase().includes(q)||(r.course||'').toLowerCase().includes(q));}
-      if(this.punishmentFilterDept) filtered=filtered.filter(r=>r.department===this.punishmentFilterDept);
-      return filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+      if(this.punishmentSearch){
+         const q = this.punishmentSearch.toLowerCase();
+         filtered = filtered.filter(r => (r.empName||'').toLowerCase().includes(q) || (r.course||'').toLowerCase().includes(q));
+      }
+      if(this.punishmentFilterDept) filtered = filtered.filter(r => r.department === this.punishmentFilterDept);
+      
+      return filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
     },
 
     downloadPunishments() {

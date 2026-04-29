@@ -1058,16 +1058,16 @@ async fetchExternalGoogleSheet() {
     }
 },
 
-// syncZkWithSchedule() {
-//     if(!this.zkSelectedTrainingId) return;
-//     const selected = this.trainingSchedule.find(t => t.id === this.zkSelectedTrainingId);
-//     if(selected) {
-//         // فۆرماتکردنی بەروار ئەگەر پێویست بکات (بۆ ئەوەی لەگەڵ ZKTeco بگونجێت)
-//         // گریمان بەرواری شیتەکە وەک 2026-04-29 ـە
-//         this.zktecoFilterDate = selected.date.trim();
-//         this.showNotification(`Linked with: ${selected.course}`);
-//     }
-// }
+syncZkWithSchedule() {
+    if(!this.zkSelectedTrainingId) return;
+    const selected = this.trainingSchedule.find(t => t.id === this.zkSelectedTrainingId);
+    if(selected) {
+        // فۆرماتکردنی بەروار ئەگەر پێویست بکات (بۆ ئەوەی لەگەڵ ZKTeco بگونجێت)
+        // گریمان بەرواری شیتەکە وەک 2026-04-29 ـە
+        this.zktecoFilterDate = selected.date.trim();
+        this.showNotification(`Linked with: ${selected.course}`);
+    }
+}
     // ==================== LOADING ====================
     startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
     stopLoading() { this.loadingProgress=100; setTimeout(()=>{this.isLoading=false; this.loadingProgress=0;}, 400); },

@@ -968,12 +968,11 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
             },
 
-            async executeSubmit() {
+           async executeSubmit() {
     this.showConfirmModal = false;
     this.isLoading = true;
     let hasError = false;
 
-    // لەبەر ئەوەی چەند ڕیکۆردێک دەگۆڕدرێت، یەکە یەکە ئیپدەیت دەکەین
     for (let rec of this.localRecords) {
         if (rec.isAlreadyReviewed) continue;
         
@@ -986,7 +985,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 Status: finalStatus, 
                 Manager_Note: finalNote + ` (By: ${this.loggedInManagerName})`
             })
-            .eq('id', rec.id); // دڵنیابە ناوی ستوونی id دروستە
+            .eq('db_id', rec.db_id); // گۆڕدرا بۆ db_id
             
         if (error) hasError = true;
     }
@@ -999,7 +998,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         this.selectedTraining = ''; 
         this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
     }
-},
+}
 
             formatDuration(mins) {
                 if(!mins || mins <= 0) return '0m';

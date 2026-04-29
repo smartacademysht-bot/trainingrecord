@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Manager Justification Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    body { font-family: 'Inter', 'Vazirmatn', sans-serif; background-color: transparent; }
+    @keyframes shimmer {
+        0% { transform: translateX(-150%) skewX(-20deg); }
+        100% { transform: translateX(200%) skewX(-20deg); }
+    }
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .loader { border-top-color: #4f46e5; animation: spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    /* =========================================================
+       Glassmorphism Background (Restored to original)
+       ========================================================= */
+    .bg-mesh-container {
+        position: fixed;
+        inset: 0;
+        z-index: -10;
+        background-color: #f8fafc;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        mix-blend-multiply: normal;
+        opacity: 0.6;
+    }
+    @keyframes float-1 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(5vw, -10vh) scale(1.1); }
+        66% { transform: translate(-5vw, 10vh) scale(0.9); }
+    }
+    @keyframes float-2 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(-10vw, 5vh) scale(0.9); }
+        66% { transform: translate(5vw, -5vh) scale(1.1); }
+    }
+    @keyframes float-3 {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(5vw, 10vh) scale(1.15); }
+        66% { transform: translate(-10vw, -10vh) scale(0.85); }
+    }
+    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #a5b4fc; animation: float-1 35s infinite ease-in-out; }
+    .blob-2 { top: 20%; right: -15%; width: 45vw; height: 45vw; background: #f9a8d4; animation: float-2 40s infinite ease-in-out; }
+    .blob-3 { bottom: -15%; left: 15%; width: 55vw; height: 55vw; background: #67e8f9; animation: float-3 38s infinite ease-in-out; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .sidebar-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+    .sidebar-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    
+    /* =========================================================
+       NATIVE APP LAYOUT STRUCTURE (MOBILE ONLY)
+       NO COLOR/DESIGN CHANGES - ONLY LAYOUT
+       ========================================================= */
+    @media (max-width: 768px) {
+        /* Prevent iOS zoom on inputs */
+        input, textarea, select { font-size: 16px !important; }
+
+        /* Main Screen Layout Adjustments */
+        main { padding: 0 !important; }
+        .mobile-scroll-padding { padding-bottom: 110px !important; padding-top: 10px !important; }
+
+        /* Review Needed Large Header block */
+        .mb-5.flex.flex-col.md\:flex-row {
+            border: none !important; box-shadow: none !important;
+            padding: 0.5rem 1rem 1rem 1rem !important; margin-bottom: 0 !important;
+        }
+
+        /* Group Headers (Absent / Late) */
+        .flex-col.xl\:flex-row > div {
+            background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+        }
+        .px-2.md\:px-5.py-2 {
+            background: transparent !important; border: none !important; padding: 1rem 1.25rem 0.5rem 1.25rem !important;
+        }
+
+        /* THE MAGIC: TABLES TO NATIVE LIST CARDS (GRID) */
+        .table-responsive { overflow: visible !important; display: block !important; padding: 0 1rem !important; margin-bottom: 1.5rem !important; }
+        table { display: block !important; width: 100% !important; }
+        thead { display: none !important; }
+        tbody { display: flex !important; flex-direction: column !important; gap: 0.85rem !important; border: none !important; }
+        
+        tr {
+            display: grid !important;
+            grid-template-columns: 1fr auto;
+            grid-template-areas: 
+                "name time"
+                "details details"
+                "status status"
+                "note note";
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important;
+            border-radius: 1.5rem !important;
+            padding: 1.25rem !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.8) !important;
+            align-items: center;
+        }
+
+        /* Map specific TD elements to Grid Areas */
+        td { display: block !important; padding: 0 !important; border: none !important; white-space: normal !important; width: 100% !important; }
+        
+        td:nth-child(1) { grid-area: name; margin-bottom: 0.25rem; } /* Name */
+        td:nth-child(2) { grid-area: details; margin-bottom: 1rem; margin-top: 0.25rem; } /* Badges */
+        td:nth-child(3) { grid-area: time; text-align: right; justify-self: end; } /* In/Out Times */
+        td:nth-child(4) { grid-area: status; margin-bottom: 0.75rem; } /* Select */
+        td:nth-child(5) { grid-area: note; } /* Textarea */
+
+        /* Internal Card Typography & Spacing */
+        td:nth-child(1) .text-sm { font-size: 1.15rem !important; font-weight: 700 !important; }
+        td:nth-child(3) .text-xs { font-size: 0.75rem !important; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; }
+        td:nth-child(3) .bg-white\/60 { background: transparent !important; border: none !important; padding: 0 !important; }
+        
+        /* Dropdown positioning fix in cards */
+        td:nth-child(4) .absolute { top: 16px !important; right: 14px !important; }
+
+        /* Sticky Native Action Bar at Bottom */
+        .fixed.bottom-0 {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
+            border-top: 1px solid rgba(255,255,255,0.6) !important;
+            padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem !important;
+            display: flex !important; flex-direction: column !important;
+        }
+        .fixed.bottom-0 button, .fixed.bottom-0 > div {
+            width: 100% !important; padding: 1rem !important; border-radius: 14px !important; font-size: 1rem !important; font-weight: 700 !important;
+        }
+    }
+
+    /* Keep inputs scrollable under keyboard */
+    input:focus, textarea:focus { scroll-margin-bottom: 250px; }
+  </style>
+</head>
+<body class="text-slate-800 antialiased h-[100dvh] w-full overflow-hidden flex flex-col selection:bg-indigo-100 selection:text-indigo-900" x-data="managerApp()">
+
+  <!-- GLASSMORPHISM BACKGROUND -->
+  <div class="bg-mesh-container">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+  </div>
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 fade-in relative z-10 overflow-y-auto">
+     <div class="bg-white/60 backdrop-blur-2xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-md border border-white/80">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-white text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-indigo-50 rotate-3 transition-transform hover:rotate-0 duration-300">
+                <i class="fa fa-lock text-2xl"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h2>
+            <p class="text-sm text-slate-500 mt-2 font-medium">Please log in to manage your department.</p>
+        </div>
+        
+        <div x-show="loginError" style="display: none;" class="bg-rose-50/80 backdrop-blur-sm border border-rose-200 text-rose-600 p-4 rounded-xl text-sm mb-6 font-semibold flex items-start gap-3 fade-in">
+            <i class="fa fa-exclamation-triangle mt-0.5 text-rose-500"></i>
+            <span x-text="loginError"></span>
+        </div>
+
+        <div class="space-y-5">
+           <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
+              <div class="relative">
+                  <select x-model="loginUser" class="w-full border border-white/60 p-3.5 pl-11 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white/50 hover:bg-white/80 focus:bg-white appearance-none cursor-pointer font-medium text-slate-700 shadow-sm">
+                      <option value="">-- Select Username --</option>
+                      <template x-for="u in managerUsernames" :key="u">
+                          <option :value="u" x-text="u"></option>
+                      </template>
+                  </select>
+                  <i class="fa fa-user absolute left-4 top-5 text-slate-400"></i>
+                  <i class="fa fa-chevron-down absolute right-4 top-5 text-slate-400  pointer-events-none"></i>
+              </div>
+              <div x-show="managerUsernames.length === 0" class="text-[11px] text-indigo-500 mt-2 ml-1 font-medium animate-pulse">Loading directory...</div>
+           </div>
+           <div>
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
+              <div class="relative">
+                  <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
+                         class="w-full border border-white/60 p-3.5 pl-11 pr-12 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white/50 focus:bg-white font-medium text-slate-700 placeholder:text-slate-400 shadow-sm" placeholder="••••••••">
+                  <i class="fa fa-key absolute left-4 top-5 text-slate-400"></i>
+                  <button type="button" @click="showPassword = !showPassword"
+                          class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition-colors p-0.5" tabindex="-1">
+                      <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                  </button>
+              </div>
+           </div>
+           <!-- Remember Me -->
+           <div class="flex items-center gap-3 pt-1 pl-1">
+               <input type="checkbox" id="rememberMe" x-model="rememberMe" class="h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer transition-all bg-white/50">
+               <label for="rememberMe" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Remember me on this device</label>
+           </div>
+           
+           <button @click="doLogin" :disabled="isLoggingIn" class="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-indigo-600 transition-all flex justify-center items-center shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] active:scale-[0.98] mt-4">
+              <span x-show="!isLoggingIn">Sign In to Dashboard</span>
+              <i x-show="isLoggingIn" class="fa fa-circle-notch fa-spin text-lg" style="display: none;"></i>
+           </button>
+        </div>
+     </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div x-show="isLoggedIn && isLoading" style="display: none;" class="fixed inset-0 bg-white/40 backdrop-blur-lg flex flex-col items-center justify-center z-[100] fade-in">
+      <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-300 h-16 w-16 mb-6"></div>
+      <h2 class="text-xl font-bold text-slate-800 tracking-tight" x-text="loadingMessage">Loading Data...</h2>
+      <p class="text-sm text-slate-500 mt-2 font-medium">Please wait a moment</p>
+  </div>
+
+  <!-- ==================== MAIN PORTAL (SIDEBAR + CONTENT) ==================== -->
+  <div x-show="isLoggedIn && !isLoading" style="display: none;" class="flex flex-col md:flex-row flex-1 overflow-hidden relative z-10 fade-in">
+
+    <!-- Mobile Top Header -->
+    <div class="md:hidden bg-slate-900/95 backdrop-blur-xl text-white border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 z-40 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 z-10">
+        <i class="fa-solid fa-fingerprint text-white text-lg"></i>
+    </div>
+            <div>
+                <h1 class="font-extrabold text-sm leading-tight">Manager Portal</h1>
+                <div class="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">Absence Justification</div>
+            </div>
+        </div>
+        <button @click="mobileMenuOpen = true" class="text-slate-300 hover:text-white p-2 focus:outline-none">
+            <i class="fa fa-bars text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div x-show="mobileMenuOpen" style="display: none;" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 md:hidden transition-opacity" @click="mobileMenuOpen = false"></div>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="fixed inset-y-0 left-0 z-[60] w-72 bg-slate-900/95 backdrop-blur-2xl text-slate-300 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.05)] border-r border-slate-800/50 transition-transform duration-300 md:relative md:translate-x-0 md:z-50"
+           :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
+      
+      <!-- Top Profile Area -->
+      <div class="px-5 pt-6 pb-5 border-b border-slate-800/50 shrink-0">
+          <div class="flex items-center gap-3 mb-6 hidden md:flex">
+              <div class="w-10 h-10 bg-indigo-600 text-white rounded-[1rem] flex items-center justify-center shadow-inner shadow-indigo-900/20">
+                  <i class="fa-solid fa-building-user text-xl"></i>
+              </div>
+              <div>
+                  <h1 class="text-lg font-extrabold tracking-tight text-white leading-none">Manager Portal</h1>
+                  <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Absence Justification</div>
+              </div>
+          </div>
+          
+          <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
+              <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center text-indigo-300 shrink-0 shadow-sm">
+                 <i class="fa fa-user"></i>
+              </div>
+              <div class="overflow-hidden">
+                  <p class="font-bold text-white text-sm truncate" x-text="loggedInManagerName"></p>
+              </div>
+          </div>
+          
+          <div class="md:hidden flex items-center justify-between mt-4">
+              <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Navigation Menu</span>
+              <button @click="mobileMenuOpen = false" class="text-slate-400 hover:text-white">
+                  <i class="fa fa-times text-xl"></i>
+              </button>
+          </div>
+      </div>
+
+      <!-- Scrollable Navigation Area -->
+      <div class="flex-1 overflow-y-auto sidebar-scrollbar p-4 flex flex-col gap-4">
+          <!-- Departments Radio Buttons -->
+          <div>
+              <p class="text-[11px] uppercase font-bold text-slate-500 tracking-widest mb-3 pl-2">Select Department</p>
+              <div class="space-y-2 px-1">
+                  <template x-for="dept in managerDepts" :key="dept.name">
+                      <label class="flex items-center p-3 rounded-[1rem] border cursor-pointer transition-all shadow-sm"
+                             :class="selectedDept === dept.name ? 'bg-indigo-600/10 border-indigo-500/50 text-indigo-300' : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-700/60'">
+                          <input type="radio" name="deptSelection" :value="dept.name" x-model="selectedDept" @change="updateMonths(); selectedTraining = '';" class="hidden">
+                          <div class="w-4 h-4 rounded-full border flex items-center justify-center mr-3 shrink-0 transition-colors"
+                               :class="selectedDept === dept.name ? 'border-indigo-400' : 'border-slate-500'">
+                              <div x-show="selectedDept === dept.name" class="w-2 h-2 rounded-full bg-indigo-400 fade-in"></div>
+                          </div>
+                          <span class="text-xs font-bold flex-1 truncate" x-text="dept.name"></span>
+                          <span x-show="dept.pendingCount > 0" class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20" x-text="dept.pendingCount + ' Pending'"></span>
+                      </label>
+                  </template>
+                  <div x-show="managerDepts.length === 0" class="text-slate-500 text-xs text-center py-4 font-medium">No departments assigned</div>
+              </div>
+          </div>
+
+          <!-- Month Filter & Trainings List -->
+          <div x-show="selectedDept" class="fade-in border-t border-slate-800/50 pt-4 mt-2">
+              <div class="px-1 mb-4 relative">
+                  <select x-model="selectedMonth" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs font-bold text-slate-300 outline-none focus:border-indigo-500 transition-colors appearance-none shadow-inner cursor-pointer">
+                      <option value="">All Months</option>
+                      <template x-for="m in availableMonths">
+                          <option :value="m.value" x-text="m.label"></option>
+                      </template>
+                  </select>
+                  <i class="fa fa-calendar-alt absolute right-4 top-3 text-slate-500 pointer-events-none text-xs"></i>
+              </div>
+
+              <div class="space-y-2 px-1">
+                  <template x-for="t in filteredTrainings" :key="t.key">
+                      <button @click="selectTrainingCard(t); mobileMenuOpen = false;"
+        :class="selectedTraining === t.key
+          ? 'bg-indigo-500 text-white shadow-md border border-indigo-400'
+          : (t.isLocked && !t.isFullyReviewed) ? 'opacity-70 text-slate-400 bg-slate-800/30 border border-slate-700/50 hover:bg-slate-700/50'
+          : 'bg-slate-800/40 border border-slate-700/50 text-slate-300 hover:bg-slate-700'"
+        class="w-full text-left px-4 py-3 rounded-[1rem] transition-all block">
+                        
+                        <div class="font-bold text-xs truncate" :class="selectedTraining === t.key ? 'text-white' : ''" x-text="t.course"></div>
+                        <div class="text-[10px] mt-1.5 flex items-center justify-between font-medium"
+                             :class="selectedTraining === t.key ? 'text-indigo-100' : 'text-slate-400'">
+                          <span class="flex items-center gap-1"><i class="fa-regular fa-calendar"></i> <span x-text="t.date"></span></span>
+                          
+                          <template x-if="t.isFullyReviewed">
+                              <span class="text-emerald-400 flex items-center gap-1"><i class="fa fa-check-double"></i> Reviewed</span>
+                          </template>
+                          <template x-if="!t.isFullyReviewed">
+                              <span>
+                                  <span x-show="t.isLocked" class="text-rose-400/80 flex items-center gap-1"><i class="fa fa-lock text-[9px]"></i> Locked</span>
+                                  <span x-show="!t.isLocked" :class="t.hoursLeft < 12 && selectedTraining !== t.key ? 'text-amber-400/90' : 'opacity-80'" x-text="t.hoursLeft + 'h left'"></span>
+                              </span>
+                          </template>
+                        </div>
+                      </button>
+                  </template>
+                  <div x-show="filteredTrainings.length === 0" class="text-slate-500 text-xs text-center py-3 font-medium bg-slate-800/20 rounded-[1rem] border border-slate-800/50">
+                      No trainings found.
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Sidebar Bottom -->
+      <div class="p-4 border-t border-slate-800/50 bg-slate-900/50 shrink-0">
+          <div class="flex gap-2">
+              <button @click="fetchData()" :disabled="isLoading"
+                      class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center justify-center gap-2 border border-slate-700 shadow-sm active:scale-95">
+                  <i class="fa fa-sync-alt text-indigo-400" :class="isLoading ? 'fa-spin' : ''"></i> Refresh
+              </button>
+              <button @click="logout" 
+                      class="flex-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center justify-center gap-2 border border-rose-500/20 shadow-sm active:scale-95">
+                  <i class="fa fa-sign-out-alt"></i> Logout
+              </button>
+          </div>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col w-full max-w-full" style="-webkit-overflow-scrolling: touch;">
+
+      <!-- Placeholder: No dept selected -->
+      <div x-show="!selectedDept" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
+        <div class="text-center text-slate-500 max-w-xs">
+          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4 rotate-3">
+              <i class="fa-regular fa-building text-3xl text-indigo-400 md:text-indigo-300"></i>
+          </div>
+          <p class="font-extrabold text-slate-700 text-lg">Select a Department</p>
+          <p class="text-xs mt-2 font-medium">Choose from the menu to begin reviewing.</p>
+        </div>
+      </div>
+
+      <!-- Placeholder: Dept selected but no training -->
+      <div x-show="selectedDept && !selectedTraining" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
+        <div class="text-center text-slate-500 max-w-xs">
+          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4 -rotate-3">
+              <i class="fa-solid fa-clipboard-list text-3xl text-indigo-400 md:text-indigo-300"></i>
+          </div>
+          <p class="font-extrabold text-slate-700 text-lg" x-text="selectedDept"></p>
+          <p class="text-xs mt-2 font-medium">Select a pending training task.</p>
+        </div>
+      </div>
+
+      <!-- Placeholder: All clear -->
+      <div x-show="selectedTraining && localRecords.length === 0 && !isLoading" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
+        <div class="text-center text-slate-500 max-w-xs">
+          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-full shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4">
+              <i class="fa fa-check text-3xl text-emerald-500"></i>
+          </div>
+          <p class="font-extrabold text-slate-700 text-lg">All Clear!</p>
+          <p class="text-xs mt-2 font-medium">No pending reviews found for this training.</p>
+        </div>
+      </div>
+
+      <!-- EMPLOYEES LIST CONTENT -->
+      <div x-show="selectedTraining && localRecords.length > 0" class="p-0 md:p-5 lg:p-6 fade-in w-full flex-1 mx-auto mobile-scroll-padding">
+          
+         <!-- Training Header Info -->
+          <div class="mb-5 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/40 backdrop-blur-lg p-4 md:p-5 rounded-none md:rounded-[1.5rem] border-b border-white/60 md:border md:shadow-sm relative">
+              <div class="flex-1">
+                  <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                      Review Needed
+                  </h2>
+                  <div class="flex items-center flex-wrap gap-2 mt-3 text-xs font-semibold text-slate-600">
+                      <span class="bg-white/80 px-3 py-1.5 rounded-xl border border-white shadow-sm flex items-center gap-2 text-indigo-700">
+                          <span x-text="selectedTraining.split('|')[0]"></span>
+                      </span>
+                      <span class="bg-white/80 px-3 py-1.5 rounded-xl border border-white shadow-sm flex items-center gap-2">
+                          <span x-text="selectedTraining.split('|')[1]"></span>
+                      </span>
+                  </div>
+              </div>
+              
+              <!-- PROGRESS BAR WITH LIVE COUNTDOWN -->
+              <div x-show="activeTrainingObj && !activeTrainingObj.isFullyReviewed" class="w-full md:w-64 mt-2 md:mt-0 shrink-0 bg-white/50 p-3 rounded-xl border border-white/70 shadow-sm">
+                  <div class="flex justify-between items-center text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">
+                      <span>Time Remaining</span>
+                      <span :class="activeTrainingObj.hoursLeft < 12 ? 'text-rose-600' : 'text-indigo-600'" x-text="formatCountdown(activeTrainingObj.expiresAt)"></span>
+                  </div>
+                  <div class="w-full bg-slate-200/50 rounded-full h-2 shadow-inner overflow-hidden border border-white/60">
+                      <div class="h-2 rounded-full transition-all duration-1000 ease-out relative overflow-hidden" 
+                           :class="activeTrainingObj.hoursLeft < 12 ? 'bg-gradient-to-r from-rose-500 to-rose-400' : 'bg-gradient-to-r from-indigo-500 to-indigo-400'"
+                           :style="`width: ${activeTrainingObj.percentLeft}%`">
+                           <div class="absolute top-0 bottom-0 w-12 bg-white/30" style="animation: shimmer 2s infinite linear; transform: skewX(-20deg);"></div>
+                      </div>
+                  </div>
+              </div>
+
+              <!-- APP-LIKE STICKY BOTTOM BAR FOR SUBMIT ACTIONS -->
+              <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:static md:bg-transparent md:border-none md:p-0 md:shadow-none md:pb-0 flex flex-col sm:flex-row gap-2 shrink-0 w-full md:w-auto mt-2 md:mt-0">
+                   <!-- Show Submit if NOT reviewed and NOT locked -->
+                   <button x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked" @click="submitNotes" class="w-full sm:w-auto bg-violet-800 hover:bg-violet-500 text-white px-6 py-3.5 md:py-2.5 rounded-xl font-bold shadow-lg md:shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] transition-all transform active:scale-[0.98] flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center"> <i class="fa fa-paper-plane"></i> Submit Reviewed</button>
+                   
+                   <!-- Show Reviewed Status -->
+                   <div x-show="activeTrainingObj?.isFullyReviewed" class="bg-emerald-100 border border-emerald-200 text-emerald-700 px-6 py-3.5 md:py-2.5 rounded-xl font-bold flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center cursor-default">
+                       <i class="fa fa-check-double"></i> Review Completed
+                   </div>
+
+                   <!-- Show Locked Status if expired and not reviewed -->
+                   <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed" class="bg-rose-100 border border-rose-200 text-rose-700 px-6 py-3.5 md:py-2.5 rounded-xl font-bold flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center cursor-default">
+                       <i class="fa fa-lock"></i> Locked (Time Expired)
+                   </div>
+              </div>
+          </div>
+
+          <!-- SIDE BY SIDE CONTAINER FOR LATE AND NO -->
+          <div class="flex flex-col xl:flex-row items-start gap-5 w-full">
+              
+              <!-- ================= SECTION 1: ABSENCES (NO & NONE) ================= -->
+              <div x-show="absentRecords.length > 0" class="flex-1 min-w-0 w-full xl:w-1/2 bg-transparent md:bg-white/60 md:backdrop-blur-xl md:rounded-[1.5rem] md:shadow-sm md:border md:border-white/80 flex flex-col">
+                  <div class="px-2 md:px-5 py-2 md:py-4 md:border-b md:border-white/50 md:bg-white/40 mb-2 md:mb-0">
+                      <h3 class="text-base md:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <div class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div> Absent Employees
+                      </h3>
+                  </div>
+
+                  <div class="table-responsive w-full flex-1 md:pb-4">
+                      <table class="w-full text-left border-collapse whitespace-nowrap md:min-w-[600px]">
+                          <thead>
+                              <tr class="bg-white/30 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/50">
+                                  <th class="px-5 py-3">Employee</th>
+                                  <th class="px-5 py-3">Absence Details</th>
+                                  <th class="px-5 py-3">Check In/Out</th>
+                                  <th class="px-5 py-3 w-40">Set Status</th>
+                                  <th class="px-5 py-3 min-w-[180px]">Explanation</th>
+                              </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/40">
+                              <template x-for="rec in absentRecords" :key="rec.rowIndex">
+                                  <tr class="transition-colors hover:bg-white/50 group">
+                                      <td class="px-5 py-4 font-bold text-slate-800 text-sm">
+                                          <div class="flex items-center gap-3">
+                                            <div x-text="rec.empName" class="text-sm tracking-tight"></div>
+                                          </div>
+                                      </td>
+                                      
+                                      <td class="px-5 py-4">
+                                          <div x-show="rec.originalStatus === 'No'">
+                                              <span class="inline-flex items-center gap-1.5 bg-rose-50/80 text-rose-700 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-rose-100 shadow-sm">
+                                                  Missed Full Course
+                                              </span>
+                                          </div>
+                                          <div x-show="rec.originalStatus === 'NONE'">
+                                              <span class="inline-flex items-center gap-1.5 bg-slate-100/80 text-slate-600 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                                  No Punch Data
+                                              </span>
+                                          </div>
+                                      </td>
+
+                                      <td class="px-5 py-4 text-xs">
+                                          <div x-show="rec.start || rec.end" class="space-y-1.5">
+                                              <div x-show="rec.start" class="flex items-center gap-2 text-emerald-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
+                                                  <i class="fa fa-arrow-right-to-bracket text-emerald-500"></i> <span x-text="rec.start"></span>
+                                              </div>
+                                              <div x-show="rec.end" class="flex items-center gap-2 text-rose-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
+                                                  <i class="fa fa-arrow-right-from-bracket text-rose-500"></i> <span x-text="rec.end"></span>
+                                              </div>
+                                          </div>
+                                          <div x-show="!rec.start && !rec.end" class="text-slate-400 font-medium text-[11px] italic">No records</div>
+                                      </td>
+
+                        <td class="px-5 py-4">
+    <div class="relative w-full">
+        <select x-model="rec.status" 
+                :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                @change="saveAutoSave(rec)"
+                class="w-full border border-white/60 rounded-xl p-2.5 pr-8 text-xs font-bold focus:ring-2 outline-none appearance-none transition-all shadow-sm" 
+                :class="{
+                  'cursor-not-allowed opacity-60 bg-slate-100': rec.isAlreadyReviewed || activeTrainingObj?.isLocked,
+                  'cursor-pointer': !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
+                  'bg-rose-50/80 text-rose-700': rec.status === 'No' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
+                  'bg-purple-50/80 text-purple-700': rec.status === 'At Duty' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
+                  'bg-blue-50/80 text-blue-700': rec.status === 'Permission' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
+                  'bg-emerald-50/80 text-emerald-700': rec.status === 'Yes' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
+                  'bg-white/80 text-slate-700': rec.status === 'NONE' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked
+                }">
+            <option value="No" class="bg-white text-slate-800">No (Absent)</option>
+            <option value="Permission" class="bg-white text-slate-800">Permission</option>
+            <option value="At Duty" class="bg-white text-slate-800">At Duty</option>
+            <option value="Yes" class="bg-white text-slate-800">Yes (Attended)</option>
+        </select>
+        <i class="fa fa-chevron-down absolute right-3 top-[12px] opacity-50 pointer-events-none"></i>
+    </div>
+</td>
+
+<td class="px-5 py-4 w-full">
+    <textarea x-model="rec.managerNote" rows="1" dir="auto" placeholder="ئەگەر هۆکاری هەیە لێرە بنووسە"
+              :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+              @input="saveAutoSave(rec)"
+              class="w-full border border-white/60 rounded-xl p-2.5 text-xs focus:ring-2 outline-none transition-all resize-y shadow-sm placeholder:text-slate-400 font-medium min-h-[40px] md:min-h-[30px]"
+              :class="(rec.isAlreadyReviewed || activeTrainingObj?.isLocked) ? 'opacity-60 cursor-not-allowed bg-slate-50 text-slate-600 border-slate-200' : 'focus:border-indigo-400 focus:ring-indigo-500/20 bg-white/80 focus:bg-white'"></textarea>
+</td>
+                                  </tr>
+                              </template>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+
+              <!-- ================= SECTION 2: LATE ARRIVALS ================= -->
+              <div x-show="lateRecords.length > 0" class="flex-1 min-w-0 w-full xl:w-1/2 bg-transparent md:bg-white/60 md:backdrop-blur-xl md:rounded-[1.5rem] md:shadow-sm md:border md:border-white/80 flex flex-col mt-4 md:mt-0">
+                  <div class="px-2 md:px-5 py-2 md:py-4 md:border-b md:border-white/50 md:bg-white/40 mb-2 md:mb-0">
+                      <h3 class="text-base md:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                          <div class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div> Late Arrivals <span class="text-[10px] font-medium text-slate-500 ml-2 border pl-2 border-l-slate-300/50 border-y-0 border-r-0 uppercase tracking-wide">(Locked)</span>
+                      </h3>
+                  </div>
+
+                 <div class="table-responsive w-full flex-1 md:pb-4">
+                      <table class="w-full text-left border-collapse whitespace-nowrap md:min-w-[600px]">
+                          <thead>
+                              <tr class="bg-white/30 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/50">
+                                  <th class="px-5 py-3">Employee</th>
+                                  <th class="px-5 py-3">Late Details</th>
+                                  <th class="px-5 py-3">Check In/Out</th>
+                                  <th class="px-5 py-3 w-32">Status</th>
+                                  <th class="px-5 py-3 min-w-[180px]">Optional Note</th>
+                              </tr>
+                          </thead>
+                          <tbody class="divide-y divide-white/40">
+                              <template x-for="rec in lateRecords" :key="rec.rowIndex">
+                                  <tr class="transition-colors bg-amber-50/20 hover:bg-amber-50/50 group">
+                                      <td class="px-5 py-4 font-bold text-slate-800 text-sm">
+                                          <div class="flex items-center gap-3">
+                                            <div x-text="rec.empName" class="text-sm tracking-tight"></div>
+                                          </div>
+                                      </td>
+                                      
+                                      <td class="px-5 py-4">
+                                          <span class="inline-flex items-center gap-1.5 bg-amber-100/80 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-amber-200 shadow-sm">
+                                              <span x-text="'Missed ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
+                                          </span>
+                                          <div class="text-[10px] text-slate-600 mt-2 font-medium flex items-center gap-1.5 bg-white/50 px-2 py-0.5 rounded w-max">
+                                              <i class="fa-solid fa-chart-pie text-slate-400"></i> Attended: <span class="text-slate-800 font-bold" x-text="formatDuration(rec.partDuration)"></span> / <span x-text="formatDuration(rec.totalDuration)"></span>
+                                          </div>
+                                      </td>
+
+                                      <td class="px-5 py-4 text-xs">
+                                          <div x-show="rec.start || rec.end" class="space-y-1.5">
+                                              <div x-show="rec.start" class="flex items-center gap-2 text-emerald-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
+                                                  <i class="fa fa-arrow-right-to-bracket text-emerald-500"></i> <span x-text="rec.start"></span>
+                                              </div>
+                                              <div x-show="rec.end" class="flex items-center gap-2 text-rose-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
+                                                  <i class="fa fa-arrow-right-from-bracket text-rose-500"></i> <span x-text="rec.end"></span>
+                                              </div>
+                                          </div>
+                                      </td>
+
+                                      <td class="px-5 py-4">
+                                          <div class="bg-white/80 text-amber-700 border border-amber-200/50 px-3 py-2 md:py-1.5 rounded-xl text-[14px] md:text-xs font-bold flex items-center gap-1.5 opacity-80 cursor-not-allowed w-max shadow-sm">
+                                              <i class="fa fa-lock text-[10px]"></i> Late
+                                          </div>
+                                      </td>
+
+                                      <td class="px-5 py-4 w-full">
+    <textarea x-model="rec.managerNote" rows="1" dir="auto" placeholder="هۆکاری دواکەوتنی (ئارەزوومەندانە)"
+              :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+              @input="saveAutoSave(rec)"
+              class="w-full border border-white/60 rounded-xl p-2.5 text-xs focus:ring-2 outline-none transition-all resize-y shadow-sm placeholder:text-slate-400 font-medium min-h-[40px] md:min-h-[30px]"
+              :class="(rec.isAlreadyReviewed || activeTrainingObj?.isLocked) ? 'opacity-60 cursor-not-allowed bg-slate-50 text-slate-600 border-slate-200' : 'focus:border-amber-400 focus:ring-amber-500/20 bg-white/80 focus:bg-white'"></textarea>
+</td>
+                                  </tr>
+                              </template>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+
+          </div> <!-- End Side by Side Container -->
+      </div>
+    </main>
+  </div>
+
+<!-- SUBMIT CONFIRMATION MODAL -->
+  <div x-show="showConfirmModal" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" x-transition.opacity>
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 transform transition-all" @click.outside="showConfirmModal = false">
+          <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+              <i class="fa fa-exclamation-triangle text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-extrabold text-center text-slate-800 mb-2">Confirm Submission</h3>
+          <p class="text-sm text-center text-slate-600 font-medium mb-8 leading-relaxed" x-html="confirmMessage"></p>
+          <div class="flex gap-3">
+              <button @click="showConfirmModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors shadow-sm">Review Again</button>
+              <button @click="executeSubmit()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-200 active:scale-95">Yes, Submit</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div x-show="showToast" style="display: none;" x-transition.opacity.duration.300ms class="fixed bottom-[100px] md:bottom-6 left-1/2 transform -translate-x-1/2 z-[200] w-[90%] md:w-auto max-w-sm">
+      <div class="bg-slate-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center justify-center gap-3 border border-slate-700 ring-1 ring-white/10">
+          <div class="w-6 h-6 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0">
+             <i class="fa fa-check text-xs"></i>
+          </div>
+          <span class="font-bold text-sm tracking-wide text-center" x-text="toastMsg"></span>
+      </div>
+  </div>
+
+<script>
+  const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function managerApp() {
+        return {
+            managerUsernames: [],
+            isLoggedIn: false,
+            loginUser: '',
+            loginPass: '',
+            loginError: '',
+            isLoggingIn: false,
+            loggedInManagerName: '',
+            loggedInManagerDepts: [],
+            resetTimes: {},
+
+            isLoading: false,
+            loadingMessage: '',
+            records: [],
+            settings: [],
+            selectedDept: '',
+            selectedTraining: '',
+            localRecords: [],
+            showPassword: false,
+            rememberMe: false,
+            
+            showToast: false,
+            toastMsg: '',
+
+            // MOBILE SUPPORT
+            mobileMenuOpen: false,
+
+            // NEW PROPERTIES
+            selectedMonth: '',
+            availableMonths: [],
+            showConfirmModal: false,
+            confirmMessage: '',
+            nowTimer: new Date().getTime(),
+
+            // GETTERS
+            get absentRecords() {
+                return this.localRecords.filter(r => r.originalStatus !== 'Late');
+            },
+            get lateRecords() {
+                return this.localRecords.filter(r => r.originalStatus === 'Late');
+            },
+            get activeTrainingObj() {
+                if(!this.selectedDept || !this.selectedTraining) return null;
+                const deptTrainings = this.getTrainingsNeedingReview(this.selectedDept);
+                return deptTrainings.find(t => t.key === this.selectedTraining) || null;
+            },
+            get filteredTrainings() {
+                if (!this.selectedDept) return [];
+                let trs = this.getTrainingsNeedingReview(this.selectedDept);
+                if (this.selectedMonth) {
+                    trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
+                }
+                return trs;
+            },
+            get managerDepts() {
+                if(!this.loggedInManagerDepts || this.loggedInManagerDepts.length === 0) return [];
+                return this.loggedInManagerDepts.map(deptName => {
+                    const trainings = this.getTrainingsNeedingReview(deptName);
+                    const pending = trainings.filter(t => !t.isFullyReviewed);
+                    return {
+                        name: deptName,
+                        pendingCount: pending.length,
+                        totalTrainings: trainings.length
+                    };
+                });
+            },
+
+            init() {
+                this.fetchUsernames();
+                setInterval(() => { this.nowTimer = new Date().getTime(); }, 1000);
+                try {
+                    const saved = localStorage.getItem('managerRemember');
+                    if (saved) {
+                        const d = JSON.parse(saved);
+                        if (d.user && d.pass) {
+                            this.loginUser = d.user;
+                            this.loginPass = d.pass;
+                            this.rememberMe = true;
+                        }
+                    }
+                } catch(e) {}
+                this.$watch('selectedTraining', () => {
+                    this.loadTargetRecords();
+                });
+            },
+
+            formatCountdown(expiresAt) {
+                if (!expiresAt) return '00h 00m 00s';
+                const diff = expiresAt - this.nowTimer;
+                if (diff <= 0) return 'Expired';
+                const h = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+            },
+
+            fetchUsernames() {
+                google.script.run.withSuccessHandler(names => {
+                    this.managerUsernames = names;
+                }).getManagerUsernames();
+            },
+
+            doLogin() {
+                if(!this.loginUser || !this.loginPass) {
+                    this.loginError = "Please select your username and enter your password.";
+                    return;
+                }
+                this.isLoggingIn = true;
+                this.loginError = '';
+                
+                google.script.run.withSuccessHandler(res => {
+                    this.isLoggingIn = false;
+                    if(res.success) {
+                        this.isLoggedIn = true;
+                        this.loggedInManagerName = res.name;
+                        this.loggedInManagerDepts = res.depts || (res.dept ? [res.dept] : []);
+                        try {
+                            if (this.rememberMe) {
+                                localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
+                            } else {
+                                localStorage.removeItem('managerRemember');
+                            }
+                        } catch(e) {}
+                        this.fetchData();
+                    } else {
+                        this.loginError = res.message;
+                    }
+                }).withFailureHandler(err => {
+                    this.isLoggingIn = false;
+                    this.loginError = "Connection error: " + err.message;
+                }).verifyManagerLogin(this.loginUser, this.loginPass);
+            },
+
+            logout() {
+                this.isLoggedIn = false;
+                this.loginUser = '';
+                this.loginPass = '';
+                this.rememberMe = false;
+                this.selectedDept = '';
+                this.selectedTraining = '';
+                this.records = [];
+                this.loggedInManagerDepts = [];
+                this.mobileMenuOpen = false;
+                try { localStorage.removeItem('managerRemember'); } catch(e) {}
+            },
+
+            fetchData(onComplete = null) {
+                this.isLoading = true;
+                this.loadingMessage = 'Loading Settings...';
+                google.script.run.withSuccessHandler(settings => {
+                    this.settings = settings;
+                    this.loadingMessage = 'Loading Training Records...';
+                    google.script.run.withSuccessHandler(recs => {
+                        this.records = recs;
+                        this.loadingMessage = 'Loading Lock Status...';
+                        google.script.run.withSuccessHandler(times => {
+                            this.resetTimes = times || {};
+                            this.isLoading = false;
+                            if(onComplete) onComplete();
+                        }).withFailureHandler(() => {
+                            this.resetTimes = {};
+                            this.isLoading = false;
+                            if(onComplete) onComplete();
+                        }).getResetTimesForManager(this.loggedInManagerName);
+                    }).withFailureHandler(e => { 
+                        this.isLoading = false;
+                        alert("Failed to load records: " + e.message); 
+                    }).getRecordsData();
+                }).withFailureHandler(e => { 
+                    this.isLoading = false;
+                    alert("Failed to load settings: " + e.message); 
+                }).getSettingsData();
+            },
+
+            updateMonths() {
+                this.selectedMonth = '';
+                if (!this.selectedDept) { this.availableMonths = []; return; }
+                const trs = this.getTrainingsNeedingReview(this.selectedDept);
+                const map = new Set();
+                trs.forEach(t => {
+                    if(t.date) {
+                        const parts = t.date.split('-');
+                        if(parts.length >= 2) map.add(`${parts[0]}-${parts[1]}`);
+                    }
+                });
+                this.availableMonths = Array.from(map).sort().reverse().map(m => {
+                    const d = new Date(m + '-01');
+                    return { value: m, label: d.toLocaleDateString('en-US', {month: 'long', year: 'numeric'}) };
+                });
+            },
+
+            saveAutoSave(rec) {
+                if (rec.isAlreadyReviewed) return; 
+                const key = `autosave_${this.selectedTraining}_${rec.empId}`;
+                const data = { status: rec.status, managerNote: rec.managerNote };
+                localStorage.setItem(key, JSON.stringify(data));
+            },
+
+            getTrainingsNeedingReview(dept) {
+                if(!dept || !this.records.length) return [];
+                const now = new Date();
+                const trainingMap = new Map();
+                const cutoffDate = new Date('2026-03-30T00:00:00').getTime(); 
+
+                this.records.forEach(r => {
+                    if(r.department !== dept) return;
+                    // CHANGED: ONLY include 'No' and 'Late'. 'NONE' is ignored.
+                    if(!['No', 'Late'].includes(r.status)) return;
+
+                    const key = `${r.course}|${r.date}`;
+                    if(!trainingMap.has(key)) {
+                        trainingMap.set(key, {
+                            key: key, course: r.course, date: r.date, trainer: r.trainer,
+                            totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0
+                        });
+                    }
+                    const g = trainingMap.get(key);
+                    if (r.managerNote && r.managerNote.trim() !== '') g.totalReviewed++;
+                    else g.totalPending++;
+                });
+
+                const result = [];
+                trainingMap.forEach(t => {
+                    if (t.totalPending === 0 && t.totalReviewed === 0) return;
+                    const trainingDate = new Date(t.date + 'T00:00:00');
+                    if (trainingDate.getTime() < cutoffDate) return;
+
+                    const resetKey = t.course.replace(/\s+/g,'_') + '_' + t.date;
+                    const resetObj = this.resetTimes[resetKey];
+                    if (resetObj && resetObj.isHidden) return; // Completely hides training if admin hid it!
+                    let baseDate = trainingDate;
+                    let maxHours = 48;
+                    if (resetObj) {
+                        const resetDate = new Date(resetObj.timestamp);
+                        if (!isNaN(resetDate.getTime()) && resetDate > trainingDate) {
+                            baseDate = resetDate;
+                            maxHours = resetObj.duration || 48;
+                        }
+                    }
+                    const expiresAtTime = baseDate.getTime() + maxHours * 60 * 60 * 1000;
+                    const hoursLeft = Math.max(0, (expiresAtTime - now.getTime()) / (1000 * 60 * 60));
+                    
+                    result.push({
+                        ...t,
+                        pendingCount: t.totalPending,
+                        isFullyReviewed: (t.totalPending === 0),
+                        hoursLeft: Math.floor(hoursLeft),
+                        maxHours: maxHours,
+                        percentLeft: Math.min(100, Math.max(0, (hoursLeft / maxHours) * 100)),
+                        isLocked: hoursLeft <= 0,
+                        expiresAt: expiresAtTime
+                    });
+                });
+                return result.sort((a, b) => {
+                    if(a.isFullyReviewed !== b.isFullyReviewed) return a.isFullyReviewed ? 1 : -1;
+                    if(a.isLocked !== b.isLocked) return a.isLocked ? 1 : -1;
+                    return b.hoursLeft - a.hoursLeft;
+                });
+            },
+
+            selectTrainingCard(t) { this.selectedTraining = t.key; },
+
+            loadTargetRecords() {
+                if(!this.selectedDept || !this.selectedTraining) { this.localRecords = []; return; }
+                const [course, date] = this.selectedTraining.split('|');
+                google.script.run.withSuccessHandler(resetObj => {
+                        let baseDate = new Date(date + 'T00:00:00');
+                        let maxHours = 48;
+                        if (resetObj) {
+                            const resetDate = new Date(resetObj.timestamp);
+                            if (!isNaN(resetDate.getTime()) && resetDate > baseDate) {
+                                baseDate = resetDate;
+                                maxHours = resetObj.duration || 48;
+                            }
+                        }
+                        const now = new Date();
+                        const hoursElapsed = (now - baseDate) / (1000 * 60 * 60);
+
+                        this.localRecords = this.records.filter(r => {
+                            if(r.department !== this.selectedDept || r.course !== course || r.date !== date) return false;
+                            const isReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                            if(isReviewed) return true; 
+                            // CHANGED: We removed the check that prevented viewing if locked
+                            // We only include genuine Absences/Lates (ignoring NONE unless already reviewed)
+                            if(r.status === 'No' || r.status === 'Late') return true;
+                            return false;
+                        }).map(r => {
+                            const isAlreadyReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                            let currentStatus = r.status;
+                            let currentNote = r.managerNote;
+                            if (!isAlreadyReviewed) {
+                                const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
+                                if (saved) {
+                                    try {
+                                        const parsed = JSON.parse(saved);
+                                        if (parsed.status) currentStatus = parsed.status;
+                                        if (parsed.managerNote) currentNote = parsed.managerNote;
+                                    } catch(e) {}
+                                }
+                            }
+                            return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: r.status, isAlreadyReviewed: isAlreadyReviewed };
+                        }).sort((a,b) => {
+                            const order = { 'No': 1, 'Late': 2, 'NONE': 3 };
+                            return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
+                        });
+                    }).getTrainingResetTime(this.loggedInManagerName, course, date);
+            },
+
+            submitNotes() {
+                let unhandledCount = 0;
+                this.localRecords.forEach(rec => {
+                    if (!rec.isAlreadyReviewed) {
+                        let isNoteFilled = (rec.managerNote && rec.managerNote.trim() !== '');
+                        let isStatusChanged = rec.originalStatus !== 'Late' && (rec.status !== rec.originalStatus);
+                        if (!isNoteFilled && !isStatusChanged) unhandledCount++;
+                    }
+                });
+                
+                if (unhandledCount > 0) {
+                    this.confirmMessage = `<span class="text-indigo-600 font-bold block mb-2">Notice: ${unhandledCount} unchanged employee(s).</span> Empty notes will automatically be filled with a dot (.). Are you sure you want to submit?`;
+                    this.showConfirmModal = true;
+                } else {
+                    this.confirmMessage = "Are you sure you want to submit?";
+                    this.showConfirmModal = true;
+                }
+            },
+
+            executeSubmit() {
+                this.showConfirmModal = false;
+                let updatesToSave = [];
+                
+                this.localRecords.forEach(rec => {
+                    if (rec.isAlreadyReviewed) return;
+                    
+                    let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+                    let finalNote = rec.managerNote ? rec.managerNote.trim() : '';
+                    
+                    // Auto-fill with a dot "." if the manager left the note empty
+                    if (finalNote === '') {
+                        finalNote = '.';
+                    }
+
+                    updatesToSave.push({
+                        rowIndex: rec.rowIndex,
+                        note: finalNote,
+                        status: finalStatus,
+                        managerName: this.loggedInManagerName 
+                    });
+                });
+                
+                if(updatesToSave.length === 0) { this.notify("No changes."); return; }
+                
+                this.isLoading = true;
+                google.script.run.withSuccessHandler(msg => {
+                    this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
+                    this.notify("Submitted successfully!"); 
+                    this.selectedTraining = ''; 
+                    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
+                }).saveManagerNotes(updatesToSave);
+            },
+
+            formatDuration(mins) {
+                if(!mins || mins <= 0) return '0m';
+                const h = Math.floor(mins / 60);
+                const m = Math.round(mins % 60);
+                return h > 0 ? `${h}h ${m}m` : `${m}m`;
+            },
+
+            notify(msg) { this.toastMsg = msg; this.showToast = true; setTimeout(() => { this.showToast = false; }, 3500); }
+        }
+    }
+  </script>
+</body></html>

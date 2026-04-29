@@ -671,28 +671,22 @@
             showToast: false,
             toastMsg: '',
 
-            // MOBILE SUPPORT
             mobileMenuOpen: false,
-
-            // NEW PROPERTIES
             selectedMonth: '',
             availableMonths:[],
             showConfirmModal: false,
             confirmMessage: '',
             nowTimer: new Date().getTime(),
 
-            // GETTERS
-            get absentRecords() {
-                return this.localRecords.filter(r => r.originalStatus !== 'Late');
-            },
-            get lateRecords() {
-                return this.localRecords.filter(r => r.originalStatus === 'Late');
-            },
+            get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
+            get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
+            
             get activeTrainingObj() {
                 if(!this.selectedDept || !this.selectedTraining) return null;
                 const deptTrainings = this.getTrainingsNeedingReview(this.selectedDept);
                 return deptTrainings.find(t => t.key === this.selectedTraining) || null;
             },
+            
             get filteredTrainings() {
                 if (!this.selectedDept) return[];
                 let trs = this.getTrainingsNeedingReview(this.selectedDept);
@@ -701,6 +695,7 @@
                 }
                 return trs;
             },
+            
             get managerDepts() {
                 if(!this.loggedInManagerDepts || this.loggedInManagerDepts.length === 0) return[];
                 return this.loggedInManagerDepts.map(deptName => {
@@ -743,15 +738,25 @@
                 return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
             },
 
-            // هێنانی داتا بێ سنوور بۆ ئەوەی کێشەی ١٠٠٠ داتایی نەمێنێت
-            async fetchAllRows(table) {
+            // چارەسەری کێشەی ونبوونی داتاکان بە ڕیزکردنیان (orderBy)
+            async fetchAllRows(table, sortCol = null) {
                 let data =[], from = 0, size = 1000, more = true;
                 while(more) {
-                    const res = await sb.from(table).select('*').range(from, from + size - 1);
-                    if(res.error) throw res.error;
-                    data.push(...(res.data ||[]));
-                    if(res.data.length < size) more = false;
-                    else from += size;
+                    let query = sb.from(table).select('*');
+                    if (sortCol) query = query.order(sortCol, { ascending: true });
+                    
+                    const res = await query.range(from, from + size - 1);
+                    if(res.error) {
+                        // ئەگەر کێشەی ڕیزکردنی هەبوو با بەبێ ڕیزکردن بیهێنێتەوە
+                        const fallback = await sb.from(table).select('*').range(from, from + size - 1);
+                        data.push(...(fallback.data ||[]));
+                        if(fallback.data.length < size) more = false;
+                        else from += size;
+                    } else {
+                        data.push(...(res.data ||[]));
+                        if(res.data.length < size) more = false;
+                        else from += size;
+                    }
                 }
                 return data;
             },
@@ -776,7 +781,6 @@
                 this.loginError = '';
                 
                 try {
-                    // بەکارهێنانی جاڤاسکریپت بۆ فلتەرکردن بۆ ئەوەی کێشەی Case Sensitive نەمێنێت
                     const data = await this.fetchAllRows('Settings');
                     const userRecords = data.filter(r => 
                         String(r.Manager || r.manager || '').trim() === this.loginUser &&
@@ -829,7 +833,8 @@
                         manager: String(s.Manager || s.manager || '').trim()
                     }));
 
-                    const recData = await this.fetchAllRows('TrainingRecord');
+                    // ڕیزکردن بە Date بۆ ئەوەی هیچ کەسێک ون نەبێت
+                    const recData = await this.fetchAllRows('TrainingRecord', 'Date');
                     this.records = recData.map(r => ({
                         db_id: r.db_id || r.id,
                         empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
@@ -846,7 +851,6 @@
                         managerNote: String(r['M.not'] || r.managerNote || '')
                     }));
 
-                    // هێنانی قوفڵەکانی مەنجەر لە سوپابەیس
                     const locksData = await this.fetchAllRows('ManagerLocks');
                     this.resetTimes = {};
                     locksData.forEach(l => {
@@ -899,9 +903,12 @@
                 const cutoffDate = new Date('2026-03-30T00:00:00').getTime(); 
 
                 this.records.forEach(r => {
-                    // لێرەدا فلتەرەکەمان کرد بە case-insensitive بۆ ئەوەی گوێ بە پیتە گەورە و بچووکەکان نەدات
+                    // چارەسەری پیتی گەورە و بچووک بۆ بەشەکان
                     if(String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
-                    if(!['No', 'Late'].includes(r.status)) return;
+                    
+                    // چارەسەری پیتی گەورە و بچووک بۆ No و Late
+                    const stat = String(r.status).toLowerCase();
+                    if(!['no', 'late'].includes(stat)) return;
 
                     const key = `${r.course}|${r.date}`;
                     if(!trainingMap.has(key)) {
@@ -911,7 +918,12 @@
                         });
                     }
                     const g = trainingMap.get(key);
-                    if (r.managerNote && r.managerNote.trim() !== '') g.totalReviewed++;
+                    
+                    // چارەسەری کێشەی NULL ی سوپابەیس
+                    const note = String(r.managerNote).trim().toLowerCase();
+                    const isReviewed = note !== '' && note !== 'null' && note !== 'nan';
+                    
+                    if (isReviewed) g.totalReviewed++;
                     else g.totalPending++;
                 });
 
@@ -970,16 +982,25 @@
                 const [course, date] = this.selectedTraining.split('|');
                 
                 this.localRecords = this.records.filter(r => {
-                    // لێرەشدا فلتەری داتا پیشاندراوەکانمان کرد بە case-insensitive
                     if(String(r.department).toLowerCase() !== String(this.selectedDept).toLowerCase() || r.course !== course || r.date !== date) return false;
-                    const isReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                    
+                    const note = String(r.managerNote).trim().toLowerCase();
+                    const isReviewed = note !== '' && note !== 'null' && note !== 'nan';
                     if(isReviewed) return true; 
-                    if(r.status === 'No' || r.status === 'Late') return true;
+                    
+                    const stat = String(r.status).toLowerCase();
+                    if(stat === 'no' || stat === 'late') return true;
                     return false;
                 }).map(r => {
-                    const isAlreadyReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                    const noteStr = String(r.managerNote).trim();
+                    const isAlreadyReviewed = noteStr !== '' && noteStr.toLowerCase() !== 'null' && noteStr.toLowerCase() !== 'nan';
+                    
                     let currentStatus = r.status;
-                    let currentNote = r.managerNote;
+                    if (currentStatus.toLowerCase() === 'no') currentStatus = 'No';
+                    if (currentStatus.toLowerCase() === 'late') currentStatus = 'Late';
+                    
+                    let currentNote = isAlreadyReviewed ? r.managerNote : '';
+
                     if (!isAlreadyReviewed) {
                         const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
                         if (saved) {
@@ -990,7 +1011,7 @@
                             } catch(e) {}
                         }
                     }
-                    return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: r.status, isAlreadyReviewed: isAlreadyReviewed };
+                    return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: currentStatus, isAlreadyReviewed: isAlreadyReviewed };
                 }).sort((a,b) => {
                     const order = { 'No': 1, 'Late': 2, 'NONE': 3 };
                     return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
@@ -1027,7 +1048,6 @@
                     let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
                     let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
 
-                    // چاککردنی کێشەی پیتە گەورەکان و ئەپدەیتکردن
                     const payload = {
                         'Status': finalStatus,
                         'status': finalStatus,
@@ -1035,9 +1055,7 @@
                         'managerNote': finalNote + ` (By: ${this.loggedInManagerName})`
                     };
 
-                    const { error } = await sb.from('TrainingRecord')
-                        .update(payload)
-                        .eq('db_id', rec.db_id);
+                    const { error } = await sb.from('TrainingRecord').update(payload).eq('db_id', rec.db_id);
                         
                     if (error) {
                         console.error("Update Error:", error);

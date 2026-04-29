@@ -749,36 +749,39 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }).getManagerUsernames();
             },
 
-            doLogin() {
-                if(!this.loginUser || !this.loginPass) {
-                    this.loginError = "Please select your username and enter your password.";
-                    return;
-                }
-                this.isLoggingIn = true;
-                this.loginError = '';
-                
-                google.script.run.withSuccessHandler(res => {
-                    this.isLoggingIn = false;
-                    if(res.success) {
-                        this.isLoggedIn = true;
-                        this.loggedInManagerName = res.name;
-                        this.loggedInManagerDepts = res.depts || (res.dept ? [res.dept] : []);
-                        try {
-                            if (this.rememberMe) {
-                                localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
-                            } else {
-                                localStorage.removeItem('managerRemember');
-                            }
-                        } catch(e) {}
-                        this.fetchData();
-                    } else {
-                        this.loginError = res.message;
-                    }
-                }).withFailureHandler(err => {
-                    this.isLoggingIn = false;
-                    this.loginError = "Connection error: " + err.message;
-                }).verifyManagerLogin(this.loginUser, this.loginPass);
-            },
+            async doLogin() {
+    if(!this.loginUser || !this.loginPass) {
+        this.loginError = "Please select your username and enter your password.";
+        return;
+    }
+    this.isLoggingIn = true;
+    this.loginError = '';
+    
+    // گەڕان بەدوای بەڕێوەبەرەکە لە خشتەی Settings بەکارهێنانی ئاسایی (Plain text matching)
+    const { data: userRecord, error } = await supabase
+        .from('Settings')
+        .select('*')
+        .eq('Manager', this.loginUser)
+        .eq('Password', this.loginPass);
+        
+    this.isLoggingIn = false;
+    
+    if (userRecord && userRecord.length > 0) {
+        this.isLoggedIn = true;
+        this.loggedInManagerName = this.loginUser;
+        // کۆکردنەوەی ئەو بەشانەی سەر بەم بەڕێوەبەرەن
+        this.loggedInManagerDepts = [...new Set(userRecord.map(r => r.Department))];
+        
+        if (this.rememberMe) {
+            localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
+        } else {
+            localStorage.removeItem('managerRemember');
+        }
+        this.fetchData();
+    } else {
+        this.loginError = "Access denied, Check your password.";
+    }
+},
 
             logout() {
                 this.isLoggedIn = false;

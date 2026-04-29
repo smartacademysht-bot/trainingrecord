@@ -967,8 +967,8 @@ function app() {
   return {
     currentTab: 'dashboard', dashView: 'home', isLoading: false, loadingProgress: 0,
     dbStatus: 'checking',
-//     trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
-// zkSelectedTrainingId: '',
+    trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
+zkSelectedTrainingId: '',
 
     
     menuItems: [
@@ -1025,7 +1025,7 @@ async init() {
       await this.fetchZKTecoData();
       await this.fetchExternalGoogleSheet(); // هێنانی لیستی دەورەکان لێرە
     },
-// هێنانی داتا لە گووگڵ شیت
+// ١. هێنانی داتا لە گووگڵ شیت
     async fetchExternalGoogleSheet() {
       const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';
       const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
@@ -1033,37 +1033,63 @@ async init() {
       try {
         const response = await fetch(url);
         const csvText = await response.text();
-        const rows = csvText.split('\n').map(r => r.split(/,(?=(?:(?:[^Unit"]*"){2})*[^Unit"]*$)/));
+        
+        // جیاکردنەوەی ڕیزەکان
+        const lines = csvText.split(/\r?\n/);
+        const result = [];
 
-        this.trainingSchedule = rows.slice(1).map(r => ({
-          id: r[0]?.replace(/"/g, '').trim(),
-          date: r[1]?.replace(/"/g, '').trim(),
-          course: r[2]?.replace(/"/g, '').trim(),
-          trainer: r[3]?.replace(/"/g, '').trim()
-        })).filter(t => t.course && t.date);
+        for (let i = 1; i < lines.length; i++) {
+          const r = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+          if (r.length < 3) continue;
+
+          let rawDate = r[1]?.replace(/"/g, '').trim();
+          // فۆرماتکردنی بەروار بۆ YYYY-MM-DD ئەگەر بە شێوازی تاقیکردنەوە بێت
+          let formattedDate = rawDate;
+          if (rawDate.includes('/')) {
+              const parts = rawDate.split('/');
+              if (parts[0].length < 4) formattedDate = `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+          }
+
+          result.push({
+            id: r[0]?.replace(/"/g, '').trim() || i,
+            date: formattedDate,
+            course: r[2]?.replace(/"/g, '').trim(),
+            trainer: r[3]?.replace(/"/g, '').trim()
+          });
+        }
+
+        this.trainingSchedule = result.filter(t => t.course && t.date);
+        console.log("Data loaded from Sheet:", this.trainingSchedule);
       } catch (e) {
-        console.error("Sheet Load Error:", e);
+        console.error("Fetch Error:", e);
+        this.showNotification("Error loading external courses", "error");
       }
     },
 
-    // ئەمە لیستی دەورەکان ڕێکدەخات: نوێترین لە سەرەوە + تەنها تا ئەمڕۆ
+    // ٢. فلتەرکردنی دەورەکان (تەنها هی ڕابردوو و ئەمڕۆ + نوێترین لە سەرەوە)
     get filteredZkScheduleOptions() {
-      const today = new Date().toISOString().split('T')[0];
+      if (!this.trainingSchedule.length) return [];
+      
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // تا کۆتایی ئەمڕۆ قبوڵ بکات
+
       return this.trainingSchedule
-        .filter(t => t.date <= today) // تەنها هی ئەمڕۆ و ڕابردوو
-        .sort((a, b) => new Date(b.date) - new Date(a.date)); // نوێترین لە سەرەوە
+        .filter(t => {
+            const d = new Date(t.date);
+            return !isNaN(d.getTime()) && d <= today;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
-    // کاتێک دەورەیەک هەڵدەبژێریت، بەروارەکە خۆی دادەنێت
+    // ٣. کاتێک لە لیستەکە دەورەیەک هەڵدەبژێریت
     syncZkWithSchedule() {
       if(!this.zkSelectedTrainingId) return;
-      const selected = this.trainingSchedule.find(t => t.id === this.zkSelectedTrainingId);
+      const selected = this.trainingSchedule.find(t => String(t.id) === String(this.zkSelectedTrainingId));
       if(selected) {
         this.zktecoFilterDate = selected.date;
         this.showNotification(`Linked with: ${selected.course}`);
       }
     },
-
     // ==================== LOADING ====================
     startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
     stopLoading() { this.loadingProgress=100; setTimeout(()=>{this.isLoading=false; this.loadingProgress=0;}, 400); },

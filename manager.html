@@ -642,29 +642,29 @@
   </div>
 
 <script>
-  const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
+    const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     function managerApp() {
         return {
-            managerUsernames: [],
+            managerUsernames:[],
             isLoggedIn: false,
             loginUser: '',
             loginPass: '',
             loginError: '',
             isLoggingIn: false,
             loggedInManagerName: '',
-            loggedInManagerDepts: [],
+            loggedInManagerDepts:[],
             resetTimes: {},
 
             isLoading: false,
             loadingMessage: '',
             records: [],
-            settings: [],
+            settings:[],
             selectedDept: '',
             selectedTraining: '',
-            localRecords: [],
+            localRecords:[],
             showPassword: false,
             rememberMe: false,
             
@@ -676,7 +676,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
             // NEW PROPERTIES
             selectedMonth: '',
-            availableMonths: [],
+            availableMonths:[],
             showConfirmModal: false,
             confirmMessage: '',
             nowTimer: new Date().getTime(),
@@ -694,7 +694,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 return deptTrainings.find(t => t.key === this.selectedTraining) || null;
             },
             get filteredTrainings() {
-                if (!this.selectedDept) return [];
+                if (!this.selectedDept) return[];
                 let trs = this.getTrainingsNeedingReview(this.selectedDept);
                 if (this.selectedMonth) {
                     trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
@@ -702,7 +702,7 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 return trs;
             },
             get managerDepts() {
-                if(!this.loggedInManagerDepts || this.loggedInManagerDepts.length === 0) return [];
+                if(!this.loggedInManagerDepts || this.loggedInManagerDepts.length === 0) return[];
                 return this.loggedInManagerDepts.map(deptName => {
                     const trainings = this.getTrainingsNeedingReview(deptName);
                     const pending = trainings.filter(t => !t.isFullyReviewed);
@@ -743,45 +743,67 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
             },
 
-            fetchUsernames() {
-                google.script.run.withSuccessHandler(names => {
-                    this.managerUsernames = names;
-                }).getManagerUsernames();
+            // هێنانی داتا بێ سنوور بۆ ئەوەی کێشەی ١٠٠٠ داتایی نەمێنێت
+            async fetchAllRows(table) {
+                let data =[], from = 0, size = 1000, more = true;
+                while(more) {
+                    const res = await sb.from(table).select('*').range(from, from + size - 1);
+                    if(res.error) throw res.error;
+                    data.push(...(res.data ||[]));
+                    if(res.data.length < size) more = false;
+                    else from += size;
+                }
+                return data;
+            },
+
+            async fetchUsernames() {
+                try {
+                    const data = await this.fetchAllRows('Settings');
+                    if (data) {
+                        this.managerUsernames =[...new Set(data.map(s => String(s.Manager || s.manager || '').trim()).filter(Boolean))].sort();
+                    }
+                } catch(e) {
+                    console.error("Failed to load usernames:", e);
+                }
             },
 
             async doLogin() {
-    if(!this.loginUser || !this.loginPass) {
-        this.loginError = "Please select your username and enter your password.";
-        return;
-    }
-    this.isLoggingIn = true;
-    this.loginError = '';
-    
-    // گەڕان بەدوای بەڕێوەبەرەکە لە خشتەی Settings بەکارهێنانی ئاسایی (Plain text matching)
-    const { data: userRecord, error } = await supabase
-        .from('Settings')
-        .select('*')
-        .eq('Manager', this.loginUser)
-        .eq('Password', this.loginPass);
-        
-    this.isLoggingIn = false;
-    
-    if (userRecord && userRecord.length > 0) {
-        this.isLoggedIn = true;
-        this.loggedInManagerName = this.loginUser;
-        // کۆکردنەوەی ئەو بەشانەی سەر بەم بەڕێوەبەرەن
-        this.loggedInManagerDepts = [...new Set(userRecord.map(r => r.Department))];
-        
-        if (this.rememberMe) {
-            localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
-        } else {
-            localStorage.removeItem('managerRemember');
-        }
-        this.fetchData();
-    } else {
-        this.loginError = "Access denied, Check your password.";
-    }
-},
+                if(!this.loginUser || !this.loginPass) {
+                    this.loginError = "Please select your username and enter your password.";
+                    return;
+                }
+                this.isLoggingIn = true;
+                this.loginError = '';
+                
+                try {
+                    // بەکارهێنانی جاڤاسکریپت بۆ فلتەرکردن بۆ ئەوەی کێشەی Case Sensitive نەمێنێت
+                    const data = await this.fetchAllRows('Settings');
+                    const userRecords = data.filter(r => 
+                        String(r.Manager || r.manager || '').trim() === this.loginUser &&
+                        String(r.Password || r.password || '').trim() === this.loginPass
+                    );
+
+                    this.isLoggingIn = false;
+                    
+                    if (userRecords && userRecords.length > 0) {
+                        this.isLoggedIn = true;
+                        this.loggedInManagerName = this.loginUser;
+                        this.loggedInManagerDepts =[...new Set(userRecords.map(r => String(r.Department || r.department || '').trim()))].filter(Boolean);
+                        
+                        if (this.rememberMe) {
+                            localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
+                        } else {
+                            localStorage.removeItem('managerRemember');
+                        }
+                        this.fetchData();
+                    } else {
+                        this.loginError = "Access denied, Check your password.";
+                    }
+                } catch(e) {
+                    this.isLoggingIn = false;
+                    this.loginError = "Connection error: " + e.message;
+                }
+            },
 
             logout() {
                 this.isLoggedIn = false;
@@ -790,34 +812,65 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 this.rememberMe = false;
                 this.selectedDept = '';
                 this.selectedTraining = '';
-                this.records = [];
-                this.loggedInManagerDepts = [];
+                this.records =[];
+                this.loggedInManagerDepts =[];
                 this.mobileMenuOpen = false;
                 try { localStorage.removeItem('managerRemember'); } catch(e) {}
             },
 
             async fetchData(onComplete = null) {
-    this.isLoading = true;
-    this.loadingMessage = 'Loading Data...';
-    
-    try {
-        const { data: settings } = await supabase.from('Settings').select('*');
-        if(settings) this.settings = settings;
+                this.isLoading = true;
+                this.loadingMessage = 'Loading Data...';
+                
+                try {
+                    const settingsData = await this.fetchAllRows('Settings');
+                    this.settings = settingsData.map(s => ({
+                        department: String(s.Department || s.department || '').trim(),
+                        manager: String(s.Manager || s.manager || '').trim()
+                    }));
 
-        const { data: records } = await supabase.from('TrainingRecord').select('*');
-        if(records) this.records = records;
+                    const recData = await this.fetchAllRows('TrainingRecord');
+                    this.records = recData.map(r => ({
+                        db_id: r.db_id || r.id,
+                        empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
+                        department: String(r.Department || r.department || '').trim(),
+                        empName: String(r.Name || r.empName || '').trim(),
+                        trainer: String(r.Trainer || r.trainer || '').trim(),
+                        course: String(r.Topic || r.course || r.topic || '').trim(),
+                        date: String(r.Date || r.date || '').trim(),
+                        totalDuration: Number(r['Duration of training'] || r.totalDuration || 0),
+                        start: String(r['Check in'] || r.start || '').trim(),
+                        end: String(r['Check out'] || r.end || '').trim(),
+                        partDuration: Number(r['Emp. Duration'] || r.partDuration || 0),
+                        status: String(r.Status || r.status || '').trim(),
+                        managerNote: String(r['M.not'] || r.managerNote || '')
+                    }));
 
-        this.isLoading = false;
-        if(onComplete) onComplete();
-    } catch(err) {
-        this.isLoading = false;
-        alert("Failed to load data: " + err.message);
-    }
-},
+                    // هێنانی قوفڵەکانی مەنجەر لە سوپابەیس
+                    const locksData = await this.fetchAllRows('ManagerLocks');
+                    this.resetTimes = {};
+                    locksData.forEach(l => {
+                        if (String(l.manager).trim() === this.loggedInManagerName) {
+                            const resetKey = String(l.course).replace(/\s+/g,'_') + '_' + String(l.date);
+                            this.resetTimes[resetKey] = {
+                                timestamp: l.timestamp,
+                                duration: l.duration,
+                                isHidden: l.is_hidden
+                            };
+                        }
+                    });
+
+                    this.isLoading = false;
+                    if(onComplete) onComplete();
+                } catch(err) {
+                    this.isLoading = false;
+                    alert("Failed to load data: " + err.message);
+                }
+            },
 
             updateMonths() {
                 this.selectedMonth = '';
-                if (!this.selectedDept) { this.availableMonths = []; return; }
+                if (!this.selectedDept) { this.availableMonths =[]; return; }
                 const trs = this.getTrainingsNeedingReview(this.selectedDept);
                 const map = new Set();
                 trs.forEach(t => {
@@ -840,14 +893,13 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             },
 
             getTrainingsNeedingReview(dept) {
-                if(!dept || !this.records.length) return [];
+                if(!dept || !this.records.length) return[];
                 const now = new Date();
                 const trainingMap = new Map();
                 const cutoffDate = new Date('2026-03-30T00:00:00').getTime(); 
 
                 this.records.forEach(r => {
                     if(r.department !== dept) return;
-                    // CHANGED: ONLY include 'No' and 'Late'. 'NONE' is ignored.
                     if(!['No', 'Late'].includes(r.status)) return;
 
                     const key = `${r.course}|${r.date}`;
@@ -862,15 +914,24 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                     else g.totalPending++;
                 });
 
-                const result = [];
+                const result =[];
                 trainingMap.forEach(t => {
                     if (t.totalPending === 0 && t.totalReviewed === 0) return;
-                    const trainingDate = new Date(t.date + 'T00:00:00');
-                    if (trainingDate.getTime() < cutoffDate) return;
+                    
+                    let trainingDate = new Date(t.date);
+                    if(isNaN(trainingDate.getTime()) && t.date.includes('/')) {
+                        const parts = t.date.split('/');
+                        if(parts.length === 3) trainingDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
+                    } else {
+                        trainingDate = new Date(t.date + 'T00:00:00');
+                    }
+
+                    if (isNaN(trainingDate.getTime()) || trainingDate.getTime() < cutoffDate) return;
 
                     const resetKey = t.course.replace(/\s+/g,'_') + '_' + t.date;
                     const resetObj = this.resetTimes[resetKey];
-                    if (resetObj && resetObj.isHidden) return; // Completely hides training if admin hid it!
+                    if (resetObj && resetObj.isHidden) return; 
+                    
                     let baseDate = trainingDate;
                     let maxHours = 48;
                     if (resetObj) {
@@ -906,47 +967,32 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             loadTargetRecords() {
                 if(!this.selectedDept || !this.selectedTraining) { this.localRecords = []; return; }
                 const [course, date] = this.selectedTraining.split('|');
-                google.script.run.withSuccessHandler(resetObj => {
-                        let baseDate = new Date(date + 'T00:00:00');
-                        let maxHours = 48;
-                        if (resetObj) {
-                            const resetDate = new Date(resetObj.timestamp);
-                            if (!isNaN(resetDate.getTime()) && resetDate > baseDate) {
-                                baseDate = resetDate;
-                                maxHours = resetObj.duration || 48;
-                            }
+                
+                this.localRecords = this.records.filter(r => {
+                    if(r.department !== this.selectedDept || r.course !== course || r.date !== date) return false;
+                    const isReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                    if(isReviewed) return true; 
+                    if(r.status === 'No' || r.status === 'Late') return true;
+                    return false;
+                }).map(r => {
+                    const isAlreadyReviewed = (r.managerNote && r.managerNote.trim() !== '');
+                    let currentStatus = r.status;
+                    let currentNote = r.managerNote;
+                    if (!isAlreadyReviewed) {
+                        const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
+                        if (saved) {
+                            try {
+                                const parsed = JSON.parse(saved);
+                                if (parsed.status) currentStatus = parsed.status;
+                                if (parsed.managerNote) currentNote = parsed.managerNote;
+                            } catch(e) {}
                         }
-                        const now = new Date();
-                        const hoursElapsed = (now - baseDate) / (1000 * 60 * 60);
-
-                        this.localRecords = this.records.filter(r => {
-                            if(r.department !== this.selectedDept || r.course !== course || r.date !== date) return false;
-                            const isReviewed = (r.managerNote && r.managerNote.trim() !== '');
-                            if(isReviewed) return true; 
-                            // CHANGED: We removed the check that prevented viewing if locked
-                            // We only include genuine Absences/Lates (ignoring NONE unless already reviewed)
-                            if(r.status === 'No' || r.status === 'Late') return true;
-                            return false;
-                        }).map(r => {
-                            const isAlreadyReviewed = (r.managerNote && r.managerNote.trim() !== '');
-                            let currentStatus = r.status;
-                            let currentNote = r.managerNote;
-                            if (!isAlreadyReviewed) {
-                                const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
-                                if (saved) {
-                                    try {
-                                        const parsed = JSON.parse(saved);
-                                        if (parsed.status) currentStatus = parsed.status;
-                                        if (parsed.managerNote) currentNote = parsed.managerNote;
-                                    } catch(e) {}
-                                }
-                            }
-                            return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: r.status, isAlreadyReviewed: isAlreadyReviewed };
-                        }).sort((a,b) => {
-                            const order = { 'No': 1, 'Late': 2, 'NONE': 3 };
-                            return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
-                        });
-                    }).getTrainingResetTime(this.loggedInManagerName, course, date);
+                    }
+                    return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: r.status, isAlreadyReviewed: isAlreadyReviewed };
+                }).sort((a,b) => {
+                    const order = { 'No': 1, 'Late': 2, 'NONE': 3 };
+                    return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
+                });
             },
 
             submitNotes() {
@@ -968,37 +1014,46 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 }
             },
 
-           async executeSubmit() {
-    this.showConfirmModal = false;
-    this.isLoading = true;
-    let hasError = false;
+            async executeSubmit() {
+                this.showConfirmModal = false;
+                this.isLoading = true;
+                let hasError = false;
 
-    for (let rec of this.localRecords) {
-        if (rec.isAlreadyReviewed) continue;
-        
-        let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
-        let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
+                for (let rec of this.localRecords) {
+                    if (rec.isAlreadyReviewed) continue;
+                    
+                    let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+                    let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
 
-        const { error } = await supabase
-            .from('TrainingRecord')
-            .update({ 
-                Status: finalStatus, 
-                Manager_Note: finalNote + ` (By: ${this.loggedInManagerName})`
-            })
-            .eq('db_id', rec.db_id); // گۆڕدرا بۆ db_id
-            
-        if (error) hasError = true;
-    }
-    
-    if (hasError) {
-        this.notify("Some records failed to update.");
-    } else {
-        this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
-        this.notify("Submitted successfully!"); 
-        this.selectedTraining = ''; 
-        this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
-    }
-}
+                    // چاککردنی کێشەی پیتە گەورەکان و ئەپدەیتکردن
+                    const payload = {
+                        'Status': finalStatus,
+                        'status': finalStatus,
+                        'M.not': finalNote + ` (By: ${this.loggedInManagerName})`,
+                        'managerNote': finalNote + ` (By: ${this.loggedInManagerName})`
+                    };
+
+                    const { error } = await sb.from('TrainingRecord')
+                        .update(payload)
+                        .eq('db_id', rec.db_id);
+                        
+                    if (error) {
+                        console.error("Update Error:", error);
+                        hasError = true;
+                    }
+                }
+                
+                this.isLoading = false;
+
+                if (hasError) {
+                    this.notify("Some records failed to update.");
+                } else {
+                    this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
+                    this.notify("Submitted successfully!"); 
+                    this.selectedTraining = ''; 
+                    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
+                }
+            },
 
             formatDuration(mins) {
                 if(!mins || mins <= 0) return '0m';
@@ -1010,5 +1065,5 @@ const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             notify(msg) { this.toastMsg = msg; this.showToast = true; setTimeout(() => { this.showToast = false; }, 3500); }
         }
     }
-  </script>
+</script>
 </body></html>

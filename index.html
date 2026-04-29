@@ -2,277 +2,1620 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Manager Justification Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KAS Training Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
-    body { font-family: 'Inter', 'Vazirmatn', sans-serif; background-color: transparent; }
-    .bg-mesh-container { position: fixed; inset: 0; z-index: -10; background-color: #f8fafc; overflow: hidden; pointer-events: none; }
-    .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.6; }
-    @keyframes float-1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(5vw, -10vh) scale(1.1); } }
-    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #a5b4fc; animation: float-1 35s infinite ease-in-out; }
-    .blob-2 { top: 20%; right: -15%; width: 45vw; height: 45vw; background: #f9a8d4; animation: float-1 40s infinite ease-in-out reverse; }
-    .blob-3 { bottom: -15%; left: 15%; width: 55vw; height: 55vw; background: #67e8f9; animation: float-1 38s infinite ease-in-out; }
-    @media (max-width: 768px) {
-        tr { display: grid !important; grid-template-columns: 1fr auto; grid-template-areas: "name time" "details details" "status status" "note note"; background: rgba(255, 255, 255, 0.6) !important; border-radius: 1.5rem !important; padding: 1.25rem !important; margin-bottom:1rem; border: 1px solid rgba(255,255,255,0.8) !important; }
-        td { display: block !important; padding: 0 !important; border: none !important; width: 100% !important; }
-        td:nth-child(1) { grid-area: name; } td:nth-child(2) { grid-area: details; margin-bottom: 1rem; } td:nth-child(3) { grid-area: time; text-align: right; } td:nth-child(4) { grid-area: status; margin-bottom: 0.75rem; } td:nth-child(5) { grid-area: note; }
-        thead { display: none !important; } tbody { display: flex !important; flex-direction: column !important; } table, .table-responsive { display: block !important; width: 100% !important; }
-    }
+    body { font-family: 'Vazirmatn', sans-serif; }
+    .progress-wrapper { width: 200px; display: flex; align-items: center; gap: 10px; }
+    .progress-track { flex: 1; background-color: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background-color: #2563eb; transition: width 0.3s ease-in-out; border-radius: 4px; }
+    .progress-text { font-size: 12px; font-weight: bold; color: #2563eb; width: 35px; text-align: right; }
+    .fade-in { animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    @keyframes cadPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+    .cad-icon { animation: cadPulse 2s infinite; }
   </style>
 </head>
-<body class="text-slate-800 antialiased h-[100dvh] w-full overflow-hidden flex flex-col" x-data="managerApp()">
-  <div class="bg-mesh-container"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
+<body class="bg-gray-100 text-gray-800" x-data="app()">
 
-  <!-- Login Screen -->
-  <div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 relative z-10">
-     <div class="bg-white/60 backdrop-blur-2xl p-8 rounded-[2rem] shadow-xl w-full max-w-md border border-white/80">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-white text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-indigo-50"><i class="fa fa-lock text-2xl"></i></div>
-            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h2>
+<div class="flex h-screen overflow-hidden">
+  <!-- SIDEBAR -->
+  <div class="w-64 bg-slate-800 text-white flex flex-col shadow-xl flex-shrink-0">
+    <div class="h-16 flex items-center justify-center font-bold text-base border-b border-slate-700">
+      <i class="fa-solid fa-chart-line mr-2"></i> KAS Training Record
+    </div>
+    <nav class="flex-1 px-2 py-4 space-y-1">
+      <template x-for="item in menuItems">
+        <button @click="currentTab = item.id; resetDash()"
+          :class="currentTab === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-slate-700'"
+          class="group flex items-center px-4 py-3 text-sm font-medium rounded-md w-full transition-colors">
+          <i :class="item.icon" class="mr-3 text-lg w-6 text-center"></i>
+          <span x-text="item.label"></span>
+        </button>
+      </template>
+    </nav>
+    <div class="px-3 py-3 border-t border-slate-700 space-y-2">
+      <div class="flex items-center justify-between bg-slate-700/50 rounded px-2 py-1.5">
+        <div class="flex items-center gap-2 min-w-0">
+          <i class="fa-solid fa-database text-blue-300 text-xs shrink-0"></i>
+          <span class="text-[11px] text-slate-300 truncate">Supabase</span>
         </div>
-        <div x-show="loginError" class="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl text-sm mb-6 font-semibold"><span x-text="loginError"></span></div>
-        <div class="space-y-5">
-           <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
-              <select x-model="loginUser" class="w-full border border-white/60 p-3.5 rounded-xl outline-none bg-white/50 text-slate-700 font-medium shadow-sm">
-                  <option value="">-- Select Username --</option>
-                  <template x-for="u in managerUsernames" :key="u"><option :value="u" x-text="u"></option></template>
-              </select>
-           </div>
-           <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
-              <input type="password" x-model="loginPass" class="w-full border border-white/60 p-3.5 rounded-xl outline-none bg-white/50 text-slate-700 shadow-sm" placeholder="••••••••">
-           </div>
-           <button @click="doLogin" :disabled="isLoggingIn" class="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-indigo-600 transition-all mt-4">
-              <span x-show="!isLoggingIn">Sign In to Dashboard</span>
-              <span x-show="isLoggingIn">Loading...</span>
-           </button>
+        <div class="flex items-center gap-1 shrink-0 ml-1">
+          <template x-if="dbStatus === 'checking'">
+            <i class="fa-solid fa-circle-notch fa-spin text-yellow-400 text-xs"></i>
+          </template>
+          <template x-if="dbStatus === 'online'">
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-green-400 shadow shadow-green-400/50 animate-pulse"></span>
+              <span class="text-[10px] text-green-400 font-bold">Online</span>
+            </span>
+          </template>
+          <template x-if="dbStatus === 'offline'">
+            <span class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-red-400"></span>
+              <span class="text-[10px] text-red-400 font-bold">Error</span>
+            </span>
+          </template>
         </div>
-     </div>
-  </div>
-
-  <!-- Loading Overlay -->
-  <div x-show="isLoggedIn && isLoading" class="fixed inset-0 bg-white/40 backdrop-blur-lg flex flex-col items-center justify-center z-[100]">
-      <div class="animate-spin rounded-full border-4 border-t-4 border-slate-300 border-t-indigo-600 h-16 w-16 mb-6"></div>
-      <h2 class="text-xl font-bold" x-text="loadingMessage"></h2>
-  </div>
-
-  <!-- Main Portal -->
-  <div x-show="isLoggedIn && !isLoading" style="display: none;" class="flex flex-col md:flex-row flex-1 overflow-hidden relative z-10">
-    <aside class="w-72 bg-slate-900/95 backdrop-blur-2xl text-slate-300 flex flex-col shrink-0 border-r border-slate-800/50 hidden md:flex">
-      <div class="p-6 border-b border-slate-800/50">
-          <h1 class="text-lg font-extrabold text-white">Manager Portal</h1>
-          <p class="text-sm text-indigo-400 font-bold mt-2" x-text="loggedInManagerName"></p>
       </div>
-      <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          <div>
-              <p class="text-[11px] uppercase font-bold text-slate-500 mb-3 pl-2">Departments</p>
-              <div class="space-y-2">
-                  <template x-for="dept in managerDepts" :key="dept.name">
-                      <label class="flex items-center p-3 rounded-xl border cursor-pointer bg-slate-800/40 border-slate-700/50">
-                          <input type="radio" :value="dept.name" x-model="selectedDept" @change="selectedTraining = ''" class="hidden">
-                          <span class="text-xs font-bold flex-1" :class="selectedDept === dept.name ? 'text-indigo-400' : ''" x-text="dept.name"></span>
-                          <span x-show="dept.pendingCount > 0" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400" x-text="dept.pendingCount"></span>
-                      </label>
-                  </template>
+      <div class="text-[10px] text-slate-400 px-2">
+        <span x-text="employees.length + ' Employees · ' + records.length + ' Records'"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="flex-1 flex flex-col overflow-hidden relative">
+    <header class="h-16 bg-white shadow flex items-center justify-between px-6 z-10 flex-shrink-0">
+      <h2 class="text-xl font-semibold text-gray-800" x-text="menuItems.find(i=>i.id===currentTab)?.label || ''"></h2>
+      <div x-show="isLoading" class="progress-wrapper fade-in">
+        <div class="progress-track">
+          <div class="progress-fill" :style="`width: ${loadingProgress}%`"></div>
+        </div>
+        <span class="progress-text" x-text="loadingProgress + '%'"></span>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-auto p-6 relative">
+
+      <!-- ========== DASHBOARD TAB ========== -->
+      <div x-show="currentTab === 'dashboard'" class="h-full flex flex-col">
+        <nav class="flex mb-5">
+          <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+              <button @click="dashView='home'" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+                <i class="fa fa-home mr-2"></i> Dashboard
+              </button>
+            </li>
+            <li x-show="dashView !== 'home'">
+              <div class="flex items-center">
+                <i class="fa fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+                <button @click="dashView='dept'; selectedTraining=null" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600" x-text="selectedDept?.department"></button>
               </div>
+            </li>
+            <li x-show="dashView === 'training'">
+              <div class="flex items-center">
+                <i class="fa fa-chevron-right text-gray-400 mx-2 text-xs"></i>
+                <span class="ml-1 text-sm font-medium text-gray-500" x-text="selectedTraining?.course"></span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        <!-- HOME VIEW -->
+        <div x-show="dashView === 'home'" class="space-y-8 fade-in">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+              <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4"><i class="fa fa-clipboard-list text-2xl"></i></div>
+              <div><p class="text-sm text-gray-500 font-bold">Total Trainings</p><p class="text-2xl font-bold text-gray-800" x-text="stats.totalTrainings"></p></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+              <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4"><i class="fa fa-gavel text-2xl"></i></div>
+              <div><p class="text-sm text-gray-500 font-bold">Total Punishments</p><p class="text-2xl font-bold text-gray-800" x-text="stats.totalPunishments"></p></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+              <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4"><i class="fa fa-notes-medical text-2xl"></i></div>
+              <div><p class="text-sm text-gray-500 font-bold">Medical Trainings</p><p class="text-2xl font-bold text-gray-800" x-text="stats.medicalTrainings"></p></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+              <div class="p-3 rounded-full bg-orange-100 text-orange-600 mr-4"><i class="fa fa-briefcase text-2xl"></i></div>
+              <div><p class="text-sm text-gray-500 font-bold">Non-Medical Trainings</p><p class="text-2xl font-bold text-gray-800" x-text="stats.nonMedicalTrainings"></p></div>
+            </div>
           </div>
-          <div x-show="selectedDept" class="border-t border-slate-800/50 pt-4 mt-2">
-              <div class="space-y-2">
-                  <template x-for="t in filteredTrainings" :key="t.key">
-                      <button @click="selectTrainingCard(t)" class="w-full text-left px-4 py-3 rounded-xl block bg-slate-800/40 border border-slate-700/50 text-slate-300" :class="selectedTraining === t.key ? 'bg-indigo-600 text-white' : ''">
-                        <div class="font-bold text-xs truncate" x-text="t.course"></div>
-                        <div class="text-[10px] mt-1.5 flex justify-between font-medium">
-                          <span x-text="t.date"></span>
-                          <span x-show="t.isFullyReviewed" class="text-emerald-400">Reviewed</span>
-                          <span x-show="!t.isFullyReviewed && t.isLocked" class="text-rose-400">Locked</span>
-                          <span x-show="!t.isFullyReviewed && !t.isLocked" x-text="t.hoursLeft + 'h left'"></span>
+
+          <template x-for="category in ['medical','non medical','inactive']">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h3 class="text-xl font-bold capitalize mb-6 text-slate-800 border-b pb-3 flex items-center">
+                <i class="fa fa-layer-group mr-2 text-blue-500"></i><span x-text="category"></span>
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <template x-for="dept in getDeptsByCategory(category)">
+                  <div @click="goToDept(dept)" class="bg-white cursor-pointer p-5 rounded-xl border border-gray-100 shadow-md hover:shadow-xl hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-1 relative group">
+                    <template x-if="getUnreviewedCount(dept.department) > 0">
+                      <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-full shadow-lg border-2 border-white z-10 animate-pulse">
+                        <i class="fa fa-bell mr-1"></i><span x-text="getUnreviewedCount(dept.department) + ' Not Reviewed'"></span>
+                      </div>
+                    </template>
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 group-hover:bg-blue-600 transition-colors rounded-l-xl"></div>
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h4 class="font-bold text-gray-800 text-lg group-hover:text-blue-700 transition-colors" x-text="dept.department"></h4>
+                        <div class="mt-3 text-sm text-gray-500">
+                          <p class="flex items-center"><i class="fa fa-user-circle mr-2 text-gray-400"></i><span x-text="dept.manager || 'No Manager'"></span></p>
                         </div>
-                      </button>
+                      </div>
+                      <div class="flex flex-col items-end gap-1">
+                        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-100" x-text="dept.count + ' Emp'"></span>
+                        <span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-100"><i class="fa fa-chalkboard-teacher mr-1"></i><span x-text="dept.trainingCount"></span></span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- DEPT VIEW -->
+        <div x-show="dashView === 'dept'" class="flex-1 bg-white rounded-xl shadow p-6 overflow-auto fade-in">
+          <div class="flex justify-between items-center mb-4 border-b pb-4">
+            <h3 class="text-2xl font-bold text-gray-800" x-text="selectedDept?.department"></h3>
+            <button @click="dashView='home'" class="text-gray-500 hover:text-gray-700"><i class="fa fa-arrow-left mr-1"></i> Back</button>
+          </div>
+          <div class="mb-5 flex flex-wrap gap-2 items-center">
+            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider"><i class="fa fa-calendar-alt mr-1"></i> Filter by Month:</span>
+            <button @click="deptMonthFilter=''" :class="deptMonthFilter==='' ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'" class="px-3 py-1.5 rounded-full text-xs font-bold transition">All</button>
+            <template x-for="m in getAvailableMonthsForDept(selectedDept?.department)" :key="m.value">
+              <button @click="deptMonthFilter=m.value" :class="deptMonthFilter===m.value ? 'bg-blue-600 text-white shadow' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'" class="px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1">
+                <span x-text="m.label"></span>
+                <span class="bg-white/30 text-[10px] px-1.5 rounded-full" :class="deptMonthFilter===m.value ? 'text-white' : 'text-blue-600'" x-text="m.count"></span>
+              </button>
+            </template>
+          </div>
+          <div class="space-y-4">
+            <template x-for="group in getGroupedTrainingsForDept(selectedDept?.department)">
+              <div x-data="{open:true}" class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                <button @click="open=!open" class="w-full flex justify-between items-center bg-gray-50 p-4 font-bold text-gray-700 hover:bg-gray-100 transition">
+                  <span class="flex items-center gap-2 text-blue-800">
+                    <i class="fa fa-calendar-day"></i><span x-text="group.date"></span>
+                    <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-0.5 rounded-full" x-text="group.trainings.length + ' Trainings'"></span>
+                  </span>
+                  <i class="fa text-gray-400" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+                <div x-show="open" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white border-t border-gray-200">
+                  <template x-for="t in group.trainings">
+                    <div @click="goToTraining(t)" class="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-5 cursor-pointer transition flex flex-col justify-between h-32 relative group">
+                      <template x-if="t.unreviewedProblemCount > 0">
+                        <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white z-10 animate-pulse">
+                          <i class="fa fa-bell mr-1"></i>Not Reviewed
+                        </div>
+                      </template>
+                      <div>
+                        <h4 class="font-bold text-lg text-blue-900" x-text="t.course"></h4>
+                      </div>
+                      <div class="flex justify-between items-end">
+                        <span class="text-xs bg-white px-2 py-1 rounded border text-gray-600" x-text="t.trainer"></span>
+                        <span class="text-xs font-bold text-blue-600">View <i class="fa fa-arrow-right ml-1"></i></span>
+                      </div>
+                    </div>
                   </template>
+                </div>
               </div>
+            </template>
+            <div x-show="getGroupedTrainingsForDept(selectedDept?.department).length===0" class="text-center p-8 text-gray-500">No trainings found for this department.</div>
           </div>
-      </div>
-      <div class="p-4 border-t border-slate-800/50 bg-slate-900/50 flex gap-2">
-          <button @click="fetchData()" class="flex-1 bg-slate-800 text-slate-200 py-2.5 rounded-xl text-xs font-bold">Refresh</button>
-          <button @click="logout" class="flex-1 bg-rose-500/10 text-rose-400 py-2.5 rounded-xl text-xs font-bold">Logout</button>
-      </div>
-    </aside>
+        </div>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 relative flex flex-col w-full">
-      <div x-show="selectedTraining && localRecords.length > 0" class="w-full flex-1 mx-auto">
-          <div class="mb-5 flex flex-col md:flex-row justify-between gap-4 bg-white/40 p-4 rounded-xl border border-white/60">
-              <div>
-                  <h2 class="text-xl font-extrabold text-slate-900">Review Needed</h2>
-                  <p class="text-xs font-bold text-indigo-700 mt-2" x-text="selectedTraining"></p>
-              </div>
-              <div>
-                   <button x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked" @click="executeSubmit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold w-full">Submit Reviewed</button>
-                   <div x-show="activeTrainingObj?.isFullyReviewed" class="bg-emerald-100 text-emerald-700 px-6 py-3 rounded-xl font-bold text-center">Review Completed</div>
-                   <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed" class="bg-rose-100 text-rose-700 px-6 py-3 rounded-xl font-bold text-center">Locked (Time Expired)</div>
-              </div>
+        <!-- TRAINING DETAIL VIEW -->
+        <div x-show="dashView === 'training'" class="flex-1 bg-white rounded-xl shadow p-6 overflow-auto fade-in h-full flex flex-col">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h3 class="text-2xl font-bold text-gray-800" x-text="selectedTraining?.course"></h3>
+              <p class="text-sm text-gray-500 mt-1">
+                <i class="fa fa-chalkboard-teacher mr-1"></i><span x-text="selectedTraining?.trainer"></span>
+                <span class="mx-2">|</span>
+                <i class="fa fa-calendar-alt mr-1"></i><span x-text="selectedTraining?.date"></span>
+              </p>
+            </div>
+            <div class="flex space-x-2 items-center flex-wrap gap-y-1">
+              <button x-show="Object.keys(pendingUpdates).length > 0" @click="commitPendingUpdates" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-bold text-sm shadow animate-pulse flex items-center">
+                <i class="fa fa-save mr-1"></i> Save <span class="mx-1" x-text="Object.keys(pendingUpdates).length"></span> Changes
+              </button>
+              <button @click="downloadTrainingAttendance(selectedTraining, selectedDept?.department)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded font-semibold text-xs transition shadow-sm border border-emerald-700 flex items-center gap-1.5">
+                <i class="fa fa-file-excel"></i><span>Download Excel</span>
+              </button>
+              <button @click="copyKurdishReport(selectedTraining, selectedDept?.department)" class="bg-purple-100 text-purple-700 px-4 py-2 rounded hover:bg-purple-200 font-semibold text-sm transition shadow-sm">
+                <i class="fa fa-file-alt mr-1"></i> Report
+              </button>
+              <button @click="dashView='dept'; pendingUpdates={}" class="text-gray-500 hover:text-gray-700 px-4 py-2 border rounded text-sm hover:bg-gray-50 transition">
+                <i class="fa fa-arrow-left mr-1"></i> Back
+              </button>
+            </div>
           </div>
 
-          <div class="flex flex-col xl:flex-row gap-5">
-              <!-- Absent Section -->
-              <div x-show="absentRecords.length > 0" class="flex-1 w-full bg-white/60 rounded-xl border border-white/80 flex flex-col p-4">
-                  <h3 class="font-extrabold text-rose-600 mb-4">Absent Employees</h3>
-                  <div class="table-responsive w-full">
-                      <table class="w-full text-left">
-                          <thead><tr class="text-slate-500 text-xs"><th class="py-2">Employee</th><th class="py-2">Details</th><th class="py-2">Set Status</th><th class="py-2">Note</th></tr></thead>
-                          <tbody>
-                              <template x-for="rec in absentRecords" :key="rec.db_id">
-                                  <tr class="border-t border-white/40">
-                                      <td class="py-3 font-bold text-sm" x-text="rec.empName"></td>
-                                      <td class="py-3 text-xs text-rose-600 font-bold" x-text="rec.originalStatus"></td>
-                                      <td class="py-3 pr-2">
-                                        <select x-model="rec.status" :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked" class="w-full border rounded-lg p-2 text-xs font-bold">
-                                            <option value="No">No (Absent)</option><option value="Permission">Permission</option><option value="At Duty">At Duty</option><option value="Yes">Yes</option>
-                                        </select>
-                                      </td>
-                                      <td class="py-3"><textarea x-model="rec.managerNote" rows="1" :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked" class="w-full border rounded-lg p-2 text-xs" placeholder="Note..."></textarea></td>
-                                  </tr>
-                              </template>
-                          </tbody>
-                      </table>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 overflow-hidden mt-4">
+            <!-- ATTEND TABLE -->
+            <div class="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm">
+              <div class="bg-green-100 p-3 flex justify-between items-center border-b border-green-200">
+                <h4 class="font-bold text-green-800 flex items-center"><i class="fa fa-check-circle mr-2"></i> Attend / Late</h4>
+                <div class="flex items-center gap-2">
+                  <button @click="copyNamesOnly(selectedTraining?.attend)" class="bg-white text-green-700 p-1.5 rounded hover:bg-green-200 transition shadow-sm" title="Copy Names">
+                    <i class="fa fa-clipboard"></i>
+                  </button>
+                  <span class="bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-sm" x-text="selectedTraining?.attend.length"></span>
+                </div>
+              </div>
+              <div x-show="selectedAttend.length > 0" class="bg-yellow-50 p-2 flex justify-between items-center border-b border-yellow-200 text-sm">
+                <span class="font-bold text-yellow-800" x-text="selectedAttend.length + ' selected'"></span>
+                <div class="flex gap-2">
+                  <select x-model="bulkStatus" class="border rounded p-1 text-xs">
+                    <option value="">Status...</option><option>Yes</option><option>Late</option><option>Permission</option><option>At Duty</option><option>No</option><option>NONE</option>
+                  </select>
+                  <button @click="applyBulkLocal('attend')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Apply</button>
+                  <button @click="performBulkDelete('attend')" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"><i class="fa fa-trash"></i></button>
+                </div>
+              </div>
+              <div class="overflow-auto flex-1 bg-white">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                      <th class="px-2 py-2 w-8"><input type="checkbox" @change="toggleAll($event,'attend')" :checked="selectedTraining?.attend.length>0 && selectedAttend.length===selectedTraining?.attend.length"></th>
+                      <th class="px-4 py-2 text-left font-semibold text-gray-600">Name</th>
+                      <th class="px-2 py-2 text-left font-semibold text-gray-600">Check In</th>
+                      <th class="px-2 py-2 text-left font-semibold text-gray-600">Check Out</th>
+                      <th class="px-2 py-2 text-left font-semibold text-blue-600 bg-blue-50">Duration</th>
+                      <th class="px-4 py-2 text-left font-semibold text-gray-600">Status</th>
+                      <th class="px-2 py-2 text-left font-semibold text-gray-600">Note</th>
+                      <th class="px-4 py-2 text-center font-semibold text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <template x-for="p in sortedSelectedAttend" :key="p.db_id">
+                      <tr class="hover:bg-gray-50 transition-colors" :class="pendingUpdates[p.db_id] ? 'bg-yellow-50' : ''">
+                        <td class="px-2 py-2"><input type="checkbox" :value="p.db_id" x-model="selectedAttend"></td>
+                        <td class="px-4 py-2 font-medium text-gray-700" x-text="p.empName"></td>
+                        <td class="px-2 py-2 text-xs text-gray-500 font-mono font-bold" x-text="p.start || '-'"></td>
+                        <td class="px-2 py-2 text-xs text-gray-500 font-mono font-bold" x-text="p.end || '-'"></td>
+                        <td class="px-2 py-2 bg-blue-50"><span class="font-mono text-xs font-bold text-blue-700" x-text="formatDuration(p.partDuration)"></span></td>
+                        <td class="px-4 py-2">
+                          <span :class="{'bg-green-100 text-green-800':p.status==='Yes','bg-yellow-100 text-yellow-800':p.status==='Late','bg-blue-100 text-blue-800':p.status==='Permission','bg-purple-100 text-purple-800':p.status==='At Duty','bg-gray-100 text-gray-600':p.status==='NONE'}" class="px-2 py-1 rounded-full text-xs font-bold" x-text="p.status"></span>
+                        </td>
+                        <td class="px-2 py-2 text-xs">
+                          <div x-show="p.managerNote" class="bg-blue-50 text-blue-800 px-2 py-1 rounded-md border border-blue-200 max-w-[120px] truncate cursor-pointer hover:bg-blue-100 font-medium" @click="navigator.clipboard.writeText(p.managerNote).then(()=>showNotification('Note copied!'))" :title="p.managerNote" x-text="p.managerNote"></div>
+                          <span x-show="!p.managerNote" class="text-gray-300 italic">-</span>
+                        </td>
+                        <td class="px-4 py-2 text-center space-x-2">
+                          <button @click="quickEditStatus(p)" class="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-blue-50" title="Edit"><i class="fa fa-pencil"></i></button>
+                          <button @click="deleteRecordDash(p)" class="text-gray-400 hover:text-red-600 transition p-1 rounded hover:bg-red-50" title="Remove"><i class="fa fa-trash"></i></button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- NOT ATTEND TABLE -->
+            <div class="flex flex-col h-full border rounded-lg overflow-hidden shadow-sm">
+              <div class="bg-red-100 p-3 flex justify-between items-center border-b border-red-200">
+                <h4 class="font-bold text-red-800 flex items-center"><i class="fa fa-times-circle mr-2"></i> Not Attend</h4>
+                <span class="bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-sm" x-text="selectedTraining?.notAttend.length"></span>
+              </div>
+              <div x-show="selectedNotAttend.length > 0" class="bg-yellow-50 p-2 flex justify-between items-center border-b border-yellow-200 text-sm">
+                <span class="font-bold text-yellow-800" x-text="selectedNotAttend.length + ' selected'"></span>
+                <div class="flex gap-2">
+                  <select x-model="bulkStatus" class="border rounded p-1 text-xs">
+                    <option value="">Status...</option><option>Yes</option><option>Late</option><option>Permission</option><option>At Duty</option><option>No</option><option>NONE</option>
+                  </select>
+                  <button @click="applyBulkLocal('notAttend')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700">Apply</button>
+                  <button @click="performBulkDelete('notAttend')" class="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"><i class="fa fa-trash"></i></button>
+                </div>
+              </div>
+              <div class="overflow-auto flex-1 bg-white">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                      <th class="px-2 py-2 w-8"><input type="checkbox" @change="toggleAll($event,'notAttend')" :checked="selectedTraining?.notAttend.length>0 && selectedNotAttend.length===selectedTraining?.notAttend.length"></th>
+                      <th class="px-4 py-2 text-left font-semibold text-gray-600">Name</th>
+                      <th class="px-4 py-2 text-left font-semibold text-gray-600">Status</th>
+                      <th class="px-2 py-2 text-left font-semibold text-gray-600">Note</th>
+                      <th class="px-4 py-2 text-center font-semibold text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <template x-for="p in sortedSelectedNotAttend" :key="p.db_id">
+                      <tr class="hover:bg-gray-50 transition-colors" :class="pendingUpdates[p.db_id] ? 'bg-yellow-50 border-l-4 border-yellow-400' : ''">
+                        <td class="px-2 py-2"><input type="checkbox" :value="p.db_id" x-model="selectedNotAttend"></td>
+                        <td class="px-4 py-2 font-medium text-gray-700" x-text="p.empName"></td>
+                        <td class="px-2 py-2">
+                          <div class="flex flex-wrap items-center gap-1">
+                            <span :class="{'bg-red-100 text-red-800':p.status==='No','bg-green-100 text-green-800':p.status==='Yes','bg-yellow-100 text-yellow-800':p.status==='Late','bg-blue-100 text-blue-800':p.status==='Permission','bg-purple-100 text-purple-800':p.status==='At Duty','bg-gray-100 text-gray-600':p.status==='NONE'}" class="px-2 py-0.5 rounded-full text-xs font-bold border min-w-[42px] text-center" x-text="p.status"></span>
+                            <div class="flex gap-0.5 flex-wrap">
+                              <template x-if="p.status !== 'Yes'"><button @click="quickChangeNotAttendStatus(p,'Yes')" class="text-[10px] px-1.5 py-0.5 rounded bg-green-50 text-green-700 border border-green-300 hover:bg-green-200 font-bold transition">Yes</button></template>
+                              <template x-if="p.status !== 'No'"><button @click="quickChangeNotAttendStatus(p,'No')" class="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-300 hover:bg-red-200 font-bold transition">No</button></template>
+                              <template x-if="p.status !== 'At Duty'"><button @click="quickChangeNotAttendStatus(p,'At Duty')" class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-300 hover:bg-purple-200 font-bold transition">Duty</button></template>
+                              <template x-if="p.status !== 'Permission'"><button @click="quickChangeNotAttendStatus(p,'Permission')" class="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-200 font-bold transition">Perm</button></template>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-2 py-2 text-xs">
+                          <div x-show="p.managerNote" class="bg-blue-50 text-blue-800 px-2 py-1 rounded-md border border-blue-200 max-w-[120px] truncate cursor-pointer hover:bg-blue-100" @click="navigator.clipboard.writeText(p.managerNote).then(()=>showNotification('Note copied!'))" :title="p.managerNote" x-text="p.managerNote"></div>
+                          <span x-show="!p.managerNote" class="text-gray-300 italic">-</span>
+                        </td>
+                        <td class="px-4 py-2 text-center space-x-2">
+                          <button @click="quickEditStatus(p)" class="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-blue-50" title="Edit"><i class="fa fa-pencil"></i></button>
+                          <button @click="deleteRecordDash(p)" class="text-gray-400 hover:text-red-600 transition p-1 rounded hover:bg-red-50" title="Remove"><i class="fa fa-trash"></i></button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== UPLOAD TAB ========== -->
+      <div x-show="currentTab === 'upload'" class="bg-white p-6 rounded-xl shadow h-full overflow-auto">
+        <h3 class="text-lg font-bold mb-4">Upload New Training Session</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="space-y-4">
+            <div class="bg-blue-50 p-4 rounded border border-blue-200">
+              <label class="block text-sm font-bold text-blue-900 mb-2">Training Details</label>
+              <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="text-xs font-semibold text-gray-500">Course Name</label>
+                    <input type="text" x-model="uploadForm.course" class="w-full text-sm border rounded p-2 focus:ring-1 focus:ring-blue-500" placeholder="Course name...">
                   </div>
-              </div>
-
-              <!-- Late Section -->
-              <div x-show="lateRecords.length > 0" class="flex-1 w-full bg-white/60 rounded-xl border border-white/80 flex flex-col p-4">
-                  <h3 class="font-extrabold text-amber-600 mb-4">Late Arrivals</h3>
-                  <div class="table-responsive w-full">
-                      <table class="w-full text-left">
-                          <thead><tr class="text-slate-500 text-xs"><th class="py-2">Employee</th><th class="py-2">Duration</th><th class="py-2">Status</th><th class="py-2">Note</th></tr></thead>
-                          <tbody>
-                              <template x-for="rec in lateRecords" :key="rec.db_id">
-                                  <tr class="border-t border-white/40">
-                                      <td class="py-3 font-bold text-sm" x-text="rec.empName"></td>
-                                      <td class="py-3 text-xs text-amber-600 font-bold"><span x-text="rec.partDuration + ' / ' + rec.totalDuration"></span></td>
-                                      <td class="py-3 pr-2"><div class="bg-amber-100 text-amber-700 px-3 py-1 rounded text-xs font-bold inline-block">Late</div></td>
-                                      <td class="py-3"><textarea x-model="rec.managerNote" rows="1" :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked" class="w-full border rounded-lg p-2 text-xs" placeholder="Optional note..."></textarea></td>
-                                  </tr>
-                              </template>
-                          </tbody>
-                      </table>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-500">Trainer</label>
+                    <input type="text" x-model="uploadForm.trainer" class="w-full text-sm border rounded p-2 focus:ring-1 focus:ring-blue-500" placeholder="Trainer name...">
                   </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label class="text-xs font-semibold text-gray-500">Date</label>
+                    <input type="date" x-model="uploadForm.date" class="w-full text-sm border rounded p-2 focus:ring-1 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="text-xs font-bold text-blue-600">Start Time</label>
+                    <input type="time" x-model="uploadForm.startTime" class="w-full text-sm border rounded p-2 focus:ring-2 focus:ring-blue-500 border-blue-300">
+                  </div>
+                  <div>
+                    <label class="text-xs font-bold text-blue-600">End Time</label>
+                    <input type="time" x-model="uploadForm.endTime" class="w-full text-sm border rounded p-2 focus:ring-2 focus:ring-blue-500 border-blue-300">
+                  </div>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-blue-600">Trainer Type</label>
+                  <select x-model="uploadForm.trainerType" class="w-full text-sm border rounded p-2 focus:ring-2 focus:ring-blue-500 border-blue-300">
+                    <option value="Internal">Internal</option>
+                    <option value="External">External</option>
+                  </select>
+                </div>
               </div>
+            </div>
           </div>
+
+          <div class="flex flex-col">
+            <div class="flex border-b mb-4">
+              <button @click="uploadMethod='file'" :class="uploadMethod==='file' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="flex-1 py-2 font-bold transition">File Upload</button>
+              <button @click="uploadMethod='manual'" :class="uploadMethod==='manual' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="flex-1 py-2 font-bold transition">Manual Entry</button>
+            </div>
+            <div x-show="uploadMethod==='file'" class="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 flex-1">
+              <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
+              <p class="text-sm text-gray-500 text-center mb-6 font-semibold">Upload Attendance XLSX</p>
+              <label class="block w-full">
+                <input type="file" id="uploadFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
+              </label>
+              <button @click="processUpload" class="mt-6 w-full bg-blue-600 text-white py-2 rounded shadow font-bold hover:bg-blue-700">Process File & Preview</button>
+            </div>
+            <div x-show="uploadMethod==='manual'" class="flex-1 flex flex-col">
+              <div class="flex-1 border rounded bg-white overflow-hidden flex flex-col">
+                <div class="bg-gray-50 border-b p-2 flex justify-between items-center">
+                  <span class="text-xs font-bold text-gray-600 uppercase">Manual Entry</span>
+                  <button @click="addManualRow" class="text-blue-600 text-xs font-bold hover:underline"><i class="fa fa-plus-circle"></i> Add Row</button>
+                </div>
+                <div class="bg-gray-100 border-b p-2 grid grid-cols-12 gap-2 text-xs font-bold text-gray-600">
+                  <div class="col-span-5">Employee Name</div>
+                  <div class="col-span-3">Start</div>
+                  <div class="col-span-3">End</div>
+                  <div class="col-span-1 text-center">Del</div>
+                </div>
+                <div class="overflow-auto max-h-64 p-2 space-y-2">
+                  <template x-for="(row, idx) in manualRows" :key="idx">
+                    <div class="grid grid-cols-12 gap-2 items-center">
+                      <div class="col-span-5">
+                        <input list="empListUpload" x-model="row.name" class="w-full border p-1 rounded text-sm border-gray-300" placeholder="Search...">
+                      </div>
+                      <div class="col-span-3"><input type="time" x-model="row.startTime" class="w-full border p-1 rounded text-sm"></div>
+                      <div class="col-span-3"><input type="time" x-model="row.endTime" class="w-full border p-1 rounded text-sm"></div>
+                      <div class="col-span-1 text-center"><button @click="removeManualRow(idx)" class="text-red-500 hover:text-red-700"><i class="fa fa-times"></i></button></div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              <datalist id="empListUpload">
+                <template x-for="e in employees.filter(emp=>emp.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
+                  <option :value="e.name"></option>
+                </template>
+              </datalist>
+              <button @click="processManual" class="mt-4 w-full bg-blue-600 text-white py-2 rounded shadow font-bold hover:bg-blue-700">Process Manual List</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div x-show="previewData" class="space-y-4 border-t pt-6 fade-in">
+          <div class="flex justify-between items-center bg-yellow-50 p-4 rounded border border-yellow-200">
+            <div><h4 class="font-bold text-yellow-800">Preview Data</h4><p class="text-sm text-gray-500" x-text="(previewData?.attend.length||0) + ' attend, ' + (previewData?.notAttend.length||0) + ' absent'"></p></div>
+            <div class="space-x-2">
+              <button @click="previewData=null" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">Cancel</button>
+              <button @click="savePreview" class="px-4 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700 transition shadow">Confirm & Save</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="border rounded overflow-hidden shadow-sm flex flex-col">
+              <div class="bg-green-100 p-2 text-center font-bold text-green-800 text-sm px-4">Attend <span class="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full ml-1" x-text="previewData?.attend.length"></span></div>
+              <div class="max-h-80 overflow-auto bg-white">
+                <table class="w-full text-xs divide-y">
+                  <thead class="bg-gray-50 sticky top-0"><tr><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th><th class="p-2 text-left">Start</th><th class="p-2 text-left">End</th><th class="p-2 text-left">Status</th></tr></thead>
+                  <tbody class="divide-y">
+                    <template x-for="(r,idx) in previewData?.attend" :key="idx">
+                      <tr class="hover:bg-gray-50"><td class="p-2 font-medium" x-text="r.empName"></td><td class="p-2 text-gray-500" x-text="r.department"></td><td class="p-2" x-text="r.start||'-'"></td><td class="p-2" x-text="r.end||'-'"></td><td class="p-2 font-bold text-green-600" x-text="r.status"></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="border rounded overflow-hidden shadow-sm flex flex-col">
+              <div class="bg-red-100 p-2 text-center font-bold text-red-800 text-sm px-4">Not Attend <span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full ml-1" x-text="previewData?.notAttend.length"></span></div>
+              <div class="max-h-80 overflow-auto bg-white">
+                <table class="w-full text-xs divide-y">
+                  <thead class="bg-gray-50 sticky top-0"><tr><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th></tr></thead>
+                  <tbody class="divide-y">
+                    <template x-for="(r,idx) in previewData?.notAttend" :key="idx">
+                      <tr class="hover:bg-gray-50"><td class="p-2 font-medium" x-text="r.empName"></td><td class="p-2 text-gray-500" x-text="r.department"></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- ========== ZKTECO TAB ========== -->
+      <div x-show="currentTab === 'zkteco'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col fade-in">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b pb-4">
+          <div>
+            <h3 class="text-xl font-bold text-gray-800 flex items-center"><i class="fa fa-fingerprint mr-2 text-blue-600"></i> ZKTeco Attendance</h3>
+            <p class="text-sm text-gray-500 mt-1">Raw punch data from ZKTeco devices.</p>
+          </div>
+          <div class="flex space-x-2 bg-gray-100 p-1 rounded-lg">
+            <button @click="zktecoTab='floor14'" :class="zktecoTab==='floor14' ? 'bg-white shadow text-blue-600' : 'text-gray-500'" class="px-6 py-2 rounded-md font-bold transition">Floor 14</button>
+            <button @click="zktecoTab='floor15'" :class="zktecoTab==='floor15' ? 'bg-white shadow text-blue-600' : 'text-gray-500'" class="px-6 py-2 rounded-md font-bold transition">Floor 15</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+          <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+            <div class="relative">
+              <input type="text" x-model="zktecoSearch" placeholder="Search name or ID..." class="border border-gray-300 rounded-lg pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-48">
+              <i class="fa fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+            </div>
+            <select x-model="zktecoFilterDept" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-36">
+              <option value="">All Departments</option>
+              <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
+            </select>
+            <input type="date" x-model="zktecoFilterDate" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+            <div class="flex items-center gap-1 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
+              <input type="month" x-model="zkFromMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
+              <span class="text-xs text-gray-400">to</span>
+              <input type="month" x-model="zkToMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
+              <button @click="fetchZKTecoData()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-bold shadow transition flex items-center"><i class="fa fa-sync-alt"></i></button>
+            </div>
+          </div>
+          <button @click="transferZKToUpload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center">
+            <i class="fa fa-upload mr-2"></i> Data to Upload
+          </button>
+        </div>
+        <div class="overflow-auto border rounded-lg flex-1 shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200 text-sm text-left">
+            <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
+              <tr>
+                <th class="px-3 py-3 font-semibold text-gray-600">Date</th>
+                <th class="px-3 py-3 font-semibold text-gray-600">User ID</th>
+                <th class="px-3 py-3 font-semibold text-gray-600">Name</th>
+                <th class="px-3 py-3 font-semibold text-gray-600">Dept</th>
+                <th class="px-3 py-3 font-semibold text-gray-600">Check In</th>
+                <th class="px-3 py-3 font-semibold text-gray-600">Check Out</th>
+                <th class="px-3 py-3 font-semibold text-blue-700 bg-blue-50">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+              <template x-for="zk in filteredZkTecoData" :key="zk.id">
+                <tr class="hover:bg-blue-50 transition-colors">
+                  <td class="px-3 py-2 text-xs text-gray-500 whitespace-nowrap" x-text="zk.dateOnly"></td>
+                  <td class="px-3 py-2 font-mono text-gray-600 text-xs" x-text="zk.UserID"></td>
+                  <td class="px-3 py-2 font-medium text-gray-800" x-text="zk.empName || zk.UserID"></td>
+                  <td class="px-3 py-2 text-gray-600 text-xs truncate max-w-[100px]" x-text="zk.department"></td>
+                  <td class="px-3 py-2 text-gray-600 font-bold" x-text="zk.checkin || '-'"></td>
+                  <td class="px-3 py-2 text-gray-600 font-bold" x-text="zk.checkout || '-'"></td>
+                  <td class="px-3 py-2 text-center">
+                    <span :class="{'bg-green-100 text-green-800':zk.status==='Yes','bg-red-100 text-red-800':zk.status==='No','bg-yellow-100 text-yellow-800':zk.status==='Late','bg-gray-100 text-gray-600':!zk.status}" class="px-2 py-1 rounded-full text-xs font-bold" x-text="zk.status||'NONE'"></span>
+                  </td>
+                </tr>
+              </template>
+              <tr x-show="filteredZkTecoData.length===0">
+                <td colspan="7" class="p-8 text-center text-gray-500">No records found for the selected filters.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== ALL TRAININGS TAB ========== -->
+      <div x-show="currentTab === 'allTrainings'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col" x-data="{selectedMasterTraining:null}">
+        <div x-show="!selectedMasterTraining" class="h-full flex flex-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold">Training List</h3>
+            <div class="relative">
+              <input type="text" x-model="searchTrainingList" placeholder="Search course, trainer, date..." class="border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
+              <i class="fa fa-search absolute left-3 top-2.5 text-gray-400"></i>
+            </div>
+          </div>
+          <div class="flex-1 overflow-auto border rounded">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50 sticky top-0">
+                <tr>
+                  <th class="p-3 text-left">Course</th>
+                  <th class="p-3 text-left">Date</th>
+                  <th class="p-3 text-left">Trainer</th>
+                  <th class="p-3 text-left">Department(s)</th>
+                  <th class="p-3 text-left">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <template x-for="t in filteredTrainingsList">
+                  <tr class="hover:bg-gray-50">
+                    <td class="p-3 font-bold" x-text="t.course"></td>
+                    <td class="p-3" x-text="t.date"></td>
+                    <td class="p-3" x-text="t.trainer"></td>
+                    <td class="p-3 text-sm text-gray-500 max-w-xs truncate" x-text="t.departments" :title="t.departments"></td>
+                    <td class="p-3"><button @click="selectedMasterTraining=t" class="text-blue-600 hover:underline">View Details</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div x-show="selectedMasterTraining" class="h-full flex flex-col">
+          <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <div>
+              <h3 class="text-xl font-bold" x-text="selectedMasterTraining?.course"></h3>
+              <p class="text-sm text-gray-500" x-text="selectedMasterTraining?.date + ' | ' + selectedMasterTraining?.trainer"></p>
+            </div>
+            <button @click="selectedMasterTraining=null" class="bg-gray-200 px-4 py-2 rounded text-sm">Back to List</button>
+          </div>
+          <div class="flex-1 overflow-auto grid grid-cols-2 gap-4">
+            <div class="border rounded overflow-hidden flex flex-col">
+              <div class="bg-green-50 p-2 font-bold text-green-800 border-b">Attended (Status: Yes) (<span x-text="selectedMasterTraining?.attend.filter(r=>r.status==='Yes').length"></span>)</div>
+              <div class="overflow-auto flex-1 bg-white">
+                <table class="w-full text-xs divide-y"><thead class="sticky top-0 bg-gray-50"><tr><th class="p-2">Name</th><th class="p-2">Dept</th></tr></thead><tbody>
+                  <template x-for="r in selectedMasterTraining?.attend.filter(r=>r.status==='Yes')"><tr class="hover:bg-gray-50"><td class="p-2" x-text="r.empName"></td><td class="p-2" x-text="r.department"></td></tr></template>
+                </tbody></table>
+              </div>
+            </div>
+            <div class="border rounded overflow-hidden flex flex-col">
+              <div class="bg-red-50 p-2 font-bold text-red-800 border-b">Not Attend (<span x-text="selectedMasterTraining?.notAttend.length"></span>)</div>
+              <div class="overflow-auto flex-1 bg-white">
+                <table class="w-full text-xs divide-y"><thead class="sticky top-0 bg-gray-50"><tr><th class="p-2">Name</th><th class="p-2">Dept</th></tr></thead><tbody>
+                  <template x-for="r in selectedMasterTraining?.notAttend"><tr class="hover:bg-gray-50"><td class="p-2" x-text="r.empName"></td><td class="p-2" x-text="r.department"></td></tr></template>
+                </tbody></table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== RECORDS TAB ========== -->
+      <div x-show="currentTab === 'records'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col">
+        <div class="mb-4 space-y-2">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-800">Records Database</h3>
+            <div class="flex gap-2 items-center text-sm">
+              <span class="text-gray-500 font-medium" x-text="'Page ' + currentPage + ' of ' + Math.ceil(filteredRecords.length / pageSize)"></span>
+              <button @click="prevPage" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 border rounded text-gray-600 transition" :disabled="currentPage===1"><i class="fa fa-chevron-left"></i></button>
+              <button @click="nextPage" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 border rounded text-gray-600 transition" :disabled="currentPage*pageSize>=filteredRecords.length"><i class="fa fa-chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="overflow-auto border rounded-lg flex-1 shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200 text-xs">
+            <thead class="bg-gray-50 sticky top-0 shadow z-10">
+              <tr>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Name</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Dept</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Date</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Course</th>
+                <th class="px-2 py-3 text-left font-semibold text-blue-700 bg-blue-50">Dur</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Start</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">End</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Status</th>
+                <th class="px-2 py-3 text-left font-semibold text-gray-600">Note</th>
+                <th class="px-2 py-3 text-center font-semibold text-gray-600">Action</th>
+              </tr>
+              <tr class="bg-gray-100 border-b">
+                <th class="p-1"><select x-model="filters.name" class="w-full border border-gray-300 p-1 rounded text-xs"><option value="">All</option><template x-for="n in uniqueNames"><option :value="n" x-text="n"></option></template></select></th>
+                <th class="p-1"><select x-model="filters.dept" class="w-full border border-gray-300 p-1 rounded text-xs"><option value="">All</option><template x-for="d in uniqueDepts"><option :value="d" x-text="d"></option></template></select></th>
+                <th class="p-1"><select x-model="filters.date" class="w-full border border-gray-300 p-1 rounded text-xs"><option value="">All</option><template x-for="d in uniqueDates"><option :value="d" x-text="d"></option></template></select></th>
+                <th class="p-1"><select x-model="filters.course" class="w-full border border-gray-300 p-1 rounded text-xs"><option value="">All</option><template x-for="c in uniqueCourses"><option :value="c" x-text="c"></option></template></select></th>
+                <th colspan="3"></th>
+                <th class="p-1"><select x-model="filters.status" class="w-full border border-gray-300 p-1 rounded text-xs"><option value="">All</option><option>Yes</option><option>No</option><option>Late</option><option>Permission</option><option>At Duty</option><option>NONE</option></select></th>
+                <th colspan="2"></th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <template x-for="rec in paginatedRecords">
+                <tr class="hover:bg-gray-50 transition-colors">
+                  <td class="px-2 py-2 font-medium text-gray-700" x-text="rec.empName"></td>
+                  <td class="px-2 py-2 text-gray-600" x-text="rec.department"></td>
+                  <td class="px-2 py-2 text-gray-600 whitespace-nowrap" x-text="rec.date"></td>
+                  <td class="px-2 py-2 text-gray-600" x-text="rec.course"></td>
+                  <td class="px-2 py-2 font-mono text-blue-700 bg-blue-50 font-bold" x-text="formatDuration(rec.totalDuration)"></td>
+                  <td class="px-2 py-2 text-gray-500" x-text="rec.start || '-'"></td>
+                  <td class="px-2 py-2 text-gray-500" x-text="rec.end || '-'"></td>
+                  <td class="px-2 py-2">
+                    <span :class="{'bg-green-100 text-green-800':rec.status==='Yes','bg-red-100 text-red-800':rec.status==='No','bg-yellow-100 text-yellow-800':rec.status==='Late','bg-blue-100 text-blue-800':rec.status==='Permission','bg-purple-100 text-purple-800':rec.status==='At Duty','bg-gray-100 text-gray-600':rec.status==='NONE'}" class="px-2 py-1 rounded-full text-xs font-semibold" x-text="rec.status"></span>
+                  </td>
+                  <td class="px-2 py-2 text-gray-500 max-w-[100px] truncate" :title="rec.managerNote" x-text="rec.managerNote"></td>
+                  <td class="px-2 py-2 text-center space-x-2">
+                    <button @click="editRecord(rec)" class="text-blue-600 hover:text-blue-800 font-medium hover:underline">Edit</button>
+                    <button @click="deleteRecordRecords(rec)" class="text-red-500 hover:text-red-700 font-medium hover:underline">Delete</button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== PUNISHMENTS TAB ========== -->
+      <div x-show="currentTab === 'punishments'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b pb-4">
+          <h3 class="text-lg font-bold text-red-700 flex items-center"><i class="fa fa-exclamation-triangle mr-2"></i> Punishments</h3>
+          <div class="flex flex-wrap gap-3 w-full md:w-auto items-center">
+            <div class="relative">
+              <input type="text" x-model="punishmentSearch" placeholder="Search name or course..." class="border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-48">
+              <i class="fa fa-search absolute left-2.5 top-2.5 text-gray-400"></i>
+            </div>
+            <select x-model="punishmentFilterDept" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-40">
+              <option value="">All Departments</option>
+              <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
+            </select>
+            <input type="month" x-model="punishmentFilterMonth" class="border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+            <button @click="downloadPunishments" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center">
+              <i class="fa fa-file-excel mr-2"></i> Download
+            </button>
+          </div>
+        </div>
+        <div class="overflow-auto border rounded-lg flex-1 shadow-sm">
+          <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-red-50 sticky top-0">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Name</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Dept</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Date</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Course</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Trainer</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Type</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Dur.</th>
+                <th class="px-4 py-3 text-center font-semibold text-red-900">Status</th>
+                <th class="px-4 py-3 text-left font-semibold text-red-900">Note</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 bg-white">
+              <template x-for="p in filteredPunishments">
+                <tr class="hover:bg-red-50 transition-colors">
+                  <td class="px-4 py-3 font-medium text-gray-700" x-text="p.empName"></td>
+                  <td class="px-4 py-3 text-gray-600" x-text="p.department"></td>
+                  <td class="px-4 py-3 text-gray-600 whitespace-nowrap" x-text="p.date"></td>
+                  <td class="px-4 py-3 text-gray-600" x-text="p.course"></td>
+                  <td class="px-4 py-3 text-gray-600" x-text="p.trainer"></td>
+                  <td class="px-4 py-3 text-gray-600 text-xs font-bold" x-text="p.trainerType || '-'"></td>
+                  <td class="px-4 py-3 font-mono text-gray-500" x-text="formatDuration(p.totalDuration)"></td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="px-3 py-1 rounded-full text-xs font-bold" :class="p.status==='No' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'" x-text="p.status"></span>
+                  </td>
+                  <td class="px-4 py-3 text-gray-600 text-xs truncate max-w-[150px]" :title="p.managerNote" x-text="p.managerNote || '-'"></td>
+                </tr>
+              </template>
+              <tr x-show="filteredPunishments.length===0">
+                <td colspan="9" class="p-8 text-center text-gray-500">No punishments found for the selected filters.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== SETTINGS TAB ========== -->
+      <div x-show="currentTab === 'settings'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col" x-data="{settingsView:'dept_mgmt',selectedDeptCard:null}">
+        <div class="flex space-x-4 border-b mb-4 flex-wrap gap-y-2">
+          <button @click="settingsView='dept_mgmt'" :class="settingsView==='dept_mgmt' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Department Management</button>
+          <button @click="settingsView='employees'" :class="settingsView==='employees' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Employees</button>
+        </div>
+
+        <!-- DEPT MANAGEMENT -->
+        <div x-show="settingsView==='dept_mgmt'" class="flex-1 flex flex-col">
+          <div class="flex justify-between mb-4">
+            <input type="text" x-model="searchSettings" placeholder="Search departments..." class="border p-2 rounded w-64 text-sm">
+            <button @click="isEditingSettings=!isEditingSettings" class="px-4 py-1 rounded text-sm font-bold transition-colors" :class="isEditingSettings ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'">
+              <i class="fa" :class="isEditingSettings ? 'fa-lock-open' : 'fa-lock'"></i>
+              <span x-text="isEditingSettings ? 'Lock Editing' : 'Enable Editing'"></span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-auto p-1 pb-10 custom-scrollbar">
+            <template x-for="set in filteredSettings.sort((a,b)=>a.department.localeCompare(b.department))">
+              <div class="bg-white border rounded-lg shadow-sm p-5 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 relative group cursor-pointer" @click="selectedDeptCard=set">
+                <div class="flex justify-between items-start mb-3">
+                  <h4 class="font-bold text-gray-800 text-lg truncate" x-text="set.department"></h4>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full uppercase font-bold border" :class="set.category==='medical' ? 'bg-green-50 text-green-700 border-green-200' : (set.category==='inactive' ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-200')" x-text="set.category"></span>
+                </div>
+                <p class="text-xs text-gray-400 font-bold uppercase mb-1">Manager</p>
+                <p class="text-sm text-gray-700 font-medium flex items-center"><i class="fa fa-user w-5 text-gray-400"></i><span x-text="set.manager || 'Not Assigned'"></span></p>
+                <div class="border-t pt-3 mt-3 flex justify-between items-center text-xs text-gray-500">
+                  <span><i class="fa fa-user-check text-green-500 mr-1"></i><span x-text="employees.filter(e=>e.department===set.department&&e.status==='Active').length"></span> Active</span>
+                  <span class="text-blue-600 font-bold group-hover:underline">Manage <i class="fa fa-arrow-right ml-1"></i></span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Dept Card Modal -->
+          <div x-show="selectedDeptCard" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[70] p-4" x-transition.opacity>
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl h-[70vh] flex flex-col" @click.outside="selectedDeptCard=null">
+              <div class="p-6 border-b flex justify-between items-start bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-2xl text-gray-800" x-text="selectedDeptCard?.department"></h3>
+                <button @click="selectedDeptCard=null" class="text-gray-400 hover:text-gray-700"><i class="fa fa-times text-2xl"></i></button>
+              </div>
+              <div class="p-6 space-y-4 overflow-auto flex-1">
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Manager</label>
+                  <input list="empListGlobal" x-model="selectedDeptCard.manager" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'" placeholder="Search employee...">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Category</label>
+                  <select x-model="selectedDeptCard.category" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'">
+                    <option value="medical">Medical</option>
+                    <option value="non medical">Non Medical</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div x-show="isEditingSettings" class="flex gap-2 pt-2">
+                  <button @click="saveDeptSettings(selectedDeptCard)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition">Save Changes</button>
+                </div>
+                <!-- Active Employees -->
+                <div class="border rounded overflow-hidden mt-4">
+                  <div class="bg-green-50 p-2 font-bold text-green-800 text-sm border-b">Active Employees</div>
+                  <div class="max-h-48 overflow-auto">
+                    <table class="w-full text-sm">
+                      <tbody class="divide-y">
+                        <template x-for="emp in employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
+                          <tr class="hover:bg-gray-50">
+                            <td class="p-3 font-medium" x-text="emp.name"></td>
+                            <td class="p-3">
+                              <button @click="if(isEditingSettings){toggleEmpStatus(emp,'Inactive')}" :disabled="!isEditingSettings" class="px-3 py-1 rounded-full text-xs font-bold border" :class="isEditingSettings ? 'bg-green-50 text-green-700 border-green-200 hover:bg-red-50 hover:text-red-700 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'">Active</button>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <datalist id="empListGlobal">
+            <template x-for="e in employees.filter(emp=>emp.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
+              <option :value="e.name"></option>
+            </template>
+          </datalist>
+        </div>
+
+        <!-- EMPLOYEES VIEW -->
+        <div x-show="settingsView==='employees'" class="flex-1 flex flex-col">
+          <div class="flex justify-between mb-4">
+            <div class="flex gap-2">
+              <div class="relative">
+                <input type="text" x-model="searchEmp" placeholder="Search employees..." class="border p-2 rounded w-64 text-sm pl-8">
+                <i class="fa fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
+              </div>
+              <select x-model="empStatusFilter" class="border p-2 rounded text-sm">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <button @click="isEditingSettings=!isEditingSettings" class="px-4 py-1 rounded text-sm font-bold" :class="isEditingSettings ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'">
+              <i class="fa" :class="isEditingSettings ? 'fa-lock-open' : 'fa-lock'"></i>
+              <span x-text="isEditingSettings ? 'Lock' : 'Enable Editing'"></span>
+            </button>
+          </div>
+          <div class="flex-1 overflow-auto border rounded-lg shadow-sm">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+              <thead class="bg-gray-50 sticky top-0">
+                <tr>
+                  <th class="p-3 text-left font-semibold text-gray-600">ID</th>
+                  <th class="p-3 text-left font-semibold text-gray-600">Name</th>
+                  <th class="p-3 text-left font-semibold text-gray-600">Department</th>
+                  <th class="p-3 text-left font-semibold text-gray-600">Status</th>
+                  <th class="p-3 text-center font-semibold text-gray-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100 bg-white">
+                <template x-for="emp in filteredEmployees">
+                  <tr class="hover:bg-gray-50">
+                    <td class="p-3 font-mono text-gray-500" x-text="emp.ID || '-'"></td>
+                    <td class="p-3 font-medium text-gray-800" x-text="emp.name"></td>
+                    <td class="p-3 text-gray-600" x-text="emp.department"></td>
+                    <td class="p-3">
+                      <span :class="emp.status==='Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="px-2 py-1 rounded-full text-xs font-bold" x-text="emp.status"></span>
+                    </td>
+                    <td class="p-3 text-center">
+                      <button x-show="isEditingSettings" @click="toggleEmpStatus(emp, emp.status==='Active' ? 'Inactive' : 'Active')" class="text-blue-600 hover:underline text-xs font-bold" x-text="emp.status==='Active' ? 'Deactivate' : 'Activate'"></button>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </main>
+
+    <!-- EDIT RECORD MODAL -->
+    <div x-show="editingRecord !== null" style="display:none;" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+      <div class="bg-white p-6 rounded-xl shadow-2xl w-80" @click.outside="editingRecord=null">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="font-bold text-lg text-gray-800">Edit Record</h3>
+          <button @click="editingRecord=null" class="text-gray-400 hover:text-gray-600"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="space-y-4">
+          <div><label class="text-xs font-bold text-gray-500 uppercase">Employee Name</label><p class="text-md font-medium text-gray-800 truncate" x-text="editingRecord?.empName"></p></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Start Time</label><input type="time" x-model="editingRecord.start" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
+            <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">End Time</label><input type="time" x-model="editingRecord.end" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
+          </div>
+          <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Status</label>
+            <select x-model="editingRecord.status" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+              <option>Yes</option><option>No</option><option>Late</option><option>Permission</option><option>At Duty</option><option>NONE</option>
+            </select>
+          </div>
+          <div><label class="text-xs font-bold text-gray-500 uppercase mb-1 block">Manager Note</label><input type="text" x-model="editingRecord.managerNote" class="w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Note..."></div>
+          <div class="pt-2 space-y-2">
+            <button @click="updateRecordSubmit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded shadow font-bold transition">Apply Changes</button>
+            <button @click="editingRecord=null" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-2 rounded font-medium transition">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div x-show="showToast" x-transition class="fixed bottom-6 right-6 z-[110]">
+      <div :class="toastType==='success' ? 'bg-green-600' : 'bg-red-600'" class="text-white px-6 py-4 rounded shadow-2xl flex items-center gap-3 min-w-[300px]">
+        <i :class="toastType==='success' ? 'fa-check-circle' : 'fa-exclamation-circle'" class="fa text-xl"></i>
+        <span class="font-bold" x-text="toastMsg"></span>
+      </div>
+    </div>
+
+    <!-- CONFIRMATION DIALOG -->
+    <div x-show="confirmOpen" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[110]" x-transition.opacity>
+      <div class="bg-white rounded-xl shadow-2xl p-6 w-96">
+        <div class="text-center mb-6">
+          <i class="fa fa-question-circle text-4xl text-blue-500 mb-4"></i>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">Confirmation Required</h3>
+          <p class="text-gray-600 text-sm" x-text="confirmMsg"></p>
+        </div>
+        <div class="flex gap-3">
+          <button @click="confirmOpen=false" class="flex-1 py-2 rounded border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition">Cancel</button>
+          <button @click="confirmAction(); confirmOpen=false" class="flex-1 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 transition shadow">Yes, Proceed</button>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
 <script>
-    const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ==================== SUPABASE CONFIG ====================
+const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function managerApp() {
-        return {
-            managerUsernames:[], isLoggedIn: false, loginUser: '', loginPass: '', loginError: '',
-            isLoggingIn: false, loggedInManagerName: '', loggedInManagerDepts: [], resetTimes: [],
-            isLoading: false, loadingMessage: '', records: [], settings:[],
-            selectedDept: '', selectedTraining: '', localRecords:[],
-            nowTimer: new Date().getTime(),
+// ==================== ALPINE APP ====================
+function app() {
+  const now = new Date();
+  const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+  const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
 
-            get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
-            get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
-            get activeTrainingObj() {
-                if(!this.selectedDept || !this.selectedTraining) return null;
-                return this.getTrainingsNeedingReview(this.selectedDept).find(t => t.key === this.selectedTraining) || null;
-            },
-            get filteredTrainings() { return this.getTrainingsNeedingReview(this.selectedDept); },
-            get managerDepts() {
-                return this.loggedInManagerDepts.map(d => ({
-                    name: d, pendingCount: this.getTrainingsNeedingReview(d).filter(t => !t.isFullyReviewed).length
-                }));
-            },
+  return {
+    currentTab: 'dashboard', dashView: 'home', isLoading: false, loadingProgress: 0,
+    dbStatus: 'checking',
 
-            async init() {
-                setInterval(() => { this.nowTimer = new Date().getTime(); }, 1000);
-                const { data } = await supabase.from('Settings').select('Manager');
-                if(data) this.managerUsernames = [...new Set(data.map(s => s.Manager).filter(Boolean))];
-            },
+    menuItems: [
+      {id:'dashboard', label:'Dashboard', icon:'fa-solid fa-gauge'},
+      {id:'upload', label:'Upload Training', icon:'fa-solid fa-upload'},
+      {id:'zkteco', label:'ZKTeco Attendance', icon:'fa-solid fa-fingerprint'},
+      {id:'allTrainings', label:'Training List', icon:'fa-solid fa-list'},
+      {id:'records', label:'Records', icon:'fa-solid fa-table'},
+      {id:'punishments', label:'Punishments', icon:'fa-solid fa-gavel'},
+      {id:'settings', label:'Settings', icon:'fa-solid fa-cog'},
+    ],
 
-            async doLogin() {
-                if(!this.loginUser || !this.loginPass) return this.loginError = "Fill all fields";
-                this.isLoggingIn = true;
-                const { data } = await supabase.from('Settings').select('*').eq('Manager', this.loginUser).eq('Password', this.loginPass);
-                this.isLoggingIn = false;
-                if (data && data.length > 0) {
-                    this.isLoggedIn = true; this.loggedInManagerName = this.loginUser;
-                    this.loggedInManagerDepts =[...new Set(data.map(r => r.Department))];
-                    this.fetchData();
-                } else this.loginError = "Access denied";
-            },
+    // ---- Data ----
+    employees: [], records: [], settings: [],
+    zktecoData: [],
 
-            async fetchData() {
-                this.isLoading = true; this.loadingMessage = 'Loading...';
-                const { data: recs } = await supabase.from('TrainingRecord').select('*');
-                if(recs) this.records = recs;
-                const { data: locks } = await supabase.from('ManagerLocks').select('*').eq('manager', this.loggedInManagerName);
-                if(locks) this.resetTimes = locks;
-                this.isLoading = false;
-            },
+    // ---- Dashboard ----
+    selectedDept: null, selectedTraining: null,
+    deptMonthFilter: '',
+    selectedAttend: [], selectedNotAttend: [], bulkStatus: '',
+    pendingUpdates: {},
+    stats: {totalTrainings:0, totalPunishments:0, medicalTrainings:0, nonMedicalTrainings:0},
 
-            getTrainingsNeedingReview(dept) {
-                if(!dept || !this.records.length) return[];
-                const now = new Date().getTime();
-                const map = new Map();
-                this.records.forEach(r => {
-                    if(r.department !== dept || !['No', 'Late'].includes(r.status)) return;
-                    const key = `${r.course}|${r.date}`;
-                    if(!map.has(key)) map.set(key, { key, course: r.course, date: r.date, totalPending: 0, totalReviewed: 0 });
-                    const g = map.get(key);
-                    if (r.managerNote && r.managerNote.trim() !== '') g.totalReviewed++; else g.totalPending++;
-                });
+    // ---- Upload ----
+    uploadMethod: 'file',
+    uploadForm: {course:'', trainer:'', date:'', startTime:'', endTime:'', trainerType:'Internal'},
+    manualRows: [],
+    previewData: null,
+    isMultiGroup: false,
 
-                const result =[];
-                map.forEach(t => {
-                    if (t.totalPending === 0 && t.totalReviewed === 0) return;
-                    let baseDate = new Date(t.date + 'T00:00:00').getTime();
-                    let maxHours = 48;
-                    const lock = this.resetTimes.find(l => l.course === t.course && l.date === t.date);
-                    if (lock) {
-                        if(lock.is_hidden) return;
-                        baseDate = new Date(lock.timestamp).getTime();
-                        maxHours = lock.duration;
-                    }
-                    const expiresAt = baseDate + (maxHours * 60 * 60 * 1000);
-                    const hoursLeft = Math.max(0, (expiresAt - now) / (1000 * 60 * 60));
-                    
-                    result.push({ ...t, isFullyReviewed: t.totalPending === 0, hoursLeft: Math.floor(hoursLeft), isLocked: hoursLeft <= 0, expiresAt });
-                });
-                return result.sort((a, b) => b.hoursLeft - a.hoursLeft);
-            },
+    // ---- ZKTeco ----
+    zktecoTab: 'floor14', zktecoSearch: '', zktecoFilterDept: '',
+    zktecoFilterDate: '', zkFromMonth: prevMonth, zkToMonth: curMonth,
 
-            selectTrainingCard(t) {
-                this.selectedTraining = t.key;
-                const [course, date] = t.key.split('|');
-                this.localRecords = this.records.filter(r => r.department === this.selectedDept && r.course === course && r.date === date &&['No','Late'].includes(r.status)).map(r => ({
-                    ...r, originalStatus: r.status, isAlreadyReviewed: !!(r.managerNote && r.managerNote.trim() !== '')
-                }));
-            },
+    // ---- Records/Filters ----
+    searchTrainingList: '',
+    currentPage: 1, pageSize: 50,
+    filters: {name:'', dept:'', date:'', course:'', status:''},
+    searchEmp: '', empStatusFilter: '', searchSettings: '', isEditingSettings: false,
 
-            async executeSubmit() {
-                this.isLoading = true;
-                for (let rec of this.localRecords) {
-                    if (rec.isAlreadyReviewed) continue;
-                    let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
-                    await supabase.from('TrainingRecord').update({ status: rec.status, managerNote: finalNote + ` (By: ${this.loggedInManagerName})` }).eq('db_id', rec.db_id);
-                }
-                alert("Submitted successfully!");
-                this.selectedTraining = '';
-                this.fetchData();
-            },
-            logout() { location.reload(); }
+    // ---- Punishments ----
+    punishmentFilterMonth: curMonth, punishmentSearch: '', punishmentFilterDept: '',
+
+    // ---- Edit modal ----
+    editingRecord: null,
+
+    // ---- Toast/Confirm ----
+    showToast: false, toastMsg: '', toastType: 'success',
+    confirmOpen: false, confirmMsg: '', confirmAction: ()=>{},
+
+    // ==================== INIT ====================
+    async init() {
+      await this.fetchData();
+      await this.fetchZKTecoData();
+    },
+
+    // ==================== LOADING ====================
+    startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
+    stopLoading() { this.loadingProgress=100; setTimeout(()=>{this.isLoading=false; this.loadingProgress=0;}, 400); },
+
+    // ==================== NOTIFICATIONS ====================
+    showNotification(msg, type='success') {
+      this.toastMsg=msg; this.toastType=type; this.showToast=true;
+      setTimeout(()=>{ this.showToast=false; }, 3500);
+    },
+    askConfirm(msg, cb) { this.confirmMsg=msg; this.confirmAction=cb; this.confirmOpen=true; },
+
+    // ==================== FETCH DATA ====================
+    async fetchData() {
+      this.startLoading(5);
+      try {
+        // Settings (departments)
+        const {data: settingsData, error: sErr} = await sb.from('Settings').select('*');
+        if(sErr) throw sErr;
+        this.settings = settingsData || [];
+        this.loadingProgress = 30;
+
+        // Employees
+        const {data: empData, error: eErr} = await sb.from('Empolyees').select('*');
+        if(eErr) throw eErr;
+        this.employees = (empData || []).map(e => ({
+          db_id: e.db_id,
+          ID: e.ID,
+          name: e.Name,
+          department: e.Department,
+          status: e.Status || 'Active'
+        }));
+        this.loadingProgress = 60;
+
+        // Training Records
+        const {data: recData, error: rErr} = await sb.from('TrainingRecord').select('*').order('Date', {ascending: false});
+        if(rErr) throw rErr;
+        this.records = (recData || []).map(r => ({
+          db_id: r.db_id,
+          no: r.id,
+          empId: r.Userid,
+          department: r.Department,
+          empName: r.Name,
+          trainer: r.Trainer,
+          trainerType: r['Trainer Type'],
+          course: r.Topic,
+          date: r.Date,
+          totalDuration: r['Duration of training'],
+          start: r['Check in'],
+          end: r['Check out'],
+          partDuration: r['Emp. Duration'],
+          status: r.Status,
+          managerNote: r['M.not'],
+          mStatus: r['M.status'],
+          seen: r.seen
+        }));
+        this.loadingProgress = 90;
+        this.calculateStats();
+        this.dbStatus = 'online';
+        this.stopLoading();
+      } catch(e) {
+        this.stopLoading();
+        this.dbStatus = 'offline';
+        this.showNotification('Error loading data: ' + e.message, 'error');
+      }
+    },
+
+    // ==================== ZKTECO ====================
+    async fetchZKTecoData() {
+      try {
+        let query = sb.from('ZKTecoLogs').select('*');
+        if(this.zkFromMonth) {
+          query = query.gte('date', this.zkFromMonth + '-01');
         }
+        if(this.zkToMonth) {
+          const [y,m] = this.zkToMonth.split('-').map(Number);
+          const lastDay = new Date(y, m, 0).getDate();
+          query = query.lte('date', `${this.zkToMonth}-${lastDay}`);
+        }
+        query = query.order('Timestamp', {ascending: false}).limit(2000);
+        const {data, error} = await query;
+        if(error) throw error;
+
+        // Group by UserID + date → one entry per person per day
+        const grouped = new Map();
+        (data||[]).forEach(row => {
+          const dateOnly = row.date || (row.Timestamp ? row.Timestamp.split('T')[0] : '');
+          const key = `${row.UserID}|${dateOnly}|${row.DeviceName}`;
+          if(!grouped.has(key)) {
+            grouped.set(key, {id: key, UserID: row.UserID, DeviceName: row.DeviceName, dateOnly, punches: []});
+          }
+          const timeStr = row.Timestamp ? row.Timestamp.split('T')[1]?.substring(0,5) : '';
+          if(timeStr) grouped.get(key).punches.push(timeStr);
+        });
+
+        this.zktecoData = Array.from(grouped.values()).map(g => {
+          const punches = g.punches.sort();
+          const emp = this.employees.find(e => String(e.ID) === String(g.UserID));
+          return {
+            ...g,
+            empName: emp ? emp.name : 'Unknown',
+            department: emp ? emp.department : 'Unknown',
+            checkin: punches[0] || '-',
+            checkout: punches.length > 1 ? punches[punches.length-1] : '-',
+            status: punches.length > 0 ? 'Yes' : 'No'
+          };
+        }).sort((a,b) => b.dateOnly.localeCompare(a.dateOnly));
+
+        this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
+      } catch(e) {
+        this.showNotification('ZKTeco fetch error: ' + e.message, 'error');
+      }
+    },
+
+    get filteredZkTecoData() {
+      let data = this.zktecoData;
+      const targetGroup = this.zktecoTab === 'floor14' ? 'FL14' : 'FL15';
+      data = data.filter(zk => (zk.DeviceName || '').includes(targetGroup.replace('FL','')));
+      if(this.zktecoFilterDate) data = data.filter(zk => zk.dateOnly === this.zktecoFilterDate);
+      if(this.zktecoFilterDept) data = data.filter(zk => zk.department === this.zktecoFilterDept);
+      if(this.zktecoSearch) {
+        const q = this.zktecoSearch.toLowerCase();
+        data = data.filter(zk => (zk.empName||'').toLowerCase().includes(q) || String(zk.UserID).includes(q));
+      }
+      return data;
+    },
+
+    transferZKToUpload() {
+      const zkData = this.filteredZkTecoData;
+      if(zkData.length === 0) return this.showNotification('No ZKTeco records found for current filter.', 'error');
+      this.manualRows = zkData.map(zk => ({
+        name: zk.empName !== 'Unknown' ? zk.empName : '',
+        startTime: zk.checkin !== '-' ? zk.checkin : '',
+        endTime: zk.checkout !== '-' ? zk.checkout : ''
+      }));
+      this.uploadMethod = 'manual';
+      this.currentTab = 'upload';
+      this.showNotification(`Transferred ${this.manualRows.length} records to Upload tab`);
+    },
+
+    // ==================== STATS ====================
+    calculateStats() {
+      this.stats.totalPunishments = this.records.filter(r => r.status==='No' || r.status==='Late').length;
+      const uniqueSessions = new Map();
+      this.records.forEach(r => {
+        const key = `${r.course}|${r.date}|${r.trainer}`;
+        if(!uniqueSessions.has(key)) {
+          const deptSetting = this.settings.find(s => s.Department === r.department);
+          const cat = deptSetting ? (deptSetting.category||'').toLowerCase() : '';
+          uniqueSessions.set(key, cat);
+        }
+      });
+      let med=0, nonMed=0;
+      uniqueSessions.forEach(cat => { if(cat.includes('non medical')) nonMed++; else if(cat.includes('medical')) med++; });
+      this.stats.totalTrainings = uniqueSessions.size;
+      this.stats.medicalTrainings = med;
+      this.stats.nonMedicalTrainings = nonMed;
+    },
+
+    resetDash() { this.dashView='home'; this.selectedDept=null; this.selectedTraining=null; },
+
+    // ==================== DEPARTMENT HELPERS ====================
+    getDeptsByCategory(cat) {
+      return this.settings.filter(s => (s.category||'').toLowerCase() === cat.toLowerCase()).map(s => {
+        const count = this.employees.filter(e=>e.department===s.Department&&e.status==='Active').length;
+        const deptTrainings = new Set();
+        this.records.filter(r=>r.department===s.Department).forEach(r=>deptTrainings.add(`${r.course}|${r.date}`));
+        return { ...s, department: s.Department, manager: s.Manager, count, trainingCount: deptTrainings.size };
+      }).sort((a,b)=>a.department.localeCompare(b.department));
+    },
+
+    getTrainingsForDept(dept) {
+      if(!dept) return [];
+      const map = new Map();
+      this.records.filter(r=>r.department===dept).forEach(r => {
+        const key = r.course+'|'+r.date;
+        if(!map.has(key)) map.set(key, {course:r.course, date:r.date, trainer:r.trainer, attend:[], notAttend:[], problemCount:0, unreviewedProblemCount:0, reviewedCount:0});
+        const g = map.get(key);
+        if(r.status==='No') g.notAttend.push(r); else g.attend.push(r);
+        if(r.status==='No'||r.status==='Late') {
+          g.problemCount++;
+          if(!r.managerNote||r.managerNote.trim()==='') g.unreviewedProblemCount++;
+        }
+        if(r.managerNote&&r.managerNote.trim()!=='') g.reviewedCount++;
+      });
+      return Array.from(map.values()).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    },
+
+    getUnreviewedCount(deptName) {
+      return this.getTrainingsForDept(deptName).filter(t=>t.unreviewedProblemCount>0).length;
+    },
+
+    getAvailableMonthsForDept(dept) {
+      if(!dept) return [];
+      const monthMap = new Map();
+      this.getTrainingsForDept(dept).forEach(t => {
+        if(!t.date) return;
+        const parts = t.date.split('-');
+        if(parts.length < 2) return;
+        const mv = parts[0]+'-'+parts[1];
+        monthMap.set(mv, (monthMap.get(mv)||0)+1);
+      });
+      return Array.from(monthMap.entries()).map(([val,count]) => {
+        const d = new Date(val+'-01');
+        return {value:val, label:d.toLocaleDateString('en-US',{year:'numeric',month:'short'}), count};
+      }).sort((a,b)=>b.value.localeCompare(a.value));
+    },
+
+    getGroupedTrainingsForDept(dept) {
+      if(!dept) return [];
+      let trainings = this.getTrainingsForDept(dept);
+      if(this.deptMonthFilter) trainings = trainings.filter(t=>t.date&&t.date.startsWith(this.deptMonthFilter));
+      const map = new Map();
+      trainings.forEach(t => { if(!map.has(t.date)) map.set(t.date,[]); map.get(t.date).push(t); });
+      return Array.from(map.entries()).map(([date,trs])=>({date,trainings:trs})).sort((a,b)=>b.date.localeCompare(a.date));
+    },
+
+    goToDept(d) { this.selectedDept=d; this.dashView='dept'; this.deptMonthFilter=''; },
+    goToTraining(t) { this.selectedTraining=t; this.dashView='training'; this.selectedAttend=[]; this.selectedNotAttend=[]; this.bulkStatus=''; },
+
+    get sortedSelectedAttend() {
+      if(!this.selectedTraining) return [];
+      const order = {'Yes':1,'Late':2,'Permission':3,'At Duty':4,'NONE':5};
+      return [...this.selectedTraining.attend].sort((a,b)=>{
+        const sA=order[a.status]||99, sB=order[b.status]||99;
+        if(sA!==sB) return sA-sB;
+        return (a.empName||'').localeCompare(b.empName||'');
+      });
+    },
+    get sortedSelectedNotAttend() {
+      if(!this.selectedTraining) return [];
+      return [...this.selectedTraining.notAttend].sort((a,b)=>(a.empName||'').localeCompare(b.empName||''));
+    },
+
+    toggleAll(e, type) {
+      const list = type==='attend' ? this.sortedSelectedAttend : this.sortedSelectedNotAttend;
+      const arr = type==='attend' ? 'selectedAttend' : 'selectedNotAttend';
+      this[arr] = e.target.checked ? list.map(i=>i.db_id) : [];
+    },
+
+    applyBulkLocal(type) {
+      const sourceList = type==='attend' ? this.selectedTraining.attend : this.selectedTraining.notAttend;
+      const selIds = type==='attend' ? this.selectedAttend : this.selectedNotAttend;
+      if(selIds.length===0||!this.bulkStatus) return;
+      selIds.forEach(id => {
+        let rec = sourceList.find(r=>r.db_id===id);
+        if(rec) { rec.status=this.bulkStatus; this.pendingUpdates[id]={db_id:id,status:rec.status,start:rec.start,end:rec.end,partDuration:rec.partDuration,managerNote:rec.managerNote}; }
+      });
+      let allRecs = [...this.selectedTraining.attend, ...this.selectedTraining.notAttend];
+      this.selectedTraining.attend = allRecs.filter(r=>r.status!=='No');
+      this.selectedTraining.notAttend = allRecs.filter(r=>r.status==='No');
+      if(type==='attend') this.selectedAttend=[]; else this.selectedNotAttend=[];
+      this.bulkStatus='';
+      this.showNotification("Status applied locally. Click 'Save Changes' to update Database.");
+    },
+
+    async commitPendingUpdates() {
+      const updates = Object.values(this.pendingUpdates);
+      if(updates.length===0) return;
+      this.startLoading();
+      try {
+        for(const u of updates) {
+          const payload = {Status: u.status};
+          if(u.start !== undefined) payload['Check in'] = u.start;
+          if(u.end !== undefined) payload['Check out'] = u.end;
+          if(u.partDuration !== undefined) payload['Emp. Duration'] = u.partDuration;
+          if(u.managerNote !== undefined) payload['M.not'] = u.managerNote;
+          await sb.from('TrainingRecord').update(payload).eq('db_id', u.db_id);
+        }
+        this.pendingUpdates = {};
+        this.showNotification(`Saved ${updates.length} changes!`);
+        await this.fetchData();
+      } catch(e) {
+        this.stopLoading();
+        this.showNotification('Save failed: '+e.message, 'error');
+      }
+    },
+
+    async performBulkDelete(type) {
+      const selIds = type==='attend' ? this.selectedAttend : this.selectedNotAttend;
+      if(selIds.length===0) return;
+      this.askConfirm(`Delete ${selIds.length} records?`, async () => {
+        this.startLoading();
+        try {
+          await sb.from('TrainingRecord').delete().in('db_id', selIds);
+          this.showNotification(`Deleted ${selIds.length} records`);
+          await this.fetchData();
+          if(type==='attend') this.selectedAttend=[]; else this.selectedNotAttend=[];
+        } catch(e) {
+          this.stopLoading();
+          this.showNotification('Delete failed: '+e.message, 'error');
+        }
+      });
+    },
+
+    deleteRecordDash(rec) {
+      this.askConfirm(`Delete record for ${rec.empName}?`, async () => {
+        this.startLoading();
+        try {
+          await sb.from('TrainingRecord').delete().eq('db_id', rec.db_id);
+          this.showNotification('Record deleted');
+          await this.fetchData();
+        } catch(e) {
+          this.stopLoading();
+          this.showNotification('Delete failed: '+e.message, 'error');
+        }
+      });
+    },
+
+    deleteRecordRecords(rec) { this.deleteRecordDash(rec); },
+
+    quickEditStatus(r) { this.editingRecord={...r}; },
+
+    quickChangeNotAttendStatus(rec, newStatus) {
+      let allRecs = [...this.selectedTraining.attend, ...this.selectedTraining.notAttend];
+      let target = allRecs.find(r=>r.db_id===rec.db_id);
+      if(!target) return;
+      target.status = newStatus;
+      this.selectedTraining.attend = allRecs.filter(r=>r.status!=='No');
+      this.selectedTraining.notAttend = allRecs.filter(r=>r.status==='No');
+      this.pendingUpdates[rec.db_id] = {db_id:rec.db_id, status:newStatus, start:rec.start, end:rec.end, partDuration:rec.partDuration, managerNote:rec.managerNote};
+      this.showNotification(`${rec.empName} → ${newStatus}. Click 'Save Changes' to confirm.`);
+    },
+
+    updateRecordSubmit() {
+      if(!this.editingRecord) return;
+      let pDur = this.timeDiffMins(this.editingRecord.start, this.editingRecord.end);
+      this.editingRecord.partDuration = pDur;
+      let allRecs = [...this.selectedTraining.attend, ...this.selectedTraining.notAttend];
+      let target = allRecs.find(r=>r.db_id===this.editingRecord.db_id);
+      if(target) { target.start=this.editingRecord.start; target.end=this.editingRecord.end; target.partDuration=pDur; target.status=this.editingRecord.status; target.managerNote=this.editingRecord.managerNote; }
+      this.selectedTraining.attend = allRecs.filter(r=>r.status!=='No');
+      this.selectedTraining.notAttend = allRecs.filter(r=>r.status==='No');
+      this.pendingUpdates[this.editingRecord.db_id] = {db_id:this.editingRecord.db_id, status:this.editingRecord.status, start:this.editingRecord.start, end:this.editingRecord.end, partDuration:pDur, managerNote:this.editingRecord.managerNote};
+      this.editingRecord = null;
+      this.showNotification("Edited locally. Click 'Save Changes' to update Database.");
+    },
+
+    editRecord(rec) { this.editingRecord={...rec}; },
+
+    // ==================== UPLOAD ====================
+    excelTime(val) {
+      if(!val) return null;
+      if(typeof val==='string'&&val.includes(':')) return val;
+      const num = Number(val);
+      if(!isNaN(num)) { const ts=Math.floor(num*86400); const h=Math.floor(ts/3600); const m=Math.floor((ts%3600)/60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; }
+      return val;
+    },
+
+    processUpload() {
+      const f = document.getElementById('uploadFile');
+      if(!f.files.length) return this.showNotification('Select file','error');
+      if(!this.uploadForm.course) return this.showNotification('Enter course name','error');
+      this.startLoading();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const d = new Uint8Array(e.target.result);
+        const w = XLSX.read(d,{type:'array'});
+        const j = XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]]);
+        this.generatePreview(j);
+      };
+      reader.readAsArrayBuffer(f.files[0]);
+    },
+
+    addManualRow() { this.manualRows.unshift({name:'', startTime:this.uploadForm.startTime||'', endTime:this.uploadForm.endTime||''}); },
+    removeManualRow(idx) { this.manualRows.splice(idx,1); },
+
+    processManual() {
+      if(this.manualRows.length===0) return this.showNotification('Add rows first','error');
+      if(!this.uploadForm.course) return this.showNotification('Enter course name','error');
+      this.startLoading();
+      const json = this.manualRows.map(r => {
+        const emp = this.employees.find(e=>(e.name||'').toLowerCase()===(r.name||'').toLowerCase()&&e.status==='Active');
+        return {'ac-no.': emp?emp.ID:'', name:r.name, 'start time':r.startTime, 'end time':r.endTime};
+      }).filter(r=>r['ac-no.']||r.name);
+      this.generatePreview(json);
+    },
+
+    generatePreview(json) {
+      const t = this.uploadForm;
+      const courseMins = this.timeDiffMins(t.startTime, t.endTime);
+      const requiredMins = courseMins*0.75;
+      const newRecords = [];
+      const attendedIds = new Set();
+
+      json.forEach(rawRow => {
+        const row = {}; Object.keys(rawRow).forEach(k=>row[k.trim().toLowerCase()]=rawRow[k]);
+        const acNo = row['ac-no.']||row['ac-no']||row['id'];
+        const name = row['name'];
+        const excelStart = this.excelTime(row['start time']);
+        const excelEnd = this.excelTime(row['end time']);
+        let empMins=0, status='';
+        if(!excelStart||!excelEnd) { status='NONE'; empMins=0; }
+        else { empMins=this.timeDiffMins(excelStart,excelEnd); status=empMins>=requiredMins?'Yes':(empMins+5>=requiredMins?'Yes':'Late'); }
+        const emp = acNo ? this.employees.find(e=>String(e.ID)===String(acNo)) : this.employees.find(e=>(e.name||'').toLowerCase()===(name||'').toLowerCase());
+        const dept = emp?emp.department:'Unknown';
+        if(emp) attendedIds.add(String(emp.ID||emp.name));
+        newRecords.push({empId:String(acNo||''), department:dept, empName:name||(emp?emp.name:'Unknown'), trainer:t.trainer, trainerType:t.trainerType, course:t.course, date:t.date, totalDuration:courseMins, start:excelStart||'', end:excelEnd||'', partDuration:empMins, status:status});
+      });
+
+      // Add absents
+      const activeDepts = [...new Set(newRecords.map(r=>r.department))].filter(d=>d!=='Unknown');
+      activeDepts.forEach(dept => {
+        this.employees.filter(e=>e.department===dept&&e.status==='Active').forEach(emp => {
+          if(!newRecords.some(r=>r.empId===String(emp.ID)&&r.course===t.course&&r.date===t.date)) {
+            newRecords.push({empId:String(emp.ID||''), department:emp.department, empName:emp.name, trainer:t.trainer, trainerType:t.trainerType, course:t.course, date:t.date, totalDuration:courseMins, start:'', end:'', partDuration:0, status:'No'});
+          }
+        });
+      });
+
+      this.previewData = {records:newRecords, attend:newRecords.filter(r=>r.status!=='No'), notAttend:newRecords.filter(r=>r.status==='No')};
+      this.stopLoading();
+    },
+
+    async savePreview() {
+      if(!this.previewData) return;
+      this.startLoading();
+      try {
+        const rows = this.previewData.records.map(r => ({
+          Department: r.department,
+          Name: r.empName,
+          Trainer: r.trainer,
+          'Trainer Type': r.trainerType,
+          Topic: r.course,
+          Date: r.date,
+          'Duration of training': r.totalDuration,
+          'Check in': r.start||null,
+          'Check out': r.end||null,
+          'Emp. Duration': r.partDuration,
+          Status: r.status,
+          Userid: r.empId||null
+        }));
+        const {error} = await sb.from('TrainingRecord').insert(rows);
+        if(error) throw error;
+        this.showNotification(`Saved ${rows.length} records!`);
+        this.previewData=null;
+        this.manualRows=[];
+        if(document.getElementById('uploadFile')) document.getElementById('uploadFile').value='';
+        await this.fetchData();
+      } catch(e) {
+        this.stopLoading();
+        this.showNotification('Save failed: '+e.message,'error');
+      }
+    },
+
+    // ==================== SETTINGS ====================
+    async saveDeptSettings(dept) {
+      try {
+        const {error} = await sb.from('Settings').update({Manager:dept.manager, category:dept.category}).eq('Department', dept.Department||dept.department);
+        if(error) throw error;
+        this.showNotification('Settings saved!');
+        await this.fetchData();
+      } catch(e) {
+        this.showNotification('Save failed: '+e.message,'error');
+      }
+    },
+
+    async toggleEmpStatus(emp, newStatus) {
+      try {
+        await sb.from('Empolyees').update({Status:newStatus}).eq('db_id', emp.db_id);
+        emp.status = newStatus;
+        this.showNotification(`${emp.name} → ${newStatus}`);
+      } catch(e) {
+        this.showNotification('Update failed: '+e.message,'error');
+      }
+    },
+
+    // ==================== COMPUTED ====================
+    get uniqueDeptsSettings() { return [...new Set(this.settings.map(s=>s.Department||s.department))].sort(); },
+
+    get filteredSettings() {
+      if(!this.searchSettings) return this.settings;
+      const q = this.searchSettings.toLowerCase();
+      return this.settings.filter(s=>(s.Department||'').toLowerCase().includes(q));
+    },
+
+    get filteredEmployees() {
+      let list = this.employees;
+      if(this.searchEmp) { const q=this.searchEmp.toLowerCase(); list=list.filter(e=>(e.name||'').toLowerCase().includes(q)||(e.department||'').toLowerCase().includes(q)); }
+      if(this.empStatusFilter) list=list.filter(e=>e.status===this.empStatusFilter);
+      return list.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    },
+
+    get uniqueNames() { return [...new Set(this.records.map(r=>r.empName))].sort(); },
+    get uniqueDepts() { return [...new Set(this.records.map(r=>r.department))].sort(); },
+    get uniqueDates() { return [...new Set(this.records.map(r=>r.date))].sort().reverse(); },
+    get uniqueCourses() { return [...new Set(this.records.map(r=>r.course))].sort(); },
+
+    get filteredRecords() {
+      return this.records.filter(r=>{
+        const mn=!this.filters.name||r.empName===this.filters.name;
+        const md=!this.filters.dept||r.department===this.filters.dept;
+        const mdate=!this.filters.date||r.date===this.filters.date;
+        const mc=!this.filters.course||r.course===this.filters.course;
+        const ms=!this.filters.status||r.status===this.filters.status;
+        return mn&&md&&mdate&&mc&&ms;
+      }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+    },
+    get paginatedRecords() { const s=(this.currentPage-1)*this.pageSize; return this.filteredRecords.slice(s,s+this.pageSize); },
+    nextPage() { if(this.currentPage*this.pageSize<this.filteredRecords.length) this.currentPage++; },
+    prevPage() { if(this.currentPage>1) this.currentPage--; },
+
+    get uniqueTrainingsList() {
+      const map = new Map();
+      this.records.forEach(r=>{
+        const key=r.course+'|'+r.date+'|'+r.trainer;
+        if(!map.has(key)) map.set(key,{course:r.course,date:r.date,trainer:r.trainer,attend:[],notAttend:[]});
+        const g=map.get(key);
+        if(r.status==='No') g.notAttend.push(r); else g.attend.push(r);
+      });
+      const list=Array.from(map.values()).sort((a,b)=>new Date(b.date)-new Date(a.date));
+      list.forEach(t=>{
+        const depts=new Set([...t.attend.map(r=>r.department),...t.notAttend.map(r=>r.department)]);
+        t.departments=Array.from(depts).filter(d=>d&&d!=='Unknown').join(', ');
+      });
+      return list;
+    },
+
+    get filteredTrainingsList() {
+      if(!this.searchTrainingList) return this.uniqueTrainingsList;
+      const q=this.searchTrainingList.toLowerCase();
+      return this.uniqueTrainingsList.filter(t=>(t.course||'').toLowerCase().includes(q)||(t.trainer||'').toLowerCase().includes(q)||(t.date||'').toLowerCase().includes(q));
+    },
+
+    get filteredPunishments() {
+      if(!this.punishmentFilterMonth) return [];
+      const [year,month]=this.punishmentFilterMonth.split('-').map(Number);
+      let filtered=this.records.filter(r=>{
+        if(!r.date) return false;
+        const rd=new Date(r.date);
+        return rd.getFullYear()===year&&(rd.getMonth()+1)===month&&(r.status==='No'||r.status==='Late');
+      });
+      if(this.punishmentSearch){const q=this.punishmentSearch.toLowerCase();filtered=filtered.filter(r=>(r.empName||'').toLowerCase().includes(q)||(r.course||'').toLowerCase().includes(q));}
+      if(this.punishmentFilterDept) filtered=filtered.filter(r=>r.department===this.punishmentFilterDept);
+      return filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    },
+
+    downloadPunishments() {
+      const data=this.filteredPunishments.map(p=>({Name:p.empName,Department:p.department,Date:p.date,Course:p.course,Trainer:p.trainer,TrainerType:p.trainerType,Duration:this.formatDuration(p.totalDuration),Status:p.status,Note:p.managerNote}));
+      const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Punishments");XLSX.writeFile(wb,`Punishments_${this.punishmentFilterMonth}.xlsx`);
+    },
+
+    // ==================== REPORT / COPY ====================
+    copyKurdishReport(t, d) {
+      if(!t) return;
+      const notAttendNames = t.notAttend.map(e=>e.empName).join('\n');
+      const message = `بەڕێزان ئەرک بکێشن هۆکاری نەهاتنی کارمەندەکانتان بۆ دەورەی ئەمڕۆ (${t.course}) وەڵامان بدەنەوە. ماوەی 48 کاتژمێرتان هەیە.\n\nکارمەندانی ئامادەنەبوو:\n${notAttendNames}`;
+      navigator.clipboard.writeText(message).then(()=>this.showNotification('Report copied to clipboard!'));
+    },
+
+    copyNamesOnly(list) {
+      if(!list||list.length===0) return this.showNotification('No names to copy','error');
+      const filtered=list.filter(i=>i.status==='Yes'||i.status==='Late'||i.status==='NONE');
+      if(filtered.length===0) return this.showNotification('No attended names to copy','error');
+      navigator.clipboard.writeText(filtered.map(i=>i.empName).join('\n')).then(()=>this.showNotification(`Copied ${filtered.length} names`));
+    },
+
+    // ==================== HELPERS ====================
+    formatDuration(mins) {
+      if(!mins&&mins!==0) return '-';
+      const m=Number(mins); if(isNaN(m)) return '-';
+      const h=Math.floor(m/60); const min=Math.round(m%60);
+      return `${h}:${String(min).padStart(2,'0')}`;
+    },
+
+    timeDiffMins(start, end) {
+      if(!start||!end||start==='-'||end==='-') return 0;
+      const [h1,m1]=start.split(':').map(Number);
+      const [h2,m2]=end.split(':').map(Number);
+      return (h2*60+m2)-(h1*60+m1);
+    },
+
+    // ==================== EXCEL DOWNLOAD ====================
+    downloadTrainingAttendance(training, dept) {
+      if(!training) return;
+      const wb = XLSX.utils.book_new();
+      const sortedAttend=[...training.attend].sort((a,b)=>{const o={'Yes':1,'Late':2,'Permission':3,'At Duty':4,'NONE':5};return (o[a.status]||99)-(o[b.status]||99)||(a.empName||'').localeCompare(b.empName||'');});
+      const sortedNotAttend=[...training.notAttend].sort((a,b)=>(a.empName||'').localeCompare(b.empName||''));
+
+      const aoa = [];
+      aoa.push([`Training Attendance Report`,'','','','','','','']);
+      aoa.push(['Course', training.course,'','','','','','']);
+      aoa.push(['Trainer', training.trainer,'','','','','','']);
+      aoa.push(['Date', training.date,'','','','','','']);
+      aoa.push(['Department', dept||'-','','','','','','']);
+      aoa.push(['','','','','','','','']);
+      aoa.push(['ATTEND / LATE ('+sortedAttend.length+')','','','','','','','']);
+      aoa.push(['#','Employee Name','Check In','Check Out','Duration','Status','Manager Note','']);
+      sortedAttend.forEach((p,i)=>aoa.push([i+1,p.empName,p.start||'-',p.end||'-',this.formatDuration(p.partDuration),p.status,p.managerNote||'','']));
+      aoa.push(['','','','','','','','']);
+      aoa.push(['NOT ATTEND ('+sortedNotAttend.length+')','','','','','','','']);
+      aoa.push(['#','Employee Name','','','','Status','Manager Note','']);
+      sortedNotAttend.forEach((p,i)=>aoa.push([i+1,p.empName,'','','',p.status,p.managerNote||'','']));
+      aoa.push(['','','','','','','','']);
+      aoa.push(['SUMMARY','','','','','','','']);
+      aoa.push(['Total Attend/Late',training.attend.length,'','','','','','']);
+      aoa.push(['Total Not Attend',training.notAttend.length,'','','','','','']);
+      aoa.push(['Grand Total',training.attend.length+training.notAttend.length,'','','','','','']);
+
+      const ws=XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols']=[{wch:5},{wch:32},{wch:11},{wch:11},{wch:11},{wch:13},{wch:38},{wch:5}];
+      XLSX.utils.book_append_sheet(wb,ws,'Attendance');
+      const safeCourse=(training.course||'Training').replace(/[\/\\*?\[\]]/g,'-').substring(0,25);
+      XLSX.writeFile(wb,`${training.date}_${safeCourse}_Attendance.xlsx`);
+      this.showNotification('Excel downloaded!');
     }
+  };
+}
 </script>
-</body></html>
+</body>
+</html>

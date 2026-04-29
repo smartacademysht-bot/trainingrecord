@@ -899,7 +899,8 @@
                 const cutoffDate = new Date('2026-03-30T00:00:00').getTime(); 
 
                 this.records.forEach(r => {
-                    if(r.department !== dept) return;
+                    // لێرەدا فلتەرەکەمان کرد بە case-insensitive بۆ ئەوەی گوێ بە پیتە گەورە و بچووکەکان نەدات
+                    if(String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
                     if(!['No', 'Late'].includes(r.status)) return;
 
                     const key = `${r.course}|${r.date}`;
@@ -969,7 +970,8 @@
                 const [course, date] = this.selectedTraining.split('|');
                 
                 this.localRecords = this.records.filter(r => {
-                    if(r.department !== this.selectedDept || r.course !== course || r.date !== date) return false;
+                    // لێرەشدا فلتەری داتا پیشاندراوەکانمان کرد بە case-insensitive
+                    if(String(r.department).toLowerCase() !== String(this.selectedDept).toLowerCase() || r.course !== course || r.date !== date) return false;
                     const isReviewed = (r.managerNote && r.managerNote.trim() !== '');
                     if(isReviewed) return true; 
                     if(r.status === 'No' || r.status === 'Late') return true;

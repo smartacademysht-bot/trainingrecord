@@ -1023,40 +1023,40 @@ function app() {
     await this.fetchZKTecoData();
     await this.fetchExternalGoogleSheet(); // هێنانی دەورەکان لە کاتی کردنەوە
 },
-// async fetchExternalGoogleSheet() {
-//     const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';
-//     // لینکی هەناردەکردنی فایلی CSV
-//     const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
+async fetchExternalGoogleSheet() {
+    const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';
+    // لینکی هەناردەکردنی فایلی CSV
+    const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
 
-//     try {
-//         const response = await fetch(url);
-//         const data = await response.text();
+    try {
+        const response = await fetch(url);
+        const data = await response.text();
         
-//         // پارسکردنی CSV بە شێوەیەکی سادە
-//         const rows = data.split('\n').map(row => {
-//             // ئەمە یارمەتیدەرە بۆ جیاکردنەوەی خانەکان کە کۆمایان تێدایە
-//             return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-//         });
+        // پارسکردنی CSV بە شێوەیەکی سادە
+        const rows = data.split('\n').map(row => {
+            // ئەمە یارمەتیدەرە بۆ جیاکردنەوەی خانەکان کە کۆمایان تێدایە
+            return row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        });
 
-//         // گۆڕینی ڕیزەکان بۆ ئۆبجێکت (دەستپێکردن لە ڕیزی ٢ چونکە ١ هێدەرە)
-//         this.trainingSchedule = rows.slice(1).map(r => {
-//             if (!r[2]) return null; // ئەگەر ناوی دەورەکە نەبوو فەرامۆشی بکە
-//             return {
-//                 id: r[0]?.replace(/"/g, ''),        // ستوونی A: ID
-//                 date: r[1]?.replace(/"/g, ''),      // ستوونی B: Date
-//                 course: r[2]?.replace(/"/g, ''),    // ستوونی C: Course
-//                 trainer: r[3]?.replace(/"/g, ''),   // ستوونی D: Trainer
-//                 startTime: r[6]?.replace(/"/g, ''), // ستوونی G: Start
-//                 endTime: r[7]?.replace(/"/g, '')    // ستوونی H: End
-//             };
-//         }).filter(item => item !== null);
+        // گۆڕینی ڕیزەکان بۆ ئۆبجێکت (دەستپێکردن لە ڕیزی ٢ چونکە ١ هێدەرە)
+        this.trainingSchedule = rows.slice(1).map(r => {
+            if (!r[2]) return null; // ئەگەر ناوی دەورەکە نەبوو فەرامۆشی بکە
+            return {
+                id: r[0]?.replace(/"/g, ''),        // ستوونی A: ID
+                date: r[1]?.replace(/"/g, ''),      // ستوونی B: Date
+                course: r[2]?.replace(/"/g, ''),    // ستوونی C: Course
+                trainer: r[3]?.replace(/"/g, ''),   // ستوونی D: Trainer
+                startTime: r[6]?.replace(/"/g, ''), // ستوونی G: Start
+                endTime: r[7]?.replace(/"/g, '')    // ستوونی H: End
+            };
+        }).filter(item => item !== null);
 
-//         console.log("External Schedule Loaded:", this.trainingSchedule);
-//     } catch (error) {
-//         console.error("Error fetching Google Sheet:", error);
-//         this.showNotification("Could not load external schedule", "error");
-//     }
-// },
+        console.log("External Schedule Loaded:", this.trainingSchedule);
+    } catch (error) {
+        console.error("Error fetching Google Sheet:", error);
+        this.showNotification("Could not load external schedule", "error");
+    }
+},
 
 // syncZkWithSchedule() {
 //     if(!this.zkSelectedTrainingId) return;

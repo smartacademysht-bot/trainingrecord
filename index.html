@@ -1020,7 +1020,11 @@ zkSelectedTrainingId: '',
     confirmOpen: false, confirmMsg: '', confirmAction: ()=>{},
 
     // ==================== INIT ====================
-
+async init() {
+      await this.fetchData();
+      await this.fetchZKTecoData();
+      await this.fetchExternalGoogleSheet(); // هێنانی لیستی دەورەکان لێرە
+    },
 // هێنانی داتا لە گووگڵ شیت
     async fetchExternalGoogleSheet() {
       const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';

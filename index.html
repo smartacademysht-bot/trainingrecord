@@ -94,6 +94,60 @@
 
     <main class="flex-1 overflow-auto p-6 relative">
 
+      <!-- ATTENDANCE TOOL TAB -->
+<div x-show="currentTab === 'attendanceTool'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col overflow-auto">
+  <div class="mb-4">
+    <h3 class="text-lg font-bold text-gray-800">Attendance Filter Tool</h3>
+    <p class="text-sm text-gray-500">Compare a master list against attendees to identify who is missing.</p>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+    <div class="space-y-6">
+      <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+        <div class="flex justify-between items-center mb-2">
+          <label class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">1. Master List (Expected Names)</label>
+        </div>
+        <textarea x-model="customMasterInput" @input="processCustomAttendance"
+          placeholder="Enter names here (one per line)..."
+          class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none custom-scrollbar"></textarea>
+        <div class="mt-2 text-xs text-gray-400">Total expected: <span class="text-gray-600 font-bold" x-text="attendanceStats.master">0</span></div>
+      </div>
+      <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+        <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">2. Actual Attendees</label>
+        <textarea x-model="customAttendeeInput" @input="processCustomAttendance"
+          placeholder="Enter names of people who showed up..."
+          class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none custom-scrollbar"></textarea>
+        <div class="mt-2 flex gap-4 text-xs font-medium">
+          <span class="text-gray-400">Raw: <span class="text-gray-600 font-bold" x-text="attendanceStats.attendeeRaw">0</span></span>
+          <span class="text-green-600">Unique: <span class="font-bold" x-text="attendanceStats.attendeeUnique">0</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-6">
+      <div class="bg-red-50 p-6 rounded-xl shadow-sm border border-red-100 flex flex-col h-[280px]">
+        <div class="flex justify-between items-center mb-4">
+          <label class="text-sm font-bold text-red-700 uppercase tracking-wider">Not Attended (Missing)</label>
+          <button @click="copyCustomList('absent')" class="text-xs bg-white border hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
+        </div>
+        <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-red-100 text-sm whitespace-pre-wrap custom-scrollbar text-red-800" x-text="attendanceResults.absent"></div>
+        <div class="mt-2 text-xs text-red-600 font-bold">Total missing: <span x-text="attendanceStats.absent">0</span></div>
+      </div>
+      <div class="bg-green-50 p-6 rounded-xl shadow-sm border border-green-100 flex flex-col h-[280px]">
+        <div class="flex justify-between items-center mb-4">
+          <label class="text-sm font-bold text-green-700 uppercase tracking-wider">Attended (Verified)</label>
+          <button @click="copyCustomList('present')" class="text-xs bg-white border hover:bg-green-100 text-green-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
+        </div>
+        <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-green-100 text-sm whitespace-pre-wrap custom-scrollbar text-green-800" x-text="attendanceResults.present"></div>
+        <div class="mt-2 text-xs text-green-600 font-bold">Total verified: <span x-text="attendanceStats.present">0</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="flex justify-end mt-4">
+    <button @click="transferAttendanceToUpload()" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 font-bold flex items-center transition">
+      <i class="fa fa-paper-plane mr-2"></i> Transfer Attendees to Upload Form
+    </button>
+  </div>
+</div>
+
       <!-- ========== DASHBOARD TAB ========== -->
       <div x-show="currentTab === 'dashboard'" class="h-full flex flex-col">
         <nav class="flex mb-5">
@@ -764,11 +818,227 @@
 
       <!-- ========== SETTINGS TAB ========== -->
       <div x-show="currentTab === 'settings'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col" x-data="{settingsView:'dept_mgmt',selectedDeptCard:null}">
-        <div class="flex space-x-4 border-b mb-4 flex-wrap gap-y-2">
-          <button @click="settingsView='dept_mgmt'" :class="settingsView==='dept_mgmt' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Department Management</button>
-          <button @click="settingsView='employees'" :class="settingsView==='employees' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Employees</button>
-        </div>
+        <!-- In Settings Tab, replace the tab buttons div -->
+<div class="flex space-x-4 border-b mb-4 flex-wrap gap-y-2">
+  <button @click="settingsView='dept_mgmt'" :class="settingsView==='dept_mgmt' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Department Management</button>
+  <button @click="settingsView='employees'" :class="settingsView==='employees' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Employees</button>
+  <button @click="settingsView='sync'" :class="settingsView==='sync' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Sync Database</button>
+  <button @click="settingsView='manager_lock'" :class="settingsView==='manager_lock' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500'" class="pb-2 font-bold px-4 flex items-center gap-1">
+    <i class="fa fa-lock text-xs"></i> Manager Lock
+  </button>
+</div>
 
+        <!-- SYNC DATABASE VIEW -->
+<div x-show="settingsView === 'sync'" class="flex-1 flex flex-col space-y-4" x-data="{ syncPreview: null }">
+  <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+    <h4 class="font-bold text-blue-900 text-lg mb-2 flex items-center">
+      <i class="fa fa-sync-alt mr-2"></i> Sync Employee Database
+    </h4>
+    <p class="text-sm text-blue-700 mb-4">
+      Upload an Excel (.xlsx) file to update the employee list.<br>
+      - <b>Column A</b>: Employee ID <span class="text-orange-700 font-bold">(Optional)</span><br>
+      - <b>Column B</b>: Full Name <span class="text-orange-700 font-bold">(Required)</span><br>
+      - <b>Column I</b>: Department<br><br>
+      System will: <b class="text-green-700">Add new names</b>, <b class="text-red-700">mark missing as Inactive</b>, and <b class="text-blue-700">update incorrect names/departments</b>.
+    </p>
+    <div class="flex gap-4 items-center">
+      <input type="file" id="syncFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"/>
+      <button @click="processSyncFile(syncPreview, $set)" class="bg-blue-600 text-white px-6 py-2 rounded shadow font-bold hover:bg-blue-700 transition">Analyze File</button>
+    </div>
+  </div>
+
+  <div x-show="syncPreview" class="flex-1 flex flex-col space-y-4 fade-in">
+    <div class="flex justify-between items-center bg-yellow-50 p-3 border border-yellow-200 rounded">
+      <div class="text-sm">
+        <span class="font-bold text-green-700 mr-4"><i class="fa fa-plus-circle"></i> <span x-text="syncPreview?.newEmps?.filter(x=>x.selected).length"></span> To Add</span>
+        <span class="font-bold text-red-700 mr-4"><i class="fa fa-user-slash"></i> <span x-text="syncPreview?.inactiveEmps?.length"></span> To Inactive</span>
+        <span class="font-bold text-blue-700"><i class="fa fa-pencil"></i> <span x-text="syncPreview?.updateEmps?.length"></span> To Update</span>
+      </div>
+      <div>
+        <button @click="syncPreview = null" class="text-gray-500 hover:text-gray-700 mr-3">Cancel</button>
+        <button @click="confirmSyncLocal(syncPreview)" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700">Confirm & Sync</button>
+      </div>
+    </div>
+
+    <div x-show="syncPreview?.updateEmps?.length > 0" class="bg-blue-50 border border-blue-200 rounded flex flex-col max-h-48">
+      <div class="bg-blue-100 p-2 text-blue-800 font-bold text-sm">Names/Departments to Update</div>
+      <div class="flex-1 overflow-auto bg-white">
+        <table class="w-full text-xs divide-y">
+          <thead class="bg-gray-50 sticky top-0">
+            <tr>
+              <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.updateEmps.forEach(e=>e.selected=$event.target.checked)"></th>
+              <th class="p-2 text-left">ID</th>
+              <th class="p-2 text-left">Old Name</th>
+              <th class="p-2 text-left">New Name</th>
+              <th class="p-2 text-left">Old Dept</th>
+              <th class="p-2 text-left">New Dept</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="e in syncPreview?.updateEmps">
+              <tr class="hover:bg-gray-50" :class="e.selected ? 'bg-blue-50' : ''">
+                <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
+                <td class="p-2 font-mono" x-text="e.id || '-'"></td>
+                <td class="p-2 text-red-600 line-through" x-text="e.oldName"></td>
+                <td class="p-2 text-green-600 font-bold" x-text="e.name"></td>
+                <td class="p-2 text-gray-500" x-text="e.oldDept || '-'"></td>
+                <td class="p-2 text-blue-600" x-text="e.department || '-'"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex-1 grid grid-cols-2 gap-4 overflow-hidden" style="min-height:200px">
+      <div class="border rounded flex flex-col">
+        <div class="bg-green-100 p-2 text-green-800 font-bold text-sm flex justify-between items-center">
+          <span>New Employees</span>
+          <div class="flex gap-1">
+            <button @click="syncPreview.newEmps.forEach(e=>e.selected=true)" class="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">All</button>
+            <button @click="syncPreview.newEmps.forEach(e=>e.selected=false)" class="text-[10px] bg-gray-400 text-white px-2 py-0.5 rounded">None</button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-auto bg-white">
+          <table class="w-full text-xs divide-y">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr>
+                <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.newEmps.forEach(e=>e.selected=$event.target.checked)"></th>
+                <th class="p-2 text-left">ID</th>
+                <th class="p-2 text-left">Name</th>
+                <th class="p-2 text-left">Dept</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="e in syncPreview?.newEmps">
+                <tr class="hover:bg-gray-50">
+                  <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
+                  <td class="p-1"><input type="text" x-model="e.customId" class="w-full border p-1 rounded text-center text-xs" placeholder="ID"></td>
+                  <td class="p-2" x-text="e.name"></td>
+                  <td class="p-2" x-text="e.department"></td>
+                </tr>
+              </template>
+              <tr x-show="!syncPreview?.newEmps?.length">
+                <td colspan="4" class="p-4 text-center text-gray-400">No new employees found</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="border rounded flex flex-col">
+        <div class="bg-red-100 p-2 text-red-800 font-bold text-sm">Missing (Will be Inactive)</div>
+        <div class="flex-1 overflow-auto bg-white">
+          <table class="w-full text-xs divide-y">
+            <thead class="bg-gray-50 sticky top-0">
+              <tr><th class="p-2 text-left">ID</th><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th></tr>
+            </thead>
+            <tbody>
+              <template x-for="e in syncPreview?.inactiveEmps">
+                <tr><td class="p-2 font-mono" x-text="e.id"></td><td class="p-2" x-text="e.name"></td><td class="p-2" x-text="e.department"></td></tr>
+              </template>
+              <tr x-show="!syncPreview?.inactiveEmps?.length">
+                <td colspan="3" class="p-4 text-center text-gray-400">No missing employees</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        <!-- MANAGER LOCK VIEW -->
+<div x-show="settingsView === 'manager_lock'" class="flex-1 flex flex-col space-y-4 fade-in"
+     x-data="{ lockManagerFilter: '', lockedTrainings: [], lockLoading: false }">
+  <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+    <h4 class="font-bold text-orange-900 text-lg mb-1 flex items-center gap-2">
+      <i class="fa fa-lock text-orange-600"></i> Manager Review Lock Control (48hr)
+    </h4>
+    <p class="text-sm text-orange-700">Select a manager to see their training reviews. Locked ones (48hr expired) can be renewed.</p>
+  </div>
+
+  <div class="flex items-center gap-3 flex-wrap">
+    <label class="text-xs font-bold text-gray-600 uppercase">Select Manager:</label>
+    <select x-model="lockManagerFilter" @change="loadLockTrainings(lockManagerFilter, $set)"
+            class="border-2 border-orange-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none w-64 font-bold text-gray-800">
+      <option value="">-- Choose Manager --</option>
+      <template x-for="m in [...new Set(settings.map(s=>s.manager).filter(Boolean))].sort()" :key="m">
+        <option :value="m" x-text="m"></option>
+      </template>
+    </select>
+    <span x-show="lockLoading" class="text-xs text-orange-600 animate-pulse font-bold">
+      <i class="fa fa-circle-notch fa-spin mr-1"></i>Loading...
+    </span>
+  </div>
+
+  <div x-show="!lockManagerFilter" class="flex-1 flex items-center justify-center text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl p-12">
+    <div>
+      <i class="fa fa-user-lock text-5xl mb-4 block text-gray-300"></i>
+      <p class="font-bold text-gray-500">Select a manager above</p>
+      <p class="text-sm mt-1">Their trainings will appear here automatically</p>
+    </div>
+  </div>
+
+  <div x-show="lockManagerFilter" class="flex-1 overflow-auto border rounded-lg shadow-sm">
+    <div class="bg-orange-100 px-4 py-2 border-b border-orange-200 flex items-center justify-between">
+      <span class="text-sm font-bold text-orange-900 flex items-center gap-2">
+        <i class="fa fa-user-tie"></i>
+        <span x-text="'Manager: ' + lockManagerFilter"></span>
+      </span>
+      <span class="text-xs text-orange-700 font-bold" x-text="lockedTrainings.length + ' training(s) pending review'"></span>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 sticky top-0 shadow-sm">
+        <tr>
+          <th class="p-3 text-left text-gray-700 font-bold">Department</th>
+          <th class="p-3 text-left text-gray-700 font-bold">Course</th>
+          <th class="p-3 text-left text-gray-700 font-bold">Date</th>
+          <th class="p-3 text-left text-gray-700 font-bold">Status</th>
+          <th class="p-3 text-center text-gray-700 font-bold">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y">
+        <template x-for="item in lockedTrainings" :key="item.key">
+          <tr class="hover:bg-orange-50 transition-colors" :class="item.isLocked ? 'bg-red-50' : ''">
+            <td class="p-3 text-gray-700 font-medium" x-text="item.department"></td>
+            <td class="p-3 font-bold text-gray-800" x-text="item.course"></td>
+            <td class="p-3 text-gray-500 font-mono text-xs" x-text="item.date"></td>
+            <td class="p-3">
+              <template x-if="item.isLocked">
+                <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 w-fit">
+                  <i class="fa fa-lock"></i> Locked — 48hr Expired
+                </span>
+              </template>
+              <template x-if="!item.isLocked">
+                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
+                  <i class="fa fa-clock"></i> <span x-text="item.hoursLeft + 'h remaining'"></span>
+                </span>
+              </template>
+            </td>
+            <td class="p-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button @click="renewLockLocal(item, 48, lockedTrainings)"
+                        class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
+                  <i class="fa fa-redo"></i> Renew 48hr
+                </button>
+                <button @click="renewLockLocal(item, 72, lockedTrainings)"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
+                  <i class="fa fa-redo"></i> 72hr
+                </button>
+              </div>
+            </td>
+          </tr>
+        </template>
+        <tr x-show="lockedTrainings.length === 0 && lockManagerFilter">
+          <td colspan="5" class="p-10 text-center text-gray-400">
+            <i class="fa fa-check-circle text-green-400 text-3xl mb-2 block"></i>
+            <p class="font-bold">No pending review trainings for this manager.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+        
         <!-- DEPT MANAGEMENT -->
         <div x-show="settingsView==='dept_mgmt'" class="flex-1 flex flex-col">
           <div class="flex justify-between mb-4">
@@ -979,6 +1249,7 @@ zkSelectedTrainingId: '',
       {id:'records', label:'Records', icon:'fa-solid fa-table'},
       {id:'punishments', label:'Punishments', icon:'fa-solid fa-gavel'},
       {id:'settings', label:'Settings', icon:'fa-solid fa-cog'},
+      {id:'attendanceTool', label:'Attendance Tool', icon:'fa-solid fa-clipboard-list'},
     ],
 
     // ---- Data ----
@@ -1143,6 +1414,176 @@ async init() {
         this.showNotification('Database Error: ' + e.message, 'error');
       }
     },
+
+    // ---- New state variables to add in return object ----
+customMasterInput: '',
+customAttendeeInput: '',
+attendanceStats: { master: 0, attendeeRaw: 0, attendeeUnique: 0, present: 0, absent: 0 },
+attendanceResults: { present: '', absent: '' },
+
+// ---- Attendance Tool functions ----
+processCustomAttendance() {
+  const masterNames = this.customMasterInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
+  const uniqueMaster = [...new Set(masterNames)];
+  const rawAttendees = this.customAttendeeInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
+  const uniqueAttendeesMap = new Map();
+  rawAttendees.forEach(name => { const l=name.toLowerCase(); if(!uniqueAttendeesMap.has(l)) uniqueAttendeesMap.set(l, name); });
+  const uniqueAttendeeList = Array.from(uniqueAttendeesMap.values());
+  const attendeeSet = new Set(uniqueAttendeeList.map(n=>n.toLowerCase()));
+  const present=[], absent=[];
+  uniqueMaster.forEach(name => { if(attendeeSet.has(name.toLowerCase())) present.push(name); else absent.push(name); });
+  this.attendanceResults.present = present.join('\n');
+  this.attendanceResults.absent = absent.join('\n');
+  this.attendanceStats = { master: uniqueMaster.length, attendeeRaw: rawAttendees.length, attendeeUnique: uniqueAttendeeList.length, present: present.length, absent: absent.length };
+},
+
+copyCustomList(type) {
+  const text = type==='present' ? this.attendanceResults.present : this.attendanceResults.absent;
+  if(!text) return this.showNotification('List is empty', 'error');
+  navigator.clipboard.writeText(text).then(() => this.showNotification(`Copied ${type==='present' ? 'Attended' : 'Missing'} list`));
+},
+
+transferAttendanceToUpload() {
+  const presentList = this.attendanceResults.present.split('\n').filter(n=>n.trim()!=='');
+  if(presentList.length===0) return this.showNotification('No data to transfer', 'error');
+  this.manualRows = presentList.map(name => ({ name, startTime: this.uploadForm.startTime||'', endTime: this.uploadForm.endTime||'' }));
+  this.currentTab = 'upload';
+  this.uploadMethod = 'manual';
+  this.showNotification(`Transferred ${presentList.length} attendees to Upload tab`);
+},
+
+// ---- Sync Database functions ----
+processSyncFile(syncPreview, $set) {
+  const f = document.getElementById('syncFile');
+  if(!f.files.length) return this.showNotification('Select sync file', 'error');
+  this.startLoading();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const d = new Uint8Array(e.target.result);
+    const w = XLSX.read(d, {type:'array'});
+    const rows = XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header:1});
+    const uploadedList = [];
+    const cleanId = (val) => String(val||'').trim().replace(/\.0$/,'');
+    rows.forEach((r, i) => {
+      if(i===0) return;
+      const rawId=r[0], rawName=r[1], rawDept=r[8];
+      if(rawName!=null && String(rawName).trim()!=='') {
+        uploadedList.push({ id: rawId!=null ? cleanId(rawId) : '', name: String(rawName).trim(), department: rawDept ? String(rawDept).trim() : '' });
+      }
+    });
+    if(uploadedList.length===0) { this.stopLoading(); return this.showNotification('No valid data found in file', 'error'); }
+    const existingByIdMap = new Map();
+    const existingByNameMap = new Map();
+    this.employees.forEach(e => {
+      if(e.ID && cleanId(e.ID)) existingByIdMap.set(cleanId(e.ID), e);
+      if(e.name) existingByNameMap.set(e.name.trim().toLowerCase(), e);
+    });
+    const newEmps=[], updateEmps=[], matchedIds=new Set(), uploadedIds=new Set();
+    uploadedList.forEach(u => {
+      let found = u.id ? existingByIdMap.get(u.id) : null;
+      if(found) {
+        uploadedIds.add(cleanId(found.ID||''));
+        matchedIds.add(cleanId(found.ID||''));
+        if(found.name.trim().toLowerCase() !== u.name.toLowerCase()) {
+          updateEmps.push({ id:u.id, name:u.name, oldName:found.name, department:u.department||found.department, oldDept:found.department, matchType:'id', selected:true });
+        }
+      } else {
+        const foundByName = existingByNameMap.get(u.name.trim().toLowerCase());
+        if(foundByName) {
+          if(foundByName.ID) { uploadedIds.add(cleanId(foundByName.ID)); matchedIds.add(cleanId(foundByName.ID)); }
+          const deptChanged = u.department && foundByName.department && u.department.toLowerCase()!==foundByName.department.toLowerCase();
+          if(deptChanged) updateEmps.push({ id:foundByName.ID||u.id, name:u.name, oldName:foundByName.name, oldDept:foundByName.department, department:u.department, matchType:'name', selected:true });
+        } else {
+          newEmps.push({ ...u, customId: u.id||'', selected:true });
+        }
+      }
+    });
+    const inactiveEmps = this.employees.filter(e => {
+      if(e.status==='Inactive') return false;
+      const eId = e.ID ? cleanId(e.ID) : '';
+      if(eId && uploadedIds.has(eId)) return false;
+      const foundInUpload = uploadedList.some(u => u.name.trim().toLowerCase()===e.name.trim().toLowerCase());
+      if(foundInUpload) return false;
+      return true;
+    });
+    $set(syncPreview, {newEmps, inactiveEmps, updateEmps});
+    this.stopLoading();
+    this.showNotification(`Analysis: ${newEmps.length} new, ${inactiveEmps.length} to deactivate, ${updateEmps.length} to update`);
+  };
+  reader.readAsArrayBuffer(f.files[0]);
+},
+
+async confirmSyncLocal(syncPreview) {
+  if(!syncPreview) return;
+  const toAdd = syncPreview.newEmps.filter(e=>e.selected);
+  const toUpdate = syncPreview.updateEmps.filter(e=>e.selected);
+  const toInactive = syncPreview.inactiveEmps;
+  this.askConfirm(`Sync: Add ${toAdd.length}, Deactivate ${toInactive.length}, Update ${toUpdate.length}?`, async () => {
+    this.startLoading();
+    try {
+      // Add new employees
+      for(const e of toAdd) {
+        const {error} = await sb.from('Employees').insert({ Name: e.name, Department: e.department, Status: 'Active', ID: e.customId||null });
+        if(error) throw error;
+      }
+      // Mark missing as Inactive
+      for(const e of toInactive) {
+        await sb.from('Employees').update({ Status: 'Inactive' }).eq('db_id', e.db_id);
+      }
+      // Update names/depts
+      for(const e of toUpdate) {
+        if(e.matchType==='id') {
+          await sb.from('Employees').update({ Name: e.name, Department: e.department }).eq('ID', e.id);
+        } else {
+          await sb.from('Employees').update({ Department: e.department }).eq('Name', e.oldName);
+        }
+      }
+      this.showNotification(`Sync complete! Added ${toAdd.length}, deactivated ${toInactive.length}, updated ${toUpdate.length}`);
+      await this.fetchData();
+    } catch(err) {
+      this.stopLoading();
+      this.showNotification('Sync failed: ' + err.message, 'error');
+    }
+  });
+},
+
+// ---- Manager Lock functions ----
+loadLockTrainings(manager, $set) {
+  if(!manager) return;
+  const now = new Date();
+  const result = [];
+  const depts = this.settings.filter(s=>s.Manager===manager || s.manager===manager).map(s=>s.Department||s.department).filter(Boolean);
+  depts.forEach(dept => {
+    const trainingMap = new Map();
+    this.records.forEach(r => {
+      if(r.department !== dept) return;
+      if(!['No','NONE'].includes(r.status)) return;
+      if(r.managerNote && r.managerNote.trim()!=='') return;
+      const key = `${dept}|${r.course}|${r.date}`;
+      if(!trainingMap.has(key)) {
+        const tDate = new Date(r.date + 'T00:00:00');
+        const expiresAt = new Date(tDate.getTime() + 48*60*60*1000);
+        const hoursLeft = (expiresAt - now)/(1000*60*60);
+        trainingMap.set(key, { key, manager, department:dept, course:r.course, date:r.date, hoursLeft:Math.max(0,Math.floor(hoursLeft)), isLocked:hoursLeft<=0 });
+      }
+    });
+    trainingMap.forEach(v=>result.push(v));
+  });
+  $set(result.sort((a,b)=>{ if(a.isLocked!==b.isLocked) return a.isLocked?-1:1; return a.hoursLeft-b.hoursLeft; }));
+},
+
+renewLockLocal(item, hours, lockedTrainings) {
+  this.askConfirm(`Renew ${hours}hr review window for "${item.course}" (${item.date})?`, () => {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + hours*60*60*1000);
+    const idx = lockedTrainings.findIndex(t=>t.key===item.key);
+    if(idx>-1) {
+      lockedTrainings[idx].hoursLeft = hours;
+      lockedTrainings[idx].isLocked = false;
+    }
+    this.showNotification(`Renewed ${hours}hr window for "${item.course}"`);
+  });
+},
 
     // ==================== ZKTECO ====================
     async fetchZKTecoData() {

@@ -1,1089 +1,1393 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ckb" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Manager Justification Portal</title>
+  <title>پۆرتاڵی بەڕێوەبەر</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
+
   <style>
-    body { font-family: 'Inter', 'Vazirmatn', sans-serif; background-color: transparent; }
-    @keyframes shimmer {
-        0% { transform: translateX(-150%) skewX(-20deg); }
-        100% { transform: translateX(200%) skewX(-20deg); }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #7c3aed;
+      --gold: #e3b341;
+      --rose: #f85149;
+      --emerald: #3fb950;
+      --amber: #d29922;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --text3: #6e7681;
     }
-    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .loader { border-top-color: #4f46e5; animation: spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
-    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
-    /* =========================================================
-       Glassmorphism Background (Restored to original)
-       ========================================================= */
-    .bg-mesh-container {
-        position: fixed;
-        inset: 0;
-        z-index: -10;
-        background-color: #f8fafc;
-        overflow: hidden;
-        pointer-events: none;
-    }
-    .blob {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(120px);
-        mix-blend-multiply: normal;
-        opacity: 0.6;
-    }
-    @keyframes float-1 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(5vw, -10vh) scale(1.1); }
-        66% { transform: translate(-5vw, 10vh) scale(0.9); }
-    }
-    @keyframes float-2 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(-10vw, 5vh) scale(0.9); }
-        66% { transform: translate(5vw, -5vh) scale(1.1); }
-    }
-    @keyframes float-3 {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(5vw, 10vh) scale(1.15); }
-        66% { transform: translate(-10vw, -10vh) scale(0.85); }
-    }
-    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #a5b4fc; animation: float-1 35s infinite ease-in-out; }
-    .blob-2 { top: 20%; right: -15%; width: 45vw; height: 45vw; background: #f9a8d4; animation: float-2 40s infinite ease-in-out; }
-    .blob-3 { bottom: -15%; left: 15%; width: 55vw; height: 55vw; background: #67e8f9; animation: float-3 38s infinite ease-in-out; }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .sidebar-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
-    .sidebar-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
-    
-    /* =========================================================
-       NATIVE APP LAYOUT STRUCTURE (MOBILE ONLY)
-       NO COLOR/DESIGN CHANGES - ONLY LAYOUT
-       ========================================================= */
-    @media (max-width: 768px) {
-        /* Prevent iOS zoom on inputs */
-        input, textarea, select { font-size: 16px !important; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-        /* Main Screen Layout Adjustments */
-        main { padding: 0 !important; }
-        .mobile-scroll-padding { padding-bottom: 110px !important; padding-top: 10px !important; }
-
-        /* Review Needed Large Header block */
-        .mb-5.flex.flex-col.md\:flex-row {
-            border: none !important; box-shadow: none !important;
-            padding: 0.5rem 1rem 1rem 1rem !important; margin-bottom: 0 !important;
-        }
-
-        /* Group Headers (Absent / Late) */
-        .flex-col.xl\:flex-row > div {
-            background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
-        }
-        .px-2.md\:px-5.py-2 {
-            background: transparent !important; border: none !important; padding: 1rem 1.25rem 0.5rem 1.25rem !important;
-        }
-
-        /* THE MAGIC: TABLES TO NATIVE LIST CARDS (GRID) */
-        .table-responsive { overflow: visible !important; display: block !important; padding: 0 1rem !important; margin-bottom: 1.5rem !important; }
-        table { display: block !important; width: 100% !important; }
-        thead { display: none !important; }
-        tbody { display: flex !important; flex-direction: column !important; gap: 0.85rem !important; border: none !important; }
-        
-        tr {
-            display: grid !important;
-            grid-template-columns: 1fr auto;
-            grid-template-areas: 
-                "name time"
-                "details details"
-                "status status"
-                "note note";
-            background: rgba(255, 255, 255, 0.6) !important;
-            backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important;
-            border-radius: 1.5rem !important;
-            padding: 1.25rem !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.8) !important;
-            align-items: center;
-        }
-
-        /* Map specific TD elements to Grid Areas */
-        td { display: block !important; padding: 0 !important; border: none !important; white-space: normal !important; width: 100% !important; }
-        
-        td:nth-child(1) { grid-area: name; margin-bottom: 0.25rem; } /* Name */
-        td:nth-child(2) { grid-area: details; margin-bottom: 1rem; margin-top: 0.25rem; } /* Badges */
-        td:nth-child(3) { grid-area: time; text-align: right; justify-self: end; } /* In/Out Times */
-        td:nth-child(4) { grid-area: status; margin-bottom: 0.75rem; } /* Select */
-        td:nth-child(5) { grid-area: note; } /* Textarea */
-
-        /* Internal Card Typography & Spacing */
-        td:nth-child(1) .text-sm { font-size: 1.15rem !important; font-weight: 700 !important; }
-        td:nth-child(3) .text-xs { font-size: 0.75rem !important; display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem; }
-        td:nth-child(3) .bg-white\/60 { background: transparent !important; border: none !important; padding: 0 !important; }
-        
-        /* Dropdown positioning fix in cards */
-        td:nth-child(4) .absolute { top: 16px !important; right: 14px !important; }
-
-        /* Sticky Native Action Bar at Bottom */
-        .fixed.bottom-0 {
-            background: rgba(255, 255, 255, 0.85) !important;
-            backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important;
-            border-top: 1px solid rgba(255,255,255,0.6) !important;
-            padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem !important;
-            display: flex !important; flex-direction: column !important;
-        }
-        .fixed.bottom-0 button, .fixed.bottom-0 > div {
-            width: 100% !important; padding: 1rem !important; border-radius: 14px !important; font-size: 1rem !important; font-weight: 700 !important;
-        }
+    /* Grid pattern bg */
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
     }
 
-    /* Keep inputs scrollable under keyboard */
-    input:focus, textarea:focus { scroll-margin-bottom: 250px; }
+    /* Glow effects */
+    .glow-blue { box-shadow: 0 0 20px rgba(88,166,255,0.15); }
+    .glow-violet { box-shadow: 0 0 20px rgba(124,58,237,0.2); }
+    .glow-rose { box-shadow: 0 0 20px rgba(248,81,73,0.15); }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(150%) skewX(-20deg); }
+      100% { transform: translateX(-150%) skewX(-20deg); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .fade-up { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+    .spin { animation: spin 1s linear infinite; }
+    .float { animation: float 3s ease-in-out infinite; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .card-hover {
+      transition: all 0.2s;
+    }
+    .card-hover:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    /* Sidebar nav button */
+    .nav-btn {
+      width: 100%;
+      text-align: right;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-direction: row-reverse;
+    }
+    .nav-btn:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .nav-btn.active {
+      background: rgba(88,166,255,0.1);
+      border-color: rgba(88,166,255,0.3);
+      color: var(--accent);
+    }
+
+    /* Table styles */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      padding: 10px 14px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 12px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: background 0.15s; }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* Checkbox custom */
+    .custom-check {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .custom-check.checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .custom-check:hover { border-color: var(--accent); }
+
+    /* Select */
+    .fancy-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+    }
+    .fancy-select:focus { border-color: var(--accent); }
+    .fancy-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Textarea */
+    .fancy-textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      outline: none;
+      resize: vertical;
+      width: 100%;
+      min-height: 36px;
+      transition: border-color 0.15s;
+      line-height: 1.5;
+    }
+    .fancy-textarea:focus { border-color: var(--accent); }
+    .fancy-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+    .fancy-textarea::placeholder { color: var(--text3); }
+
+    /* Badge */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Button primary */
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
+
+    /* Progress bar */
+    .progress-track {
+      background: var(--surface2);
+      border-radius: 100px;
+      height: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    /* Loader */
+    .loader-ring {
+      width: 48px; height: 48px;
+      border: 3px solid var(--surface2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 50%;
+      transform: translateX(50%);
+      z-index: 9999;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      animation: fadeUp 0.3s ease;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      input, textarea, select { font-size: 16px !important; }
+      
+      .data-table thead { display: none; }
+      .data-table tbody { display: flex; flex-direction: column; gap: 12px; }
+      .data-table tr {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas: "chk name time" "chk badges badges" "chk select select" "chk note note";
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        align-items: start;
+      }
+      .data-table td { display: block; padding: 0; border: none; }
+      .data-table td:nth-child(1) { grid-area: chk; padding-top: 2px; }
+      .data-table td:nth-child(2) { grid-area: name; }
+      .data-table td:nth-child(3) { grid-area: badges; }
+      .data-table td:nth-child(4) { grid-area: time; text-align: left; }
+      .data-table td:nth-child(5) { grid-area: select; }
+      .data-table td:nth-child(6) { grid-area: note; }
+    }
+
+    /* Sidebar mobile slide */
+    .sidebar-mobile {
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Section heading line */
+    .section-line {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Bulk action bar */
+    .bulk-bar {
+      background: rgba(88,166,255,0.08);
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Login card glow animation */
+    @keyframes borderGlow {
+      0%, 100% { border-color: var(--border); }
+      50% { border-color: rgba(88,166,255,0.4); }
+    }
+    .login-card {
+      animation: borderGlow 4s ease-in-out infinite;
+    }
+
+    /* Status color helpers */
+    .status-no { color: var(--rose); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
+    .status-late { color: var(--amber); background: rgba(210,153,34,0.1); border-color: rgba(210,153,34,0.25); }
+    .status-perm { color: #a78bfa; background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.25); }
+    .status-duty { color: var(--accent); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
+    .status-yes { color: var(--emerald); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25); }
   </style>
 </head>
-<body class="text-slate-800 antialiased h-[100dvh] w-full overflow-hidden flex flex-col selection:bg-indigo-100 selection:text-indigo-900" x-data="managerApp()">
 
-  <!-- GLASSMORPHISM BACKGROUND -->
-  <div class="bg-mesh-container">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-      <div class="blob blob-3"></div>
-  </div>
+<body class="h-screen w-screen overflow-hidden flex flex-col grid-bg" x-data="managerApp()">
 
-  <!-- ==================== LOGIN SCREEN ==================== -->
-  <div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 fade-in relative z-10 overflow-y-auto">
-     <div class="bg-white/60 backdrop-blur-2xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full max-w-md border border-white/80">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-white text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm border border-indigo-50 rotate-3 transition-transform hover:rotate-0 duration-300">
-                <i class="fa fa-lock text-2xl"></i>
-            </div>
-            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h2>
-            <p class="text-sm text-slate-500 mt-2 font-medium">Please log in to manage your department.</p>
-        </div>
-        
-        <div x-show="loginError" style="display: none;" class="bg-rose-50/80 backdrop-blur-sm border border-rose-200 text-rose-600 p-4 rounded-xl text-sm mb-6 font-semibold flex items-start gap-3 fade-in">
-            <i class="fa fa-exclamation-triangle mt-0.5 text-rose-500"></i>
-            <span x-text="loginError"></span>
-        </div>
-
-        <div class="space-y-5">
-           <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
-              <div class="relative">
-                  <select x-model="loginUser" class="w-full border border-white/60 p-3.5 pl-11 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white/50 hover:bg-white/80 focus:bg-white appearance-none cursor-pointer font-medium text-slate-700 shadow-sm">
-                      <option value="">-- Select Username --</option>
-                      <template x-for="u in managerUsernames" :key="u">
-                          <option :value="u" x-text="u"></option>
-                      </template>
-                  </select>
-                  <i class="fa fa-user absolute left-4 top-5 text-slate-400"></i>
-                  <i class="fa fa-chevron-down absolute right-4 top-5 text-slate-400  pointer-events-none"></i>
-              </div>
-              <div x-show="managerUsernames.length === 0" class="text-[11px] text-indigo-500 mt-2 ml-1 font-medium animate-pulse">Loading directory...</div>
-           </div>
-           <div>
-              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Password</label>
-              <div class="relative">
-                  <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
-                         class="w-full border border-white/60 p-3.5 pl-11 pr-12 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all bg-white/50 focus:bg-white font-medium text-slate-700 placeholder:text-slate-400 shadow-sm" placeholder="••••••••">
-                  <i class="fa fa-key absolute left-4 top-5 text-slate-400"></i>
-                  <button type="button" @click="showPassword = !showPassword"
-                          class="absolute right-4 top-4 text-slate-400 hover:text-indigo-600 transition-colors p-0.5" tabindex="-1">
-                      <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
-                  </button>
-              </div>
-           </div>
-           <!-- Remember Me -->
-           <div class="flex items-center gap-3 pt-1 pl-1">
-               <input type="checkbox" id="rememberMe" x-model="rememberMe" class="h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer transition-all bg-white/50">
-               <label for="rememberMe" class="text-sm font-medium text-slate-600 cursor-pointer select-none">Remember me on this device</label>
-           </div>
-           
-           <button @click="doLogin" :disabled="isLoggingIn" class="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-indigo-600 transition-all flex justify-center items-center shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] active:scale-[0.98] mt-4">
-              <span x-show="!isLoggingIn">Sign In to Dashboard</span>
-              <i x-show="isLoggingIn" class="fa fa-circle-notch fa-spin text-lg" style="display: none;"></i>
-           </button>
-        </div>
-     </div>
-  </div>
-
-  <!-- LOADING OVERLAY -->
-  <div x-show="isLoggedIn && isLoading" style="display: none;" class="fixed inset-0 bg-white/40 backdrop-blur-lg flex flex-col items-center justify-center z-[100] fade-in">
-      <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-300 h-16 w-16 mb-6"></div>
-      <h2 class="text-xl font-bold text-slate-800 tracking-tight" x-text="loadingMessage">Loading Data...</h2>
-      <p class="text-sm text-slate-500 mt-2 font-medium">Please wait a moment</p>
-  </div>
-
-  <!-- ==================== MAIN PORTAL (SIDEBAR + CONTENT) ==================== -->
-  <div x-show="isLoggedIn && !isLoading" style="display: none;" class="flex flex-col md:flex-row flex-1 overflow-hidden relative z-10 fade-in">
-
-    <!-- Mobile Top Header -->
-    <div class="md:hidden bg-slate-900/95 backdrop-blur-xl text-white border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 z-40 shadow-md">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 z-10">
-        <i class="fa-solid fa-fingerprint text-white text-lg"></i>
+<!-- ==================== LOGIN ==================== -->
+<div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 fade-up overflow-y-auto">
+  <div class="card login-card w-full max-w-sm p-8 glow-blue">
+    
+    <div class="text-center mb-8">
+      <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-violet-700 flex items-center justify-center mx-auto mb-4 float" style="box-shadow: 0 8px 32px rgba(88,166,255,0.3)">
+        <i class="fa-solid fa-fingerprint text-white text-xl"></i>
+      </div>
+      <h1 class="text-xl font-black text-white">پۆرتاڵی بەڕێوەبەر</h1>
+      <p class="text-xs mt-1" style="color: var(--text3)">سیستەمی توێژینەوەی غیابات</p>
     </div>
-            <div>
-                <h1 class="font-extrabold text-sm leading-tight">Manager Portal</h1>
-                <div class="text-[9px] text-indigo-300 font-bold uppercase tracking-widest">Absence Justification</div>
-            </div>
+
+    <div x-show="loginError" style="display:none;" class="mb-5 p-3 rounded-lg text-sm font-semibold flex items-start gap-2 fade-up" style="background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.3); color:var(--rose)">
+      <i class="fa fa-exclamation-circle mt-0.5"></i>
+      <span x-text="loginError"></span>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)">ناوی بەکارهێنەر</label>
+        <div class="relative">
+          <select x-model="loginUser" class="fancy-select pr-10" style="padding-right:36px">
+            <option value="">-- هەڵبژێرە --</option>
+            <template x-for="u in managerUsernames" :key="u">
+              <option :value="u" x-text="u"></option>
+            </template>
+          </select>
+          <i class="fa fa-user absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
         </div>
-        <button @click="mobileMenuOpen = true" class="text-slate-300 hover:text-white p-2 focus:outline-none">
-            <i class="fa fa-bars text-xl"></i>
+        <div x-show="managerUsernames.length === 0" class="text-xs mt-1 font-medium" style="color:var(--accent)">
+          <i class="fa fa-circle-notch fa-spin ml-1"></i> بارکردنی لیست...
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)">وشەی نهێنی</label>
+        <div class="relative">
+          <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
+            class="fancy-select pr-10 w-full" placeholder="••••••••" style="padding-right:36px">
+          <i class="fa fa-key absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
+          <button type="button" @click="showPassword = !showPassword"
+            class="absolute top-2.5 left-3 text-xs transition-colors" style="color:var(--text3)" :style="showPassword ? 'color:var(--accent)' : ''">
+            <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+          </button>
+        </div>
+      </div>
+
+      <label class="flex items-center gap-3 cursor-pointer">
+        <div class="custom-check" :class="rememberMe ? 'checked' : ''" @click="rememberMe = !rememberMe">
+          <i x-show="rememberMe" class="fa fa-check text-xs text-white" style="font-size:10px"></i>
+        </div>
+        <span class="text-sm font-medium" style="color:var(--text2)">لە ئەم ئامێرەدا بەخاتروم بهێلە</span>
+      </label>
+
+      <button @click="doLogin" :disabled="isLoggingIn" class="btn-primary w-full justify-center mt-2">
+        <i class="fa fa-sign-in-alt" x-show="!isLoggingIn"></i>
+        <i class="fa fa-circle-notch fa-spin" x-show="isLoggingIn" style="display:none"></i>
+        <span x-show="!isLoggingIn">چوونە ژوورەوە</span>
+        <span x-show="isLoggingIn" style="display:none">چاوەڕوانبە...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LOADING ==================== -->
+<div x-show="isLoggedIn && isLoading" style="display:none" class="fixed inset-0 z-[100] flex flex-col items-center justify-center fade-up" style="background:rgba(13,17,23,0.85); backdrop-filter:blur(8px)">
+  <div class="loader-ring mb-5"></div>
+  <p class="font-bold text-lg" x-text="loadingMessage">بارکردن...</p>
+  <p class="text-sm mt-1" style="color:var(--text3)">تکایە کەمێک چاوەڕوان بە</p>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div x-show="isLoggedIn && !isLoading" style="display:none" class="flex flex-col md:flex-row flex-1 overflow-hidden fade-up">
+
+  <!-- Mobile top bar -->
+  <div class="md:hidden flex items-center justify-between px-4 py-3 shrink-0 border-b" style="background:var(--surface); border-color:var(--border)">
+    <button @click="mobileMenuOpen = true" class="p-2 rounded-lg" style="color:var(--text2)">
+      <i class="fa fa-bars"></i>
+    </button>
+    <div class="text-center">
+      <div class="text-sm font-black text-white">پۆرتاڵی بەڕێوەبەر</div>
+      <div class="text-xs" style="color:var(--accent)">سیستەمی غیابات</div>
+    </div>
+    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black" style="background:var(--accent); color:#0d1117" x-text="loggedInManagerName.charAt(0)"></div>
+  </div>
+
+  <!-- Mobile overlay -->
+  <div x-show="mobileMenuOpen" style="display:none" class="fixed inset-0 z-50 md:hidden" style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px)" @click="mobileMenuOpen = false"></div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="fixed inset-y-0 right-0 z-[60] w-72 flex flex-col shrink-0 border-l sidebar-mobile md:relative md:translate-x-0"
+    :class="mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'"
+    style="background:var(--surface); border-color:var(--border)">
+
+    <!-- Header -->
+    <div class="p-5 border-b shrink-0" style="border-color:var(--border)">
+      <div class="hidden md:flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white" style="background:linear-gradient(135deg,#1d4ed8,#7c3aed)">
+          <i class="fa-solid fa-fingerprint"></i>
+        </div>
+        <div>
+          <div class="font-black text-sm text-white">پۆرتاڵی بەڕێوەبەر</div>
+          <div class="text-xs" style="color:var(--accent)">سیستەمی توێژینەوەی غیابات</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 rounded-lg" style="background:var(--surface2)">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0"
+          style="background:linear-gradient(135deg,var(--accent),#7c3aed); color:#0d1117"
+          x-text="loggedInManagerName.charAt(0)"></div>
+        <div class="overflow-hidden">
+          <div class="font-bold text-sm text-white truncate" x-text="loggedInManagerName"></div>
+          <div class="text-xs" style="color:var(--text3)">بەڕێوەبەر</div>
+        </div>
+        <button @click="mobileMenuOpen = false" class="md:hidden mr-auto p-1" style="color:var(--text3)">
+          <i class="fa fa-times"></i>
         </button>
+      </div>
     </div>
 
-    <!-- Mobile Sidebar Overlay -->
-    <div x-show="mobileMenuOpen" style="display: none;" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 md:hidden transition-opacity" @click="mobileMenuOpen = false"></div>
+    <!-- Scrollable nav -->
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
 
-    <!-- ========== SIDEBAR ========== -->
-    <aside class="fixed inset-y-0 left-0 z-[60] w-72 bg-slate-900/95 backdrop-blur-2xl text-slate-300 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.05)] border-r border-slate-800/50 transition-transform duration-300 md:relative md:translate-x-0 md:z-50"
-           :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
-      
-      <!-- Top Profile Area -->
-      <div class="px-5 pt-6 pb-5 border-b border-slate-800/50 shrink-0">
-          <div class="flex items-center gap-3 mb-6 hidden md:flex">
-              <div class="w-10 h-10 bg-indigo-600 text-white rounded-[1rem] flex items-center justify-center shadow-inner shadow-indigo-900/20">
-                  <i class="fa-solid fa-building-user text-xl"></i>
-              </div>
-              <div>
-                  <h1 class="text-lg font-extrabold tracking-tight text-white leading-none">Manager Portal</h1>
-                  <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mt-0.5">Absence Justification</div>
-              </div>
-          </div>
-          
-          <div class="flex items-center gap-3 bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
-              <div class="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center text-indigo-300 shrink-0 shadow-sm">
-                 <i class="fa fa-user"></i>
-              </div>
-              <div class="overflow-hidden">
-                  <p class="font-bold text-white text-sm truncate" x-text="loggedInManagerName"></p>
-              </div>
-          </div>
-          
-          <div class="md:hidden flex items-center justify-between mt-4">
-              <span class="text-xs font-bold uppercase tracking-widest text-slate-500">Navigation Menu</span>
-              <button @click="mobileMenuOpen = false" class="text-slate-400 hover:text-white">
-                  <i class="fa fa-times text-xl"></i>
-              </button>
-          </div>
-      </div>
-
-      <!-- Scrollable Navigation Area -->
-      <div class="flex-1 overflow-y-auto sidebar-scrollbar p-4 flex flex-col gap-4">
-          <!-- Departments Radio Buttons -->
-          <div>
-              <p class="text-[11px] uppercase font-bold text-slate-500 tracking-widest mb-3 pl-2">Select Department</p>
-              <div class="space-y-2 px-1">
-                  <template x-for="dept in managerDepts" :key="dept.name">
-                      <label class="flex items-center p-3 rounded-[1rem] border cursor-pointer transition-all shadow-sm"
-                             :class="selectedDept === dept.name ? 'bg-indigo-600/10 border-indigo-500/50 text-indigo-300' : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-700/60'">
-                          <input type="radio" name="deptSelection" :value="dept.name" x-model="selectedDept" @change="updateMonths(); selectedTraining = '';" class="hidden">
-                          <div class="w-4 h-4 rounded-full border flex items-center justify-center mr-3 shrink-0 transition-colors"
-                               :class="selectedDept === dept.name ? 'border-indigo-400' : 'border-slate-500'">
-                              <div x-show="selectedDept === dept.name" class="w-2 h-2 rounded-full bg-indigo-400 fade-in"></div>
-                          </div>
-                          <span class="text-xs font-bold flex-1 truncate" x-text="dept.name"></span>
-                          <span x-show="dept.pendingCount > 0" class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20" x-text="dept.pendingCount + ' Pending'"></span>
-                      </label>
-                  </template>
-                  <div x-show="managerDepts.length === 0" class="text-slate-500 text-xs text-center py-4 font-medium">No departments assigned</div>
-              </div>
-          </div>
-
-          <!-- Month Filter & Trainings List -->
-          <div x-show="selectedDept" class="fade-in border-t border-slate-800/50 pt-4 mt-2">
-              <div class="px-1 mb-4 relative">
-                  <select x-model="selectedMonth" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs font-bold text-slate-300 outline-none focus:border-indigo-500 transition-colors appearance-none shadow-inner cursor-pointer">
-                      <option value="">All Months</option>
-                      <template x-for="m in availableMonths">
-                          <option :value="m.value" x-text="m.label"></option>
-                      </template>
-                  </select>
-                  <i class="fa fa-calendar-alt absolute right-4 top-3 text-slate-500 pointer-events-none text-xs"></i>
-              </div>
-
-              <div class="space-y-2 px-1">
-                  <template x-for="t in filteredTrainings" :key="t.key">
-                      <button @click="selectTrainingCard(t); mobileMenuOpen = false;"
-        :class="selectedTraining === t.key
-          ? 'bg-indigo-500 text-white shadow-md border border-indigo-400'
-          : (t.isLocked && !t.isFullyReviewed) ? 'opacity-70 text-slate-400 bg-slate-800/30 border border-slate-700/50 hover:bg-slate-700/50'
-          : 'bg-slate-800/40 border border-slate-700/50 text-slate-300 hover:bg-slate-700'"
-        class="w-full text-left px-4 py-3 rounded-[1rem] transition-all block">
-                        
-                        <div class="font-bold text-xs truncate" :class="selectedTraining === t.key ? 'text-white' : ''" x-text="t.course"></div>
-                        <div class="text-[10px] mt-1.5 flex items-center justify-between font-medium"
-                             :class="selectedTraining === t.key ? 'text-indigo-100' : 'text-slate-400'">
-                          <span class="flex items-center gap-1"><i class="fa-regular fa-calendar"></i> <span x-text="t.date"></span></span>
-                          
-                          <template x-if="t.isFullyReviewed">
-                              <span class="text-emerald-400 flex items-center gap-1"><i class="fa fa-check-double"></i> Reviewed</span>
-                          </template>
-                          <template x-if="!t.isFullyReviewed">
-                              <span>
-                                  <span x-show="t.isLocked" class="text-rose-400/80 flex items-center gap-1"><i class="fa fa-lock text-[9px]"></i> Locked</span>
-                                  <span x-show="!t.isLocked" :class="t.hoursLeft < 12 && selectedTraining !== t.key ? 'text-amber-400/90' : 'opacity-80'" x-text="t.hoursLeft + 'h left'"></span>
-                              </span>
-                          </template>
-                        </div>
-                      </button>
-                  </template>
-                  <div x-show="filteredTrainings.length === 0" class="text-slate-500 text-xs text-center py-3 font-medium bg-slate-800/20 rounded-[1rem] border border-slate-800/50">
-                      No trainings found.
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Sidebar Bottom -->
-      <div class="p-4 border-t border-slate-800/50 bg-slate-900/50 shrink-0">
-          <div class="flex gap-2">
-              <button @click="fetchData()" :disabled="isLoading"
-                      class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center justify-center gap-2 border border-slate-700 shadow-sm active:scale-95">
-                  <i class="fa fa-sync-alt text-indigo-400" :class="isLoading ? 'fa-spin' : ''"></i> Refresh
-              </button>
-              <button @click="logout" 
-                      class="flex-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center justify-center gap-2 border border-rose-500/20 shadow-sm active:scale-95">
-                  <i class="fa fa-sign-out-alt"></i> Logout
-              </button>
-          </div>
-      </div>
-    </aside>
-
-    <!-- ========== MAIN CONTENT ========== -->
-    <main class="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col w-full max-w-full" style="-webkit-overflow-scrolling: touch;">
-
-      <!-- Placeholder: No dept selected -->
-      <div x-show="!selectedDept" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
-        <div class="text-center text-slate-500 max-w-xs">
-          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4 rotate-3">
-              <i class="fa-regular fa-building text-3xl text-indigo-400 md:text-indigo-300"></i>
-          </div>
-          <p class="font-extrabold text-slate-700 text-lg">Select a Department</p>
-          <p class="text-xs mt-2 font-medium">Choose from the menu to begin reviewing.</p>
+      <!-- Departments -->
+      <div>
+        <div class="section-line mb-3">
+          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)">بەشەکان</span>
+        </div>
+        <div class="space-y-1">
+          <template x-for="dept in managerDepts" :key="dept.name">
+            <button @click="selectedDept = dept.name; updateMonths(); selectedTraining = ''; mobileMenuOpen = false;"
+              class="nav-btn" :class="selectedDept === dept.name ? 'active' : ''">
+              <span x-text="dept.name" class="flex-1 text-right truncate"></span>
+              <span x-show="dept.pendingCount > 0" class="badge text-xs flex-shrink-0"
+                style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"
+                x-text="dept.pendingCount + ' چاوەڕوان'"></span>
+            </button>
+          </template>
+          <div x-show="managerDepts.length === 0" class="text-xs text-center py-3" style="color:var(--text3)">هیچ بەشێک دیاری نەکراوە</div>
         </div>
       </div>
 
-      <!-- Placeholder: Dept selected but no training -->
-      <div x-show="selectedDept && !selectedTraining" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
-        <div class="text-center text-slate-500 max-w-xs">
-          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-3xl shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4 -rotate-3">
-              <i class="fa-solid fa-clipboard-list text-3xl text-indigo-400 md:text-indigo-300"></i>
-          </div>
-          <p class="font-extrabold text-slate-700 text-lg" x-text="selectedDept"></p>
-          <p class="text-xs mt-2 font-medium">Select a pending training task.</p>
+      <!-- Month filter + trainings -->
+      <div x-show="selectedDept" class="fade-up">
+        <div class="section-line mb-3">
+          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)">پڕۆگرامەکان</span>
         </div>
-      </div>
 
-      <!-- Placeholder: All clear -->
-      <div x-show="selectedTraining && localRecords.length === 0 && !isLoading" class="absolute inset-0 flex items-center justify-center pointer-events-none p-6">
-        <div class="text-center text-slate-500 max-w-xs">
-          <div class="w-20 h-20 bg-white/60 backdrop-blur-xl rounded-full shadow-sm border border-gray-200 md:border-white flex items-center justify-center mx-auto mb-4">
-              <i class="fa fa-check text-3xl text-emerald-500"></i>
-          </div>
-          <p class="font-extrabold text-slate-700 text-lg">All Clear!</p>
-          <p class="text-xs mt-2 font-medium">No pending reviews found for this training.</p>
+        <div class="relative mb-3">
+          <select x-model="selectedMonth" class="fancy-select text-xs pr-8" style="padding-right:30px">
+            <option value="">هەموو مانگەکان</option>
+            <template x-for="m in availableMonths">
+              <option :value="m.value" x-text="m.label"></option>
+            </template>
+          </select>
+          <i class="fa fa-chevron-down absolute top-3 right-3 text-xs pointer-events-none" style="color:var(--text3)"></i>
         </div>
-      </div>
 
-      <!-- EMPLOYEES LIST CONTENT -->
-      <div x-show="selectedTraining && localRecords.length > 0" class="p-0 md:p-5 lg:p-6 fade-in w-full flex-1 mx-auto mobile-scroll-padding">
-          
-         <!-- Training Header Info -->
-          <div class="mb-5 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-white/40 backdrop-blur-lg p-4 md:p-5 rounded-none md:rounded-[1.5rem] border-b border-white/60 md:border md:shadow-sm relative">
-              <div class="flex-1">
-                  <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-                      Review Needed
-                  </h2>
-                  <div class="flex items-center flex-wrap gap-2 mt-3 text-xs font-semibold text-slate-600">
-                      <span class="bg-white/80 px-3 py-1.5 rounded-xl border border-white shadow-sm flex items-center gap-2 text-indigo-700">
-                          <span x-text="selectedTraining.split('|')[0]"></span>
-                      </span>
-                      <span class="bg-white/80 px-3 py-1.5 rounded-xl border border-white shadow-sm flex items-center gap-2">
-                          <span x-text="selectedTraining.split('|')[1]"></span>
-                      </span>
-                  </div>
+        <div class="space-y-1.5">
+          <template x-for="t in filteredTrainings" :key="t.key">
+            <button @click="selectTrainingCard(t); mobileMenuOpen = false;"
+              class="nav-btn w-full flex-col items-stretch gap-1 py-3"
+              :class="selectedTraining === t.key ? 'active' : ''">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-black truncate flex-1" :class="selectedTraining === t.key ? 'text-white' : ''" x-text="t.course" style="text-align:right"></span>
+                <template x-if="t.isFullyReviewed">
+                  <span class="badge text-xs flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)"><i class="fa fa-check-double"></i></span>
+                </template>
+                <template x-if="!t.isFullyReviewed && t.isLocked">
+                  <span class="badge text-xs flex-shrink-0" style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"><i class="fa fa-lock"></i></span>
+                </template>
               </div>
-              
-              <!-- PROGRESS BAR WITH LIVE COUNTDOWN -->
-              <div x-show="activeTrainingObj && !activeTrainingObj.isFullyReviewed" class="w-full md:w-64 mt-2 md:mt-0 shrink-0 bg-white/50 p-3 rounded-xl border border-white/70 shadow-sm">
-                  <div class="flex justify-between items-center text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-2">
-                      <span>Time Remaining</span>
-                      <span :class="activeTrainingObj.hoursLeft < 12 ? 'text-rose-600' : 'text-indigo-600'" x-text="formatCountdown(activeTrainingObj.expiresAt)"></span>
+              <div class="flex items-center justify-between text-xs" style="color:var(--text3)">
+                <span x-text="t.date"></span>
+                <template x-if="!t.isFullyReviewed && !t.isLocked">
+                  <span :style="t.hoursLeft < 12 ? 'color:var(--amber)' : ''" x-text="t.hoursLeft + ' کاتژمێر'"></span>
+                </template>
+              </div>
+            </button>
+          </template>
+          <div x-show="filteredTrainings.length === 0" class="text-xs text-center py-3 rounded-lg" style="color:var(--text3); background:var(--surface2)">هیچ پڕۆگرامێک نەدۆزرایەوە</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom actions -->
+    <div class="p-4 border-t shrink-0 flex gap-2" style="border-color:var(--border)">
+      <button @click="fetchData()" :disabled="isLoading" class="btn-ghost flex-1 justify-center text-xs">
+        <i class="fa fa-sync-alt" :class="isLoading ? 'fa-spin' : ''"></i> نوێکردنەوە
+      </button>
+      <button @click="logout" class="btn-ghost flex-1 justify-center text-xs" style="color:var(--rose); border-color:rgba(248,81,73,0.3)">
+        <i class="fa fa-sign-out-alt"></i> چوونەدەرەوە
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col" style="-webkit-overflow-scrolling:touch">
+
+    <!-- Empty states -->
+    <div x-show="!selectedDept" class="flex-1 flex items-center justify-center p-6">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
+          <i class="fa-regular fa-building text-2xl" style="color:var(--accent)"></i>
+        </div>
+        <p class="font-black text-white text-lg">بەشێک هەڵبژێرە</p>
+        <p class="text-sm mt-1" style="color:var(--text3)">لە لیستی لای راست هەڵبژێرە</p>
+      </div>
+    </div>
+
+    <div x-show="selectedDept && !selectedTraining" class="flex-1 flex items-center justify-center p-6">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
+          <i class="fa-solid fa-clipboard-list text-2xl" style="color:var(--accent)"></i>
+        </div>
+        <p class="font-black text-white text-lg" x-text="selectedDept"></p>
+        <p class="text-sm mt-1" style="color:var(--text3)">پڕۆگرامێکی پەرتووخانە هەڵبژێرە</p>
+      </div>
+    </div>
+
+    <div x-show="selectedTraining && localRecords.length === 0 && !isLoading" class="flex-1 flex items-center justify-center p-6">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.3)">
+          <i class="fa fa-check text-2xl" style="color:var(--emerald)"></i>
+        </div>
+        <p class="font-black text-white text-lg">هەموویان باشە!</p>
+        <p class="text-sm mt-1" style="color:var(--text3)">هیچ تۆمارێکی چاوەڕوان نییە</p>
+      </div>
+    </div>
+
+    <!-- ===== RECORDS ===== -->
+    <div x-show="selectedTraining && localRecords.length > 0" class="p-4 md:p-6 fade-up flex flex-col gap-5" style="padding-bottom:100px">
+
+      <!-- Training header -->
+      <div class="card p-4 md:p-5">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <span class="badge status-no border" x-show="absentRecords.length > 0" x-text="absentRecords.length + ' غایب'"></span>
+              <span class="badge status-late border" x-show="lateRecords.length > 0" x-text="lateRecords.length + ' دواکەوتوو'"></span>
+            </div>
+            <h2 class="text-base md:text-lg font-black text-white" x-text="selectedTraining.split('|')[0]"></h2>
+            <div class="flex items-center gap-3 mt-1 text-xs font-medium flex-wrap" style="color:var(--text3)">
+              <span class="flex items-center gap-1"><i class="fa-regular fa-calendar" style="color:var(--accent)"></i> <span x-text="selectedTraining.split('|')[1]"></span></span>
+            </div>
+          </div>
+
+          <!-- Countdown -->
+          <div x-show="activeTrainingObj && !activeTrainingObj.isFullyReviewed" class="w-full md:w-56 shrink-0">
+            <div class="flex justify-between text-xs font-bold mb-2">
+              <span style="color:var(--text3)">کاتی ماوە</span>
+              <span :style="activeTrainingObj?.hoursLeft < 12 ? 'color:var(--rose)' : 'color:var(--accent)'"
+                x-text="formatCountdown(activeTrainingObj?.expiresAt)"></span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill"
+                :style="`width:${activeTrainingObj?.percentLeft || 0}%; background:${activeTrainingObj?.hoursLeft < 12 ? 'var(--rose)' : 'var(--accent)'}`"></div>
+            </div>
+          </div>
+
+          <!-- Submit / Status buttons -->
+          <div class="flex gap-2 flex-shrink-0">
+            <button x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked"
+              @click="submitNotes" class="btn-primary">
+              <i class="fa fa-paper-plane"></i> تەواوکردن
+            </button>
+            <div x-show="activeTrainingObj?.isFullyReviewed"
+              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(63,185,80,0.1); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)">
+              <i class="fa fa-check-double"></i> تەواوبووە
+            </div>
+            <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed"
+              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.3)">
+              <i class="fa fa-lock"></i> کاتی تەواوبوو
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== ABSENT SECTION ========== -->
+      <div x-show="absentRecords.length > 0" class="card fade-up">
+        <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full" style="background:var(--rose); box-shadow:0 0 8px rgba(248,81,73,0.5)"></div>
+            <h3 class="font-black text-sm text-white">کارمەندانی غایب</h3>
+            <span class="badge text-xs" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.25)"
+              x-text="absentRecords.length"></span>
+          </div>
+
+          <!-- Select all for absent -->
+          <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+            <button @click="toggleSelectAll('absent')" class="btn-ghost text-xs px-3 py-2">
+              <div class="custom-check w-4 h-4" :class="isAllAbsentSelected ? 'checked' : ''">
+                <i x-show="isAllAbsentSelected" class="fa fa-check text-white" style="font-size:9px"></i>
+              </div>
+              هەموویان
+            </button>
+          </div>
+        </div>
+
+        <!-- Bulk action bar for absent -->
+        <div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up">
+          <div class="bulk-bar">
+            <span class="text-sm font-bold" style="color:var(--accent)">
+              <i class="fa fa-check-square ml-1"></i>
+              <span x-text="selectedAbsent.length"></span> کارمەند هەڵبژێردرا
+            </span>
+            <div class="flex items-center gap-2 flex-wrap mr-auto">
+              <span class="text-xs font-bold" style="color:var(--text3)">ستاتوس:</span>
+              <select x-model="bulkStatusAbsent" class="fancy-select text-xs w-auto" style="width:auto; min-width:130px">
+                <option value="">هەڵبژێرە</option>
+                <option value="No">غایب</option>
+                <option value="Permission">مۆڵەت</option>
+                <option value="At Duty">لە کارەوە</option>
+                <option value="Yes">ئامادەبووە</option>
+              </select>
+              <button @click="applyBulkAbsent" :disabled="!bulkStatusAbsent" class="btn-primary text-xs px-3 py-2">
+                <i class="fa fa-bolt"></i> جێبەجێ بکە
+              </button>
+              <button @click="clearAbsentSelection" class="btn-ghost text-xs px-3 py-2">پووچەڵکردنەوە</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="w-10">
+                  <div class="custom-check w-4 h-4" :class="isAllAbsentSelected ? 'checked' : ''"
+                    @click="toggleSelectAll('absent')" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+                    <i x-show="isAllAbsentSelected" class="fa fa-check text-white" style="font-size:9px"></i>
                   </div>
-                  <div class="w-full bg-slate-200/50 rounded-full h-2 shadow-inner overflow-hidden border border-white/60">
-                      <div class="h-2 rounded-full transition-all duration-1000 ease-out relative overflow-hidden" 
-                           :class="activeTrainingObj.hoursLeft < 12 ? 'bg-gradient-to-r from-rose-500 to-rose-400' : 'bg-gradient-to-r from-indigo-500 to-indigo-400'"
-                           :style="`width: ${activeTrainingObj.percentLeft}%`">
-                           <div class="absolute top-0 bottom-0 w-12 bg-white/30" style="animation: shimmer 2s infinite linear; transform: skewX(-20deg);"></div>
+                </th>
+                <th>ناوی کارمەند</th>
+                <th>دۆخ</th>
+                <th>چوونەژوورەوە/دەرەوە</th>
+                <th class="w-36">ستاتوس</th>
+                <th class="w-52">تێبینی</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="rec in absentRecords" :key="rec.rowIndex">
+                <tr :class="selectedAbsent.includes(rec.empId) ? 'bg-blue-900/10' : ''">
+                  <td>
+                    <div class="custom-check w-4 h-4"
+                      :class="(selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) ? 'checked' : ''"
+                      x-show="!rec.isAlreadyReviewed && !activeTrainingObj?.isLocked"
+                      @click="toggleAbsentSelect(rec.empId)">
+                      <i x-show="selectedAbsent.includes(rec.empId)" class="fa fa-check text-white" style="font-size:9px"></i>
+                    </div>
+                    <div x-show="rec.isAlreadyReviewed" class="w-4 h-4 flex items-center justify-center" style="color:var(--emerald)">
+                      <i class="fa fa-check-circle text-xs"></i>
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="font-bold text-white text-sm" x-text="rec.empName"></div>
+                    <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
+                  </td>
+
+                  <td>
+                    <span x-show="rec.originalStatus === 'No'" class="badge status-no border text-xs">تێپەڕاندووە</span>
+                    <span x-show="rec.originalStatus === 'NONE'" class="badge text-xs" style="background:rgba(110,118,129,0.15); color:var(--text2); border:1px solid var(--border)">داتا نییە</span>
+                  </td>
+
+                  <td>
+                    <div class="space-y-1 text-xs">
+                      <div x-show="rec.start" class="flex items-center gap-1.5 font-semibold" style="color:var(--emerald)">
+                        <i class="fa fa-arrow-right-to-bracket text-xs"></i> <span x-text="rec.start"></span>
                       </div>
-                  </div>
-              </div>
+                      <div x-show="rec.end" class="flex items-center gap-1.5 font-semibold" style="color:var(--rose)">
+                        <i class="fa fa-arrow-right-from-bracket text-xs"></i> <span x-text="rec.end"></span>
+                      </div>
+                      <div x-show="!rec.start && !rec.end" class="italic text-xs" style="color:var(--text3)">تۆمار نییە</div>
+                    </div>
+                  </td>
 
-              <!-- APP-LIKE STICKY BOTTOM BAR FOR SUBMIT ACTIONS -->
-              <div class="fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] md:static md:bg-transparent md:border-none md:p-0 md:shadow-none md:pb-0 flex flex-col sm:flex-row gap-2 shrink-0 w-full md:w-auto mt-2 md:mt-0">
-                   <!-- Show Submit if NOT reviewed and NOT locked -->
-                   <button x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked" @click="submitNotes" class="w-full sm:w-auto bg-violet-800 hover:bg-violet-500 text-white px-6 py-3.5 md:py-2.5 rounded-xl font-bold shadow-lg md:shadow-[0_4px_14px_0_rgb(0,0,0,0.2)] transition-all transform active:scale-[0.98] flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center"> <i class="fa fa-paper-plane"></i> Submit Reviewed</button>
-                   
-                   <!-- Show Reviewed Status -->
-                   <div x-show="activeTrainingObj?.isFullyReviewed" class="bg-emerald-100 border border-emerald-200 text-emerald-700 px-6 py-3.5 md:py-2.5 rounded-xl font-bold flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center cursor-default">
-                       <i class="fa fa-check-double"></i> Review Completed
-                   </div>
+                  <td>
+                    <div class="relative">
+                      <select x-model="rec.status"
+                        :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                        @change="saveAutoSave(rec)"
+                        class="fancy-select text-xs pr-6" style="padding-right:24px; font-size:12px"
+                        :class="{
+                          'status-no': rec.status === 'No',
+                          'status-perm': rec.status === 'Permission',
+                          'status-duty': rec.status === 'At Duty',
+                          'status-yes': rec.status === 'Yes'
+                        }">
+                        <option value="No">غایب</option>
+                        <option value="Permission">مۆڵەت</option>
+                        <option value="At Duty">لە کارەوە</option>
+                        <option value="Yes">ئامادەبووە</option>
+                      </select>
+                      <i class="fa fa-chevron-down absolute top-2.5 left-2 text-xs pointer-events-none" style="color:var(--text3)"></i>
+                    </div>
+                  </td>
 
-                   <!-- Show Locked Status if expired and not reviewed -->
-                   <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed" class="bg-rose-100 border border-rose-200 text-rose-700 px-6 py-3.5 md:py-2.5 rounded-xl font-bold flex items-center gap-2 text-[15px] md:text-sm w-full md:w-auto justify-center cursor-default">
-                       <i class="fa fa-lock"></i> Locked (Time Expired)
-                   </div>
-              </div>
+                  <td>
+                    <textarea x-model="rec.managerNote" rows="2" dir="auto"
+                      placeholder="هۆکار بنووسە..."
+                      :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                      @input="saveAutoSave(rec)"
+                      class="fancy-textarea text-xs" style="min-height:36px"></textarea>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== LATE SECTION ========== -->
+      <div x-show="lateRecords.length > 0" class="card fade-up">
+        <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full" style="background:var(--amber); box-shadow:0 0 8px rgba(210,153,34,0.5)"></div>
+            <h3 class="font-black text-sm text-white">کارمەندانی دواکەوتوو</h3>
+            <span class="badge text-xs" style="background:rgba(210,153,34,0.1); color:var(--amber); border:1px solid rgba(210,153,34,0.25)"
+              x-text="lateRecords.length"></span>
           </div>
 
-          <!-- SIDE BY SIDE CONTAINER FOR LATE AND NO -->
-          <div class="flex flex-col xl:flex-row items-start gap-5 w-full">
-              
-              <!-- ================= SECTION 1: ABSENCES (NO & NONE) ================= -->
-              <div x-show="absentRecords.length > 0" class="flex-1 min-w-0 w-full xl:w-1/2 bg-transparent md:bg-white/60 md:backdrop-blur-xl md:rounded-[1.5rem] md:shadow-sm md:border md:border-white/80 flex flex-col">
-                  <div class="px-2 md:px-5 py-2 md:py-4 md:border-b md:border-white/50 md:bg-white/40 mb-2 md:mb-0">
-                      <h3 class="text-base md:text-base font-extrabold text-slate-800 flex items-center gap-2">
-                          <div class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"></div> Absent Employees
-                      </h3>
+          <!-- Bulk select for late -->
+          <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+            <button @click="toggleSelectAll('late')" class="btn-ghost text-xs px-3 py-2">
+              <div class="custom-check w-4 h-4" :class="isAllLateSelected ? 'checked' : ''">
+                <i x-show="isAllLateSelected" class="fa fa-check text-white" style="font-size:9px"></i>
+              </div>
+              هەموویان
+            </button>
+          </div>
+        </div>
+
+        <!-- Bulk action bar for late -->
+        <div x-show="selectedLate.length > 0" class="px-4 pt-3 fade-up">
+          <div class="bulk-bar">
+            <span class="text-sm font-bold" style="color:var(--accent)">
+              <i class="fa fa-check-square ml-1"></i>
+              <span x-text="selectedLate.length"></span> کارمەند هەڵبژێردرا
+            </span>
+            <div class="flex items-center gap-2 flex-wrap mr-auto">
+              <span class="text-xs font-bold" style="color:var(--text3)">تێبینی یەکسان:</span>
+              <input x-model="bulkNoteLate" type="text" placeholder="تێبینی بنووسە..." dir="auto"
+                class="fancy-select text-xs" style="width:200px; font-size:12px">
+              <button @click="applyBulkLate" :disabled="!bulkNoteLate" class="btn-primary text-xs px-3 py-2">
+                <i class="fa fa-bolt"></i> جێبەجێ بکە
+              </button>
+              <button @click="clearLateSelection" class="btn-ghost text-xs px-3 py-2">پووچەڵکردنەوە</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="w-10">
+                  <div class="custom-check w-4 h-4" :class="isAllLateSelected ? 'checked' : ''"
+                    @click="toggleSelectAll('late')" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+                    <i x-show="isAllLateSelected" class="fa fa-check text-white" style="font-size:9px"></i>
                   </div>
+                </th>
+                <th>ناوی کارمەند</th>
+                <th>وردەکارییەکان</th>
+                <th>چوونەژوورەوە/دەرەوە</th>
+                <th class="w-28">دۆخ</th>
+                <th class="w-52">تێبینی (ئارەزوومەندانە)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-for="rec in lateRecords" :key="rec.rowIndex">
+                <tr :class="selectedLate.includes(rec.empId) ? 'bg-amber-900/10' : ''" style="background-color: rgba(210,153,34,0.03)">
+                  <td>
+                    <div class="custom-check w-4 h-4"
+                      :class="selectedLate.includes(rec.empId) ? 'checked' : ''"
+                      x-show="!rec.isAlreadyReviewed && !activeTrainingObj?.isLocked"
+                      @click="toggleLateSelect(rec.empId)">
+                      <i x-show="selectedLate.includes(rec.empId)" class="fa fa-check text-white" style="font-size:9px"></i>
+                    </div>
+                    <div x-show="rec.isAlreadyReviewed" class="w-4 h-4 flex items-center justify-center" style="color:var(--emerald)">
+                      <i class="fa fa-check-circle text-xs"></i>
+                    </div>
+                  </td>
 
-                  <div class="table-responsive w-full flex-1 md:pb-4">
-                      <table class="w-full text-left border-collapse whitespace-nowrap md:min-w-[600px]">
-                          <thead>
-                              <tr class="bg-white/30 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/50">
-                                  <th class="px-5 py-3">Employee</th>
-                                  <th class="px-5 py-3">Absence Details</th>
-                                  <th class="px-5 py-3">Check In/Out</th>
-                                  <th class="px-5 py-3 w-40">Set Status</th>
-                                  <th class="px-5 py-3 min-w-[180px]">Explanation</th>
-                              </tr>
-                          </thead>
-                          <tbody class="divide-y divide-white/40">
-                              <template x-for="rec in absentRecords" :key="rec.rowIndex">
-                                  <tr class="transition-colors hover:bg-white/50 group">
-                                      <td class="px-5 py-4 font-bold text-slate-800 text-sm">
-                                          <div class="flex items-center gap-3">
-                                            <div x-text="rec.empName" class="text-sm tracking-tight"></div>
-                                          </div>
-                                      </td>
-                                      
-                                      <td class="px-5 py-4">
-                                          <div x-show="rec.originalStatus === 'No'">
-                                              <span class="inline-flex items-center gap-1.5 bg-rose-50/80 text-rose-700 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-rose-100 shadow-sm">
-                                                  Missed Full Course
-                                              </span>
-                                          </div>
-                                          <div x-show="rec.originalStatus === 'NONE'">
-                                              <span class="inline-flex items-center gap-1.5 bg-slate-100/80 text-slate-600 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-slate-200 shadow-sm">
-                                                  No Punch Data
-                                              </span>
-                                          </div>
-                                      </td>
+                  <td>
+                    <div class="font-bold text-white text-sm" x-text="rec.empName"></div>
+                    <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
+                  </td>
 
-                                      <td class="px-5 py-4 text-xs">
-                                          <div x-show="rec.start || rec.end" class="space-y-1.5">
-                                              <div x-show="rec.start" class="flex items-center gap-2 text-emerald-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
-                                                  <i class="fa fa-arrow-right-to-bracket text-emerald-500"></i> <span x-text="rec.start"></span>
-                                              </div>
-                                              <div x-show="rec.end" class="flex items-center gap-2 text-rose-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
-                                                  <i class="fa fa-arrow-right-from-bracket text-rose-500"></i> <span x-text="rec.end"></span>
-                                              </div>
-                                          </div>
-                                          <div x-show="!rec.start && !rec.end" class="text-slate-400 font-medium text-[11px] italic">No records</div>
-                                      </td>
+                  <td>
+                    <span class="badge status-late border text-xs mb-1 block w-max" x-text="'دوا کەوتووە ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
+                    <div class="text-xs mt-1 flex items-center gap-1" style="color:var(--text3)">
+                      <i class="fa fa-chart-pie text-xs"></i>
+                      ئامادەبووە: <span class="font-bold text-white" x-text="formatDuration(rec.partDuration)"></span>
+                      / <span x-text="formatDuration(rec.totalDuration)"></span>
+                    </div>
+                  </td>
 
-                        <td class="px-5 py-4">
-    <div class="relative w-full">
-        <select x-model="rec.status" 
-                :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
-                @change="saveAutoSave(rec)"
-                class="w-full border border-white/60 rounded-xl p-2.5 pr-8 text-xs font-bold focus:ring-2 outline-none appearance-none transition-all shadow-sm" 
-                :class="{
-                  'cursor-not-allowed opacity-60 bg-slate-100': rec.isAlreadyReviewed || activeTrainingObj?.isLocked,
-                  'cursor-pointer': !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
-                  'bg-rose-50/80 text-rose-700': rec.status === 'No' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
-                  'bg-purple-50/80 text-purple-700': rec.status === 'At Duty' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
-                  'bg-blue-50/80 text-blue-700': rec.status === 'Permission' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
-                  'bg-emerald-50/80 text-emerald-700': rec.status === 'Yes' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked,
-                  'bg-white/80 text-slate-700': rec.status === 'NONE' && !rec.isAlreadyReviewed && !activeTrainingObj?.isLocked
-                }">
-            <option value="No" class="bg-white text-slate-800">No (Absent)</option>
-            <option value="Permission" class="bg-white text-slate-800">Permission</option>
-            <option value="At Duty" class="bg-white text-slate-800">At Duty</option>
-            <option value="Yes" class="bg-white text-slate-800">Yes (Attended)</option>
-        </select>
-        <i class="fa fa-chevron-down absolute right-3 top-[12px] opacity-50 pointer-events-none"></i>
+                  <td>
+                    <div class="space-y-1 text-xs">
+                      <div x-show="rec.start" class="flex items-center gap-1.5 font-semibold" style="color:var(--emerald)">
+                        <i class="fa fa-arrow-right-to-bracket text-xs"></i> <span x-text="rec.start"></span>
+                      </div>
+                      <div x-show="rec.end" class="flex items-center gap-1.5 font-semibold" style="color:var(--rose)">
+                        <i class="fa fa-arrow-right-from-bracket text-xs"></i> <span x-text="rec.end"></span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="badge status-late border text-xs" style="opacity:0.7">
+                      <i class="fa fa-clock text-xs"></i> دواکەوتوو
+                    </span>
+                  </td>
+
+                  <td>
+                    <textarea x-model="rec.managerNote" rows="2" dir="auto"
+                      placeholder="هۆکاری دواکەوتنی..."
+                      :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                      @input="saveAutoSave(rec)"
+                      class="fancy-textarea text-xs" style="min-height:36px; border-color:rgba(210,153,34,0.3)"></textarea>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- end records -->
+  </main>
+</div>
+
+<!-- ===== CONFIRM MODAL ===== -->
+<div x-show="showConfirmModal" style="display:none" class="fixed inset-0 z-[200] flex items-center justify-center p-4 fade-up"
+  style="background:rgba(0,0,0,0.7); backdrop-filter:blur(8px)">
+  <div class="card w-full max-w-sm p-7 glow-blue" @click.outside="showConfirmModal = false">
+    <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style="background:rgba(227,179,65,0.1); border:1px solid rgba(227,179,65,0.3)">
+      <i class="fa fa-exclamation-triangle text-2xl" style="color:var(--gold)"></i>
     </div>
-</td>
-
-<td class="px-5 py-4 w-full">
-    <textarea x-model="rec.managerNote" rows="1" dir="auto" placeholder="ئەگەر هۆکاری هەیە لێرە بنووسە"
-              :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
-              @input="saveAutoSave(rec)"
-              class="w-full border border-white/60 rounded-xl p-2.5 text-xs focus:ring-2 outline-none transition-all resize-y shadow-sm placeholder:text-slate-400 font-medium min-h-[40px] md:min-h-[30px]"
-              :class="(rec.isAlreadyReviewed || activeTrainingObj?.isLocked) ? 'opacity-60 cursor-not-allowed bg-slate-50 text-slate-600 border-slate-200' : 'focus:border-indigo-400 focus:ring-indigo-500/20 bg-white/80 focus:bg-white'"></textarea>
-</td>
-                                  </tr>
-                              </template>
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-
-              <!-- ================= SECTION 2: LATE ARRIVALS ================= -->
-              <div x-show="lateRecords.length > 0" class="flex-1 min-w-0 w-full xl:w-1/2 bg-transparent md:bg-white/60 md:backdrop-blur-xl md:rounded-[1.5rem] md:shadow-sm md:border md:border-white/80 flex flex-col mt-4 md:mt-0">
-                  <div class="px-2 md:px-5 py-2 md:py-4 md:border-b md:border-white/50 md:bg-white/40 mb-2 md:mb-0">
-                      <h3 class="text-base md:text-base font-extrabold text-slate-800 flex items-center gap-2">
-                          <div class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div> Late Arrivals <span class="text-[10px] font-medium text-slate-500 ml-2 border pl-2 border-l-slate-300/50 border-y-0 border-r-0 uppercase tracking-wide">(Locked)</span>
-                      </h3>
-                  </div>
-
-                 <div class="table-responsive w-full flex-1 md:pb-4">
-                      <table class="w-full text-left border-collapse whitespace-nowrap md:min-w-[600px]">
-                          <thead>
-                              <tr class="bg-white/30 text-slate-500 text-[10px] font-bold uppercase tracking-widest border-b border-white/50">
-                                  <th class="px-5 py-3">Employee</th>
-                                  <th class="px-5 py-3">Late Details</th>
-                                  <th class="px-5 py-3">Check In/Out</th>
-                                  <th class="px-5 py-3 w-32">Status</th>
-                                  <th class="px-5 py-3 min-w-[180px]">Optional Note</th>
-                              </tr>
-                          </thead>
-                          <tbody class="divide-y divide-white/40">
-                              <template x-for="rec in lateRecords" :key="rec.rowIndex">
-                                  <tr class="transition-colors bg-amber-50/20 hover:bg-amber-50/50 group">
-                                      <td class="px-5 py-4 font-bold text-slate-800 text-sm">
-                                          <div class="flex items-center gap-3">
-                                            <div x-text="rec.empName" class="text-sm tracking-tight"></div>
-                                          </div>
-                                      </td>
-                                      
-                                      <td class="px-5 py-4">
-                                          <span class="inline-flex items-center gap-1.5 bg-amber-100/80 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded-lg border border-amber-200 shadow-sm">
-                                              <span x-text="'Missed ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
-                                          </span>
-                                          <div class="text-[10px] text-slate-600 mt-2 font-medium flex items-center gap-1.5 bg-white/50 px-2 py-0.5 rounded w-max">
-                                              <i class="fa-solid fa-chart-pie text-slate-400"></i> Attended: <span class="text-slate-800 font-bold" x-text="formatDuration(rec.partDuration)"></span> / <span x-text="formatDuration(rec.totalDuration)"></span>
-                                          </div>
-                                      </td>
-
-                                      <td class="px-5 py-4 text-xs">
-                                          <div x-show="rec.start || rec.end" class="space-y-1.5">
-                                              <div x-show="rec.start" class="flex items-center gap-2 text-emerald-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
-                                                  <i class="fa fa-arrow-right-to-bracket text-emerald-500"></i> <span x-text="rec.start"></span>
-                                              </div>
-                                              <div x-show="rec.end" class="flex items-center gap-2 text-rose-700 font-semibold w-max bg-white/60 px-2 py-1 rounded border border-white">
-                                                  <i class="fa fa-arrow-right-from-bracket text-rose-500"></i> <span x-text="rec.end"></span>
-                                              </div>
-                                          </div>
-                                      </td>
-
-                                      <td class="px-5 py-4">
-                                          <div class="bg-white/80 text-amber-700 border border-amber-200/50 px-3 py-2 md:py-1.5 rounded-xl text-[14px] md:text-xs font-bold flex items-center gap-1.5 opacity-80 cursor-not-allowed w-max shadow-sm">
-                                              <i class="fa fa-lock text-[10px]"></i> Late
-                                          </div>
-                                      </td>
-
-                                      <td class="px-5 py-4 w-full">
-    <textarea x-model="rec.managerNote" rows="1" dir="auto" placeholder="هۆکاری دواکەوتنی (ئارەزوومەندانە)"
-              :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
-              @input="saveAutoSave(rec)"
-              class="w-full border border-white/60 rounded-xl p-2.5 text-xs focus:ring-2 outline-none transition-all resize-y shadow-sm placeholder:text-slate-400 font-medium min-h-[40px] md:min-h-[30px]"
-              :class="(rec.isAlreadyReviewed || activeTrainingObj?.isLocked) ? 'opacity-60 cursor-not-allowed bg-slate-50 text-slate-600 border-slate-200' : 'focus:border-amber-400 focus:ring-amber-500/20 bg-white/80 focus:bg-white'"></textarea>
-</td>
-                                  </tr>
-                              </template>
-                          </tbody>
-                      </table>
-                  </div>
-              </div>
-
-          </div> <!-- End Side by Side Container -->
-      </div>
-    </main>
+    <h3 class="text-lg font-black text-center text-white mb-2">دڵنیابوونەوە</h3>
+    <p class="text-sm text-center font-medium mb-7 leading-relaxed" style="color:var(--text2)" x-html="confirmMessage"></p>
+    <div class="flex gap-3">
+      <button @click="showConfirmModal = false" class="btn-ghost flex-1 justify-center">گەڕانەوە</button>
+      <button @click="executeSubmit()" class="btn-primary flex-1 justify-center">
+        <i class="fa fa-check"></i> بەڵێ، تەواوبێ
+      </button>
+    </div>
   </div>
+</div>
 
-<!-- SUBMIT CONFIRMATION MODAL -->
-  <div x-show="showConfirmModal" style="display: none;" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" x-transition.opacity>
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-7 transform transition-all" @click.outside="showConfirmModal = false">
-          <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-              <i class="fa fa-exclamation-triangle text-2xl"></i>
-          </div>
-          <h3 class="text-xl font-extrabold text-center text-slate-800 mb-2">Confirm Submission</h3>
-          <p class="text-sm text-center text-slate-600 font-medium mb-8 leading-relaxed" x-html="confirmMessage"></p>
-          <div class="flex gap-3">
-              <button @click="showConfirmModal = false" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors shadow-sm">Review Again</button>
-              <button @click="executeSubmit()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-200 active:scale-95">Yes, Submit</button>
-          </div>
-      </div>
+<!-- ===== TOAST ===== -->
+<div x-show="showToast" style="display:none" x-transition.opacity.duration.300ms class="toast">
+  <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald)">
+    <i class="fa fa-check text-xs"></i>
   </div>
-
-  <!-- TOAST NOTIFICATION -->
-  <div x-show="showToast" style="display: none;" x-transition.opacity.duration.300ms class="fixed bottom-[100px] md:bottom-6 left-1/2 transform -translate-x-1/2 z-[200] w-[90%] md:w-auto max-w-sm">
-      <div class="bg-slate-900/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center justify-center gap-3 border border-slate-700 ring-1 ring-white/10">
-          <div class="w-6 h-6 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0">
-             <i class="fa fa-check text-xs"></i>
-          </div>
-          <span class="font-bold text-sm tracking-wide text-center" x-text="toastMsg"></span>
-      </div>
-  </div>
+  <span x-text="toastMsg"></span>
+</div>
 
 <script>
-    const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    function managerApp() {
+function managerApp() {
+  return {
+    managerUsernames: [],
+    isLoggedIn: false,
+    loginUser: '',
+    loginPass: '',
+    loginError: '',
+    isLoggingIn: false,
+    loggedInManagerName: '',
+    loggedInManagerDepts: [],
+    resetTimes: {},
+    isLoading: false,
+    loadingMessage: '',
+    records: [],
+    settings: [],
+    selectedDept: '',
+    selectedTraining: '',
+    localRecords: [],
+    showPassword: false,
+    rememberMe: false,
+    showToast: false,
+    toastMsg: '',
+    mobileMenuOpen: false,
+    selectedMonth: '',
+    availableMonths: [],
+    showConfirmModal: false,
+    confirmMessage: '',
+    nowTimer: Date.now(),
+
+    // Bulk selection
+    selectedAbsent: [],
+    selectedLate: [],
+    bulkStatusAbsent: '',
+    bulkNoteLate: '',
+
+    get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
+    get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
+
+    get isAllAbsentSelected() {
+      const selectable = this.absentRecords.filter(r => !r.isAlreadyReviewed);
+      return selectable.length > 0 && selectable.every(r => this.selectedAbsent.includes(r.empId));
+    },
+    get isAllLateSelected() {
+      const selectable = this.lateRecords.filter(r => !r.isAlreadyReviewed);
+      return selectable.length > 0 && selectable.every(r => this.selectedLate.includes(r.empId));
+    },
+
+    get activeTrainingObj() {
+      if (!this.selectedDept || !this.selectedTraining) return null;
+      return this.getTrainingsNeedingReview(this.selectedDept).find(t => t.key === this.selectedTraining) || null;
+    },
+
+    get filteredTrainings() {
+      if (!this.selectedDept) return [];
+      let trs = this.getTrainingsNeedingReview(this.selectedDept);
+      if (this.selectedMonth) trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
+      return trs;
+    },
+
+    get managerDepts() {
+      if (!this.loggedInManagerDepts || !this.loggedInManagerDepts.length) return [];
+      return this.loggedInManagerDepts.map(deptName => {
+        const trainings = this.getTrainingsNeedingReview(deptName);
         return {
-            managerUsernames:[],
-            isLoggedIn: false,
-            loginUser: '',
-            loginPass: '',
-            loginError: '',
-            isLoggingIn: false,
-            loggedInManagerName: '',
-            loggedInManagerDepts:[],
-            resetTimes: {},
+          name: deptName,
+          pendingCount: trainings.filter(t => !t.isFullyReviewed).length,
+        };
+      });
+    },
 
-            isLoading: false,
-            loadingMessage: '',
-            records: [],
-            settings:[],
-            selectedDept: '',
-            selectedTraining: '',
-            localRecords:[],
-            showPassword: false,
-            rememberMe: false,
-            
-            showToast: false,
-            toastMsg: '',
-
-            mobileMenuOpen: false,
-            selectedMonth: '',
-            availableMonths:[],
-            showConfirmModal: false,
-            confirmMessage: '',
-            nowTimer: new Date().getTime(),
-
-            get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
-            get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
-            
-            get activeTrainingObj() {
-                if(!this.selectedDept || !this.selectedTraining) return null;
-                const deptTrainings = this.getTrainingsNeedingReview(this.selectedDept);
-                return deptTrainings.find(t => t.key === this.selectedTraining) || null;
-            },
-            
-            get filteredTrainings() {
-                if (!this.selectedDept) return[];
-                let trs = this.getTrainingsNeedingReview(this.selectedDept);
-                if (this.selectedMonth) {
-                    trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
-                }
-                return trs;
-            },
-            
-            get managerDepts() {
-                if(!this.loggedInManagerDepts || this.loggedInManagerDepts.length === 0) return[];
-                return this.loggedInManagerDepts.map(deptName => {
-                    const trainings = this.getTrainingsNeedingReview(deptName);
-                    const pending = trainings.filter(t => !t.isFullyReviewed);
-                    return {
-                        name: deptName,
-                        pendingCount: pending.length,
-                        totalTrainings: trainings.length
-                    };
-                });
-            },
-
-            init() {
-                this.fetchUsernames();
-                setInterval(() => { this.nowTimer = new Date().getTime(); }, 1000);
-                try {
-                    const saved = localStorage.getItem('managerRemember');
-                    if (saved) {
-                        const d = JSON.parse(saved);
-                        if (d.user && d.pass) {
-                            this.loginUser = d.user;
-                            this.loginPass = d.pass;
-                            this.rememberMe = true;
-                        }
-                    }
-                } catch(e) {}
-                this.$watch('selectedTraining', () => {
-                    this.loadTargetRecords();
-                });
-            },
-
-            formatCountdown(expiresAt) {
-                if (!expiresAt) return '00h 00m 00s';
-                const diff = expiresAt - this.nowTimer;
-                if (diff <= 0) return 'Expired';
-                const h = Math.floor(diff / (1000 * 60 * 60));
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
-                return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
-            },
-
-            // چارەسەری کێشەی ونبوونی داتاکان بە ڕیزکردنیان (orderBy)
-            async fetchAllRows(table, sortCol = null) {
-                let data =[], from = 0, size = 1000, more = true;
-                while(more) {
-                    let query = sb.from(table).select('*');
-                    if (sortCol) query = query.order(sortCol, { ascending: true });
-                    
-                    const res = await query.range(from, from + size - 1);
-                    if(res.error) {
-                        // ئەگەر کێشەی ڕیزکردنی هەبوو با بەبێ ڕیزکردن بیهێنێتەوە
-                        const fallback = await sb.from(table).select('*').range(from, from + size - 1);
-                        data.push(...(fallback.data ||[]));
-                        if(fallback.data.length < size) more = false;
-                        else from += size;
-                    } else {
-                        data.push(...(res.data ||[]));
-                        if(res.data.length < size) more = false;
-                        else from += size;
-                    }
-                }
-                return data;
-            },
-
-            async fetchUsernames() {
-                try {
-                    const data = await this.fetchAllRows('Settings');
-                    if (data) {
-                        this.managerUsernames =[...new Set(data.map(s => String(s.Manager || s.manager || '').trim()).filter(Boolean))].sort();
-                    }
-                } catch(e) {
-                    console.error("Failed to load usernames:", e);
-                }
-            },
-
-            async doLogin() {
-                if(!this.loginUser || !this.loginPass) {
-                    this.loginError = "Please select your username and enter your password.";
-                    return;
-                }
-                this.isLoggingIn = true;
-                this.loginError = '';
-                
-                try {
-                    const data = await this.fetchAllRows('Settings');
-                    const userRecords = data.filter(r => 
-                        String(r.Manager || r.manager || '').trim() === this.loginUser &&
-                        String(r.Password || r.password || '').trim() === this.loginPass
-                    );
-
-                    this.isLoggingIn = false;
-                    
-                    if (userRecords && userRecords.length > 0) {
-                        this.isLoggedIn = true;
-                        this.loggedInManagerName = this.loginUser;
-                        this.loggedInManagerDepts =[...new Set(userRecords.map(r => String(r.Department || r.department || '').trim()))].filter(Boolean);
-                        
-                        if (this.rememberMe) {
-                            localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
-                        } else {
-                            localStorage.removeItem('managerRemember');
-                        }
-                        this.fetchData();
-                    } else {
-                        this.loginError = "Access denied, Check your password.";
-                    }
-                } catch(e) {
-                    this.isLoggingIn = false;
-                    this.loginError = "Connection error: " + e.message;
-                }
-            },
-
-            logout() {
-                this.isLoggedIn = false;
-                this.loginUser = '';
-                this.loginPass = '';
-                this.rememberMe = false;
-                this.selectedDept = '';
-                this.selectedTraining = '';
-                this.records =[];
-                this.loggedInManagerDepts =[];
-                this.mobileMenuOpen = false;
-                try { localStorage.removeItem('managerRemember'); } catch(e) {}
-            },
-
-            async fetchData(onComplete = null) {
-                this.isLoading = true;
-                this.loadingMessage = 'Loading Data...';
-                
-                try {
-                    const settingsData = await this.fetchAllRows('Settings');
-                    this.settings = settingsData.map(s => ({
-                        department: String(s.Department || s.department || '').trim(),
-                        manager: String(s.Manager || s.manager || '').trim()
-                    }));
-
-                    // ڕیزکردن بە Date بۆ ئەوەی هیچ کەسێک ون نەبێت
-                    const recData = await this.fetchAllRows('TrainingRecord', 'Date');
-                    this.records = recData.map(r => ({
-                        db_id: r.db_id || r.id,
-                        empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
-                        department: String(r.Department || r.department || '').trim(),
-                        empName: String(r.Name || r.empName || '').trim(),
-                        trainer: String(r.Trainer || r.trainer || '').trim(),
-                        course: String(r.Topic || r.course || r.topic || '').trim(),
-                        date: String(r.Date || r.date || '').trim(),
-                        totalDuration: Number(r['Duration of training'] || r.totalDuration || 0),
-                        start: String(r['Check in'] || r.start || '').trim(),
-                        end: String(r['Check out'] || r.end || '').trim(),
-                        partDuration: Number(r['Emp. Duration'] || r.partDuration || 0),
-                        status: String(r.Status || r.status || '').trim(),
-                        managerNote: String(r['M.not'] || r.managerNote || '')
-                    }));
-
-                    const locksData = await this.fetchAllRows('ManagerLocks');
-                    this.resetTimes = {};
-                    locksData.forEach(l => {
-                        if (String(l.manager).trim() === this.loggedInManagerName) {
-                            const resetKey = String(l.course).replace(/\s+/g,'_') + '_' + String(l.date);
-                            this.resetTimes[resetKey] = {
-                                timestamp: l.timestamp,
-                                duration: l.duration,
-                                isHidden: l.is_hidden
-                            };
-                        }
-                    });
-
-                    this.isLoading = false;
-                    if(onComplete) onComplete();
-                } catch(err) {
-                    this.isLoading = false;
-                    alert("Failed to load data: " + err.message);
-                }
-            },
-
-            updateMonths() {
-                this.selectedMonth = '';
-                if (!this.selectedDept) { this.availableMonths =[]; return; }
-                const trs = this.getTrainingsNeedingReview(this.selectedDept);
-                const map = new Set();
-                trs.forEach(t => {
-                    if(t.date) {
-                        const parts = t.date.split('-');
-                        if(parts.length >= 2) map.add(`${parts[0]}-${parts[1]}`);
-                    }
-                });
-                this.availableMonths = Array.from(map).sort().reverse().map(m => {
-                    const d = new Date(m + '-01');
-                    return { value: m, label: d.toLocaleDateString('en-US', {month: 'long', year: 'numeric'}) };
-                });
-            },
-
-            saveAutoSave(rec) {
-                if (rec.isAlreadyReviewed) return; 
-                const key = `autosave_${this.selectedTraining}_${rec.empId}`;
-                const data = { status: rec.status, managerNote: rec.managerNote };
-                localStorage.setItem(key, JSON.stringify(data));
-            },
-
-            getTrainingsNeedingReview(dept) {
-                if(!dept || !this.records.length) return[];
-                const now = new Date();
-                const trainingMap = new Map();
-                const cutoffDate = new Date('2026-03-30T00:00:00').getTime(); 
-
-                this.records.forEach(r => {
-                    // چارەسەری پیتی گەورە و بچووک بۆ بەشەکان
-                    if(String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
-                    
-                    // چارەسەری پیتی گەورە و بچووک بۆ No و Late
-                    const stat = String(r.status).toLowerCase();
-                    if(!['no', 'late'].includes(stat)) return;
-
-                    const key = `${r.course}|${r.date}`;
-                    if(!trainingMap.has(key)) {
-                        trainingMap.set(key, {
-                            key: key, course: r.course, date: r.date, trainer: r.trainer,
-                            totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0
-                        });
-                    }
-                    const g = trainingMap.get(key);
-                    
-                    // چارەسەری کێشەی NULL ی سوپابەیس
-                    const note = String(r.managerNote).trim().toLowerCase();
-                    const isReviewed = note !== '' && note !== 'null' && note !== 'nan';
-                    
-                    if (isReviewed) g.totalReviewed++;
-                    else g.totalPending++;
-                });
-
-                const result =[];
-                trainingMap.forEach(t => {
-                    if (t.totalPending === 0 && t.totalReviewed === 0) return;
-                    
-                    let trainingDate = new Date(t.date);
-                    if(isNaN(trainingDate.getTime()) && t.date.includes('/')) {
-                        const parts = t.date.split('/');
-                        if(parts.length === 3) trainingDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00`);
-                    } else {
-                        trainingDate = new Date(t.date + 'T00:00:00');
-                    }
-
-                    if (isNaN(trainingDate.getTime()) || trainingDate.getTime() < cutoffDate) return;
-
-                    const resetKey = t.course.replace(/\s+/g,'_') + '_' + t.date;
-                    const resetObj = this.resetTimes[resetKey];
-                    if (resetObj && resetObj.isHidden) return; 
-                    
-                    let baseDate = trainingDate;
-                    let maxHours = 48;
-                    if (resetObj) {
-                        const resetDate = new Date(resetObj.timestamp);
-                        if (!isNaN(resetDate.getTime()) && resetDate > trainingDate) {
-                            baseDate = resetDate;
-                            maxHours = resetObj.duration || 48;
-                        }
-                    }
-                    const expiresAtTime = baseDate.getTime() + maxHours * 60 * 60 * 1000;
-                    const hoursLeft = Math.max(0, (expiresAtTime - now.getTime()) / (1000 * 60 * 60));
-                    
-                    result.push({
-                        ...t,
-                        pendingCount: t.totalPending,
-                        isFullyReviewed: (t.totalPending === 0),
-                        hoursLeft: Math.floor(hoursLeft),
-                        maxHours: maxHours,
-                        percentLeft: Math.min(100, Math.max(0, (hoursLeft / maxHours) * 100)),
-                        isLocked: hoursLeft <= 0,
-                        expiresAt: expiresAtTime
-                    });
-                });
-                return result.sort((a, b) => {
-                    if(a.isFullyReviewed !== b.isFullyReviewed) return a.isFullyReviewed ? 1 : -1;
-                    if(a.isLocked !== b.isLocked) return a.isLocked ? 1 : -1;
-                    return b.hoursLeft - a.hoursLeft;
-                });
-            },
-
-            selectTrainingCard(t) { this.selectedTraining = t.key; },
-
-            loadTargetRecords() {
-                if(!this.selectedDept || !this.selectedTraining) { this.localRecords = []; return; }
-                const [course, date] = this.selectedTraining.split('|');
-                
-                this.localRecords = this.records.filter(r => {
-                    if(String(r.department).toLowerCase() !== String(this.selectedDept).toLowerCase() || r.course !== course || r.date !== date) return false;
-                    
-                    const note = String(r.managerNote).trim().toLowerCase();
-                    const isReviewed = note !== '' && note !== 'null' && note !== 'nan';
-                    if(isReviewed) return true; 
-                    
-                    const stat = String(r.status).toLowerCase();
-                    if(stat === 'no' || stat === 'late') return true;
-                    return false;
-                }).map(r => {
-                    const noteStr = String(r.managerNote).trim();
-                    const isAlreadyReviewed = noteStr !== '' && noteStr.toLowerCase() !== 'null' && noteStr.toLowerCase() !== 'nan';
-                    
-                    let currentStatus = r.status;
-                    if (currentStatus.toLowerCase() === 'no') currentStatus = 'No';
-                    if (currentStatus.toLowerCase() === 'late') currentStatus = 'Late';
-                    
-                    let currentNote = isAlreadyReviewed ? r.managerNote : '';
-
-                    if (!isAlreadyReviewed) {
-                        const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
-                        if (saved) {
-                            try {
-                                const parsed = JSON.parse(saved);
-                                if (parsed.status) currentStatus = parsed.status;
-                                if (parsed.managerNote) currentNote = parsed.managerNote;
-                            } catch(e) {}
-                        }
-                    }
-                    return { ...r, status: currentStatus, managerNote: currentNote, originalStatus: currentStatus, isAlreadyReviewed: isAlreadyReviewed };
-                }).sort((a,b) => {
-                    const order = { 'No': 1, 'Late': 2, 'NONE': 3 };
-                    return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
-                });
-            },
-
-            submitNotes() {
-                let unhandledCount = 0;
-                this.localRecords.forEach(rec => {
-                    if (!rec.isAlreadyReviewed) {
-                        let isNoteFilled = (rec.managerNote && rec.managerNote.trim() !== '');
-                        let isStatusChanged = rec.originalStatus !== 'Late' && (rec.status !== rec.originalStatus);
-                        if (!isNoteFilled && !isStatusChanged) unhandledCount++;
-                    }
-                });
-                
-                if (unhandledCount > 0) {
-                    this.confirmMessage = `<span class="text-indigo-600 font-bold block mb-2">Notice: ${unhandledCount} unchanged employee(s).</span> Empty notes will automatically be filled with a dot (.). Are you sure you want to submit?`;
-                    this.showConfirmModal = true;
-                } else {
-                    this.confirmMessage = "Are you sure you want to submit?";
-                    this.showConfirmModal = true;
-                }
-            },
-
-            async executeSubmit() {
-                this.showConfirmModal = false;
-                this.isLoading = true;
-                let hasError = false;
-
-                for (let rec of this.localRecords) {
-                    if (rec.isAlreadyReviewed) continue;
-                    
-                    let finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
-                    let finalNote = rec.managerNote ? rec.managerNote.trim() : '.';
-
-                    const payload = {
-                        'Status': finalStatus,
-                        'status': finalStatus,
-                        'M.not': finalNote + ` (By: ${this.loggedInManagerName})`,
-                        'managerNote': finalNote + ` (By: ${this.loggedInManagerName})`
-                    };
-
-                    const { error } = await sb.from('TrainingRecord').update(payload).eq('db_id', rec.db_id);
-                        
-                    if (error) {
-                        console.error("Update Error:", error);
-                        hasError = true;
-                    }
-                }
-                
-                this.isLoading = false;
-
-                if (hasError) {
-                    this.notify("Some records failed to update.");
-                } else {
-                    this.localRecords.forEach(rec => localStorage.removeItem(`autosave_${this.selectedTraining}_${rec.empId}`));
-                    this.notify("Submitted successfully!"); 
-                    this.selectedTraining = ''; 
-                    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); }); 
-                }
-            },
-
-            formatDuration(mins) {
-                if(!mins || mins <= 0) return '0m';
-                const h = Math.floor(mins / 60);
-                const m = Math.round(mins % 60);
-                return h > 0 ? `${h}h ${m}m` : `${m}m`;
-            },
-
-            notify(msg) { this.toastMsg = msg; this.showToast = true; setTimeout(() => { this.showToast = false; }, 3500); }
+    init() {
+      this.fetchUsernames();
+      setInterval(() => { this.nowTimer = Date.now(); }, 1000);
+      try {
+        const saved = localStorage.getItem('managerRemember');
+        if (saved) {
+          const d = JSON.parse(saved);
+          if (d.user && d.pass) { this.loginUser = d.user; this.loginPass = d.pass; this.rememberMe = true; }
         }
+      } catch(e) {}
+      this.$watch('selectedTraining', () => { this.loadTargetRecords(); this.clearAbsentSelection(); this.clearLateSelection(); });
+    },
+
+    formatCountdown(expiresAt) {
+      if (!expiresAt) return '٠٠s ٠٠m ٠٠h';
+      const diff = expiresAt - this.nowTimer;
+      if (diff <= 0) return 'کاتی تەواوبوو';
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      return `${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+    },
+
+    async fetchAllRows(table, sortCol = null) {
+      let data = [], from = 0, size = 1000, more = true;
+      while (more) {
+        try {
+          let query = sb.from(table).select('*');
+          if (sortCol) query = query.order(sortCol, { ascending: true });
+          const res = await query.range(from, from + size - 1);
+          if (res.error) throw res.error;
+          const rows = res.data || [];
+          data.push(...rows);
+          more = rows.length === size;
+          from += size;
+        } catch(e) {
+          // Try without sort if sort fails
+          if (sortCol) {
+            const res2 = await sb.from(table).select('*').range(from, from + size - 1);
+            const rows = res2.data || [];
+            data.push(...rows);
+            more = rows.length === size;
+            from += size;
+          } else {
+            throw e;
+          }
+        }
+      }
+      return data;
+    },
+
+    async fetchUsernames() {
+      try {
+        const data = await this.fetchAllRows('Settings');
+        if (data && data.length) {
+          this.managerUsernames = [...new Set(data.map(s => String(s.Manager || s.manager || '').trim()).filter(Boolean))].sort();
+        }
+      } catch(e) { console.error('fetchUsernames error:', e); }
+    },
+
+    async doLogin() {
+      if (!this.loginUser || !this.loginPass) { this.loginError = 'تکایە ناو و وشەی نهێنیت هەڵبژێرە.'; return; }
+      this.isLoggingIn = true; this.loginError = '';
+      try {
+        const data = await this.fetchAllRows('Settings');
+        const matched = (data || []).filter(r =>
+          String(r.Manager || r.manager || '').trim() === this.loginUser &&
+          String(r.Password || r.password || '').trim() === this.loginPass
+        );
+        this.isLoggingIn = false;
+        if (matched.length > 0) {
+          this.isLoggedIn = true;
+          this.loggedInManagerName = this.loginUser;
+          this.loggedInManagerDepts = [...new Set(matched.map(r => String(r.Department || r.department || '').trim()))].filter(Boolean);
+          if (this.rememberMe) localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
+          else localStorage.removeItem('managerRemember');
+          this.fetchData();
+        } else {
+          this.loginError = 'دەستوور نییە. وشەی نهێنی بپشکنەرەوە.';
+        }
+      } catch(e) {
+        this.isLoggingIn = false;
+        this.loginError = 'هەڵەی پەیوەندی: ' + e.message;
+      }
+    },
+
+    logout() {
+      this.isLoggedIn = false; this.loginUser = ''; this.loginPass = '';
+      this.selectedDept = ''; this.selectedTraining = ''; this.records = [];
+      this.loggedInManagerDepts = []; this.mobileMenuOpen = false;
+      try { localStorage.removeItem('managerRemember'); } catch(e) {}
+    },
+
+    async fetchData(onComplete = null) {
+      this.isLoading = true; this.loadingMessage = 'داتا بارکردن...';
+      try {
+        const settingsData = await this.fetchAllRows('Settings');
+        this.settings = (settingsData || []).map(s => ({
+          department: String(s.Department || s.department || '').trim(),
+          manager: String(s.Manager || s.manager || '').trim()
+        }));
+
+        const recData = await this.fetchAllRows('TrainingRecord', 'Date');
+        this.records = (recData || []).map((r, i) => ({
+          rowIndex: i,
+          db_id: r.db_id || r.id,
+          empId: String(r.Userid || r.empId || r.User_ID || '').trim(),
+          department: String(r.Department || r.department || '').trim(),
+          empName: String(r.Name || r.empName || '').trim(),
+          trainer: String(r.Trainer || r.trainer || '').trim(),
+          course: String(r.Topic || r.course || r.topic || '').trim(),
+          date: String(r.Date || r.date || '').trim(),
+          totalDuration: Number(r['Duration of training'] || r.totalDuration || 0),
+          start: String(r['Check in'] || r.start || '').trim(),
+          end: String(r['Check out'] || r.end || '').trim(),
+          partDuration: Number(r['Emp. Duration'] || r.partDuration || 0),
+          status: String(r.Status || r.status || '').trim(),
+          managerNote: String(r['M.not'] || r.managerNote || '').trim()
+        }));
+
+        const locksData = await this.fetchAllRows('ManagerLocks');
+        this.resetTimes = {};
+        (locksData || []).forEach(l => {
+          if (String(l.manager || '').trim() === this.loggedInManagerName) {
+            const resetKey = String(l.course || '').replace(/\s+/g,'_') + '_' + String(l.date || '');
+            this.resetTimes[resetKey] = {
+              timestamp: l.timestamp,
+              duration: l.duration,
+              isHidden: l.is_hidden
+            };
+          }
+        });
+
+        this.isLoading = false;
+        if (onComplete) onComplete();
+      } catch(err) {
+        this.isLoading = false;
+        alert('شکستی هێنا: ' + err.message);
+      }
+    },
+
+    updateMonths() {
+      this.selectedMonth = '';
+      if (!this.selectedDept) { this.availableMonths = []; return; }
+      const trs = this.getTrainingsNeedingReview(this.selectedDept);
+      const map = new Set();
+      trs.forEach(t => {
+        if (t.date) {
+          const parts = t.date.split('-');
+          if (parts.length >= 2) map.add(`${parts[0]}-${parts[1]}`);
+        }
+      });
+      this.availableMonths = Array.from(map).sort().reverse().map(m => {
+        const d = new Date(m + '-01');
+        return { value: m, label: d.toLocaleDateString('ckb', { month: 'long', year: 'numeric' }) };
+      });
+    },
+
+    saveAutoSave(rec) {
+      if (rec.isAlreadyReviewed) return;
+      try {
+        localStorage.setItem(`autosave_${this.selectedTraining}_${rec.empId}`, JSON.stringify({ status: rec.status, managerNote: rec.managerNote }));
+      } catch(e) {}
+    },
+
+    // FIX: robust date parsing + 48h countdown fix
+    getTrainingsNeedingReview(dept) {
+      if (!dept || !this.records.length) return [];
+      const now = new Date();
+      const cutoffDate = new Date('2026-03-30T00:00:00').getTime();
+      const trainingMap = new Map();
+
+      this.records.forEach(r => {
+        if (String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
+        const stat = String(r.status).toLowerCase();
+        if (!['no', 'late'].includes(stat)) return;
+
+        const key = `${r.course}|${r.date}`;
+        if (!trainingMap.has(key)) {
+          trainingMap.set(key, { key, course: r.course, date: r.date, trainer: r.trainer, totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0 });
+        }
+        const g = trainingMap.get(key);
+        const note = String(r.managerNote || '').trim().toLowerCase();
+        const isReviewed = note !== '' && note !== 'null' && note !== 'nan' && note !== 'undefined';
+        if (isReviewed) g.totalReviewed++;
+        else g.totalPending++;
+      });
+
+      const result = [];
+      trainingMap.forEach(t => {
+        if (t.totalPending === 0 && t.totalReviewed === 0) return;
+
+        // FIX: robust date parse
+        let trainingDate = null;
+        if (t.date) {
+          if (t.date.includes('/')) {
+            const parts = t.date.split('/');
+            if (parts.length === 3) trainingDate = new Date(`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}T00:00:00`);
+          } else {
+            trainingDate = new Date(t.date + (t.date.includes('T') ? '' : 'T00:00:00'));
+          }
+        }
+        if (!trainingDate || isNaN(trainingDate.getTime())) return;
+        if (trainingDate.getTime() < cutoffDate) return;
+
+        const resetKey = t.course.replace(/\s+/g,'_') + '_' + t.date;
+        const resetObj = this.resetTimes[resetKey];
+        if (resetObj && resetObj.isHidden) return;
+
+        // FIX: 48h countdown - use training date as base, not reset time unless reset is newer
+        let baseTime = trainingDate.getTime();
+        let maxHours = 48;
+        if (resetObj && resetObj.timestamp) {
+          const resetDate = new Date(resetObj.timestamp);
+          if (!isNaN(resetDate.getTime()) && resetDate.getTime() > trainingDate.getTime()) {
+            baseTime = resetDate.getTime();
+            maxHours = Number(resetObj.duration) || 48;
+          }
+        }
+
+        const expiresAtTime = baseTime + maxHours * 3600000;
+        const msLeft = expiresAtTime - now.getTime();
+        const hoursLeft = Math.max(0, msLeft / 3600000);
+
+        result.push({
+          ...t,
+          pendingCount: t.totalPending,
+          isFullyReviewed: t.totalPending === 0,
+          hoursLeft: Math.floor(hoursLeft),
+          maxHours,
+          percentLeft: Math.min(100, Math.max(0, (msLeft / (maxHours * 3600000)) * 100)),
+          isLocked: msLeft <= 0,
+          expiresAt: expiresAtTime
+        });
+      });
+
+      return result.sort((a, b) => {
+        if (a.isFullyReviewed !== b.isFullyReviewed) return a.isFullyReviewed ? 1 : -1;
+        if (a.isLocked !== b.isLocked) return a.isLocked ? 1 : -1;
+        return b.hoursLeft - a.hoursLeft;
+      });
+    },
+
+    selectTrainingCard(t) { this.selectedTraining = t.key; },
+
+    loadTargetRecords() {
+      if (!this.selectedDept || !this.selectedTraining) { this.localRecords = []; return; }
+      const [course, date] = this.selectedTraining.split('|');
+
+      this.localRecords = this.records.filter(r => {
+        if (String(r.department).toLowerCase() !== String(this.selectedDept).toLowerCase()) return false;
+        if (r.course !== course || r.date !== date) return false;
+        const note = String(r.managerNote || '').trim().toLowerCase();
+        const isReviewed = note !== '' && note !== 'null' && note !== 'nan' && note !== 'undefined';
+        if (isReviewed) return true;
+        const stat = String(r.status).toLowerCase();
+        return stat === 'no' || stat === 'late' || stat === 'none';
+      }).map((r, i) => {
+        const noteStr = String(r.managerNote || '').trim();
+        const isAlreadyReviewed = noteStr !== '' && noteStr.toLowerCase() !== 'null' && noteStr.toLowerCase() !== 'nan' && noteStr.toLowerCase() !== 'undefined';
+
+        let statNorm = String(r.status).trim();
+        if (statNorm.toLowerCase() === 'no') statNorm = 'No';
+        else if (statNorm.toLowerCase() === 'late') statNorm = 'Late';
+        else if (!statNorm || statNorm.toLowerCase() === 'none' || statNorm.toLowerCase() === 'null') statNorm = 'NONE';
+
+        let currentStatus = statNorm;
+        let currentNote = isAlreadyReviewed ? noteStr : '';
+
+        if (!isAlreadyReviewed) {
+          try {
+            const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.status) currentStatus = parsed.status;
+              if (parsed.managerNote) currentNote = parsed.managerNote;
+            }
+          } catch(e) {}
+        }
+
+        return { ...r, rowIndex: i, status: currentStatus, managerNote: currentNote, originalStatus: statNorm, isAlreadyReviewed };
+      }).sort((a, b) => {
+        const order = { 'No': 1, 'NONE': 2, 'Late': 3 };
+        return (order[a.originalStatus] || 9) - (order[b.originalStatus] || 9) || a.empName.localeCompare(b.empName);
+      });
+    },
+
+    // Bulk selection helpers
+    toggleAbsentSelect(empId) {
+      const idx = this.selectedAbsent.indexOf(empId);
+      if (idx === -1) this.selectedAbsent.push(empId);
+      else this.selectedAbsent.splice(idx, 1);
+    },
+    toggleLateSelect(empId) {
+      const idx = this.selectedLate.indexOf(empId);
+      if (idx === -1) this.selectedLate.push(empId);
+      else this.selectedLate.splice(idx, 1);
+    },
+    toggleSelectAll(type) {
+      if (type === 'absent') {
+        const selectable = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
+        if (this.isAllAbsentSelected) this.selectedAbsent = [];
+        else this.selectedAbsent = [...selectable];
+      } else {
+        const selectable = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
+        if (this.isAllLateSelected) this.selectedLate = [];
+        else this.selectedLate = [...selectable];
+      }
+    },
+    clearAbsentSelection() { this.selectedAbsent = []; this.bulkStatusAbsent = ''; },
+    clearLateSelection() { this.selectedLate = []; this.bulkNoteLate = ''; },
+
+    applyBulkAbsent() {
+      if (!this.bulkStatusAbsent) return;
+      this.localRecords.forEach(rec => {
+        if (this.selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) {
+          rec.status = this.bulkStatusAbsent;
+          this.saveAutoSave(rec);
+        }
+      });
+      this.clearAbsentSelection();
+      this.notify('ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە');
+    },
+
+    applyBulkLate() {
+      if (!this.bulkNoteLate) return;
+      this.localRecords.forEach(rec => {
+        if (this.selectedLate.includes(rec.empId) && !rec.isAlreadyReviewed) {
+          rec.managerNote = this.bulkNoteLate;
+          this.saveAutoSave(rec);
+        }
+      });
+      this.clearLateSelection();
+      this.notify('تێبینی کارمەندانی هەڵبژێردراو نوێکرایەوە');
+    },
+
+    submitNotes() {
+      let unhandled = this.localRecords.filter(r => !r.isAlreadyReviewed && !r.managerNote?.trim() && r.status === r.originalStatus).length;
+      this.confirmMessage = unhandled > 0
+        ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} کارمەند بێ تێبینی ماوەتەوە.</span> تێبینیە بووەکان بە (.) دەگوازرێنەوە. دڵنیایت؟`
+        : 'دڵنیایت کە دەتەوێت تەواوی بکەیت؟';
+      this.showConfirmModal = true;
+    },
+
+    async executeSubmit() {
+      this.showConfirmModal = false;
+      this.isLoading = true;
+      this.loadingMessage = 'ناردن...';
+      let hasError = false;
+
+      for (const rec of this.localRecords) {
+        if (rec.isAlreadyReviewed) continue;
+        const finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+        const finalNote = (rec.managerNote || '').trim() || '.';
+        const payload = {
+          'Status': finalStatus, 'status': finalStatus,
+          'M.not': finalNote + ` (By: ${this.loggedInManagerName})`,
+          'managerNote': finalNote + ` (By: ${this.loggedInManagerName})`
+        };
+        const { error } = await sb.from('TrainingRecord').update(payload).eq('db_id', rec.db_id);
+        if (error) { console.error('Update error:', error); hasError = true; }
+      }
+
+      this.isLoading = false;
+      if (hasError) {
+        this.notify('هەندێ تۆمار نەنوێکرایەوە. دووبارە هەوڵبدەرەوە.');
+      } else {
+        this.localRecords.forEach(r => { try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {} });
+        this.notify('بەسەرکەوتوویی ناردرا!');
+        this.selectedTraining = '';
+        this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
+      }
+    },
+
+    formatDuration(mins) {
+      if (!mins || mins <= 0) return '٠m';
+      const h = Math.floor(mins / 60);
+      const m = Math.round(mins % 60);
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    },
+
+    notify(msg) {
+      this.toastMsg = msg; this.showToast = true;
+      setTimeout(() => { this.showToast = false; }, 3500);
     }
+  };
+}
 </script>
-</body></html>
+</body>
+</html>

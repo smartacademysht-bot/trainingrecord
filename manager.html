@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
+    /* ===== THEME VARIABLES ===== */
     :root {
       --bg: #0d1117;
       --surface: #161b22;
@@ -27,289 +28,177 @@
       --text: #e6edf3;
       --text2: #8b949e;
       --text3: #6e7681;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --surface2: #f3f6fa;
+      --border: #d0d7de;
+      --accent: #0969da;
+      --accent2: #8250df;
+      --gold: #9a6700;
+      --rose: #cf222e;
+      --emerald: #1a7f37;
+      --amber: #9a6700;
+      --text: #1f2328;
+      --text2: #656d76;
+      --text3: #8c959f;
+      --shadow: 0 4px 24px rgba(0,0,0,0.1);
     }
 
     * { box-sizing: border-box; }
-    
     body {
       font-family: 'Vazirmatn', sans-serif;
       background: var(--bg);
       color: var(--text);
       direction: rtl;
+      transition: background 0.3s, color 0.3s;
     }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    /* Grid pattern bg */
     .grid-bg {
       background-image: 
-        linear-gradient(rgba(88,166,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(88,166,255,0.03) 1px, transparent 1px);
+        linear-gradient(rgba(88,166,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(88,166,255,0.04) 1px, transparent 1px);
       background-size: 40px 40px;
     }
+    [data-theme="light"] .grid-bg {
+      background-image: 
+        linear-gradient(rgba(9,105,218,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(9,105,218,0.05) 1px, transparent 1px);
+    }
 
-    /* Glow effects */
     .glow-blue { box-shadow: 0 0 20px rgba(88,166,255,0.15); }
-    .glow-violet { box-shadow: 0 0 20px rgba(124,58,237,0.2); }
-    .glow-rose { box-shadow: 0 0 20px rgba(248,81,73,0.15); }
+    [data-theme="light"] .glow-blue { box-shadow: 0 0 20px rgba(9,105,218,0.12); }
 
-    /* Animations */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes pulse-ring {
-      0% { transform: scale(1); opacity: 0.8; }
-      100% { transform: scale(1.5); opacity: 0; }
-    }
-    @keyframes shimmer {
-      0% { transform: translateX(150%) skewX(-20deg); }
-      100% { transform: translateX(-150%) skewX(-20deg); }
-    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shimmer { 0% { transform: translateX(150%) skewX(-20deg); } 100% { transform: translateX(-150%) skewX(-20deg); } }
     @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
+    @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+    @keyframes borderGlow { 0%,100%{ border-color:var(--border); } 50%{ border-color:rgba(88,166,255,0.4); } }
+    @keyframes helpPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(88,166,255,0.4); } 50%{ box-shadow:0 0 0 12px rgba(88,166,255,0); } }
+    @keyframes spotlightFade { 0%{ opacity:0; } 100%{ opacity:1; } }
+    @keyframes helpStepIn { from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:translateX(0); } }
 
     .fade-up { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
     .spin { animation: spin 1s linear infinite; }
     .float { animation: float 3s ease-in-out infinite; }
+    .login-card { animation: borderGlow 4s ease-in-out infinite; }
 
-    /* Card */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-    .card-hover {
-      transition: all 0.2s;
-    }
-    .card-hover:hover {
-      border-color: var(--accent);
-      background: var(--surface2);
-    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+    .card-hover { transition: all 0.2s; }
+    .card-hover:hover { border-color: var(--accent); background: var(--surface2); }
 
-    /* Sidebar nav button */
     .nav-btn {
-      width: 100%;
-      text-align: right;
-      padding: 10px 14px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-      background: transparent;
-      color: var(--text2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-direction: row-reverse;
+      width: 100%; text-align: right; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid transparent; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; background: transparent; color: var(--text2);
+      display: flex; align-items: center; gap: 8px; flex-direction: row-reverse;
     }
-    .nav-btn:hover {
-      background: var(--surface2);
-      color: var(--text);
-    }
-    .nav-btn.active {
-      background: rgba(88,166,255,0.1);
-      border-color: rgba(88,166,255,0.3);
-      color: var(--accent);
-    }
+    .nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .nav-btn.active { background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.3); color: var(--accent); }
+    [data-theme="light"] .nav-btn.active { background: rgba(9,105,218,0.08); border-color: rgba(9,105,218,0.25); color: var(--accent); }
 
-    /* Table styles */
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th {
-      padding: 10px 14px;
-      text-align: right;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .data-table td {
-      padding: 12px 14px;
-      font-size: 13px;
-      border-bottom: 1px solid rgba(48,54,61,0.5);
-      vertical-align: middle;
-    }
+    .data-table th { padding: 10px 14px; text-align: right; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .data-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: middle; }
+    [data-theme="light"] .data-table td { border-bottom: 1px solid rgba(208,215,222,0.5); }
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tbody tr { transition: background 0.15s; }
-    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .data-table tbody tr:hover { background: rgba(0,0,0,0.02); }
+    [data-theme="light"] .data-table tbody tr:hover { background: rgba(0,0,0,0.02); }
 
-    /* Checkbox custom */
-    .custom-check {
-      width: 18px; height: 18px;
-      border: 2px solid var(--border);
-      border-radius: 5px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.15s;
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .custom-check.checked {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
+    .custom-check { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--surface); flex-shrink: 0; }
+    .custom-check.checked { background: var(--accent); border-color: var(--accent); }
     .custom-check:hover { border-color: var(--accent); }
 
-    /* Select */
-    .fancy-select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 8px 12px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-      transition: border-color 0.15s;
-      appearance: none;
-      -webkit-appearance: none;
-      width: 100%;
-    }
+    .fancy-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; transition: border-color 0.15s; appearance: none; -webkit-appearance: none; width: 100%; }
     .fancy-select:focus { border-color: var(--accent); }
     .fancy-select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Textarea */
-    .fancy-textarea {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 8px 12px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: 13px;
-      outline: none;
-      resize: vertical;
-      width: 100%;
-      min-height: 36px;
-      transition: border-color 0.15s;
-      line-height: 1.5;
-    }
+    .fancy-textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; outline: none; resize: vertical; width: 100%; min-height: 36px; transition: border-color 0.15s; line-height: 1.5; }
     .fancy-textarea:focus { border-color: var(--accent); }
     .fancy-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
     .fancy-textarea::placeholder { color: var(--text3); }
 
-    /* Badge */
-    .badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 3px 10px;
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 700;
-    }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
 
-    /* Button primary */
-    .btn-primary {
-      background: var(--accent);
-      color: #0d1117;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: inline-flex; align-items: center; gap: 8px;
-    }
-    .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; }
+    [data-theme="dark"] .btn-primary { color: #0d1117; }
+    .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
     .btn-primary:active { transform: scale(0.97); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .btn-ghost {
-      background: var(--surface2);
-      color: var(--text2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 18px;
-      font-family: 'Vazirmatn', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: inline-flex; align-items: center; gap: 8px;
-    }
+    .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 18px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; }
     .btn-ghost:hover { background: var(--border); color: var(--text); }
 
-    /* Progress bar */
-    .progress-track {
-      background: var(--surface2);
-      border-radius: 100px;
-      height: 6px;
-      overflow: hidden;
-      border: 1px solid var(--border);
+    .progress-track { background: var(--surface2); border-radius: 100px; height: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; border-radius: 100px; transition: width 1s ease; position: relative; overflow: hidden; }
+    .progress-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s infinite; }
+
+    .loader-ring { width: 48px; height: 48px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+
+    .toast { position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); z-index: 9999; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow); animation: fadeUp 0.3s ease; }
+
+    .status-no { color: var(--rose); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
+    .status-late { color: var(--amber); background: rgba(210,153,34,0.1); border-color: rgba(210,153,34,0.25); }
+    .status-perm { color: #a78bfa; background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.25); }
+    .status-duty { color: var(--accent); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
+    .status-yes { color: var(--emerald); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25); }
+
+    .section-line { display: flex; align-items: center; gap: 12px; }
+    .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .bulk-bar { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    /* Theme toggle */
+    .theme-toggle { width: 44px; height: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: all 0.3s; }
+    .theme-toggle-knob { width: 18px; height: 18px; border-radius: 50%; position: absolute; top: 2px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+    [data-theme="dark"] .theme-toggle-knob { right: 2px; background: #1d4ed8; color: #fff; }
+    [data-theme="light"] .theme-toggle-knob { left: 2px; background: #fbbf24; color: #fff; }
+
+    /* ===== HELP OVERLAY ===== */
+    .help-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
+    .help-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 501; backdrop-filter: blur(2px); animation: spotlightFade 0.3s ease; }
+    [data-theme="light"] .help-backdrop { background: rgba(0,0,0,0.55); }
+
+    .help-spotlight {
+      position: fixed; z-index: 502; pointer-events: none;
+      border-radius: 14px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.75), 0 0 0 3px var(--accent), 0 0 40px rgba(88,166,255,0.5);
+      transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+      animation: helpPulse 2s ease-in-out infinite;
     }
-    .progress-fill {
-      height: 100%;
-      border-radius: 100px;
-      transition: width 1s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: shimmer 2s infinite;
+    [data-theme="light"] .help-spotlight { box-shadow: 0 0 0 9999px rgba(0,0,0,0.55), 0 0 0 3px var(--accent), 0 0 40px rgba(9,105,218,0.4); }
+
+    .help-tooltip {
+      position: fixed; z-index: 503;
+      background: var(--surface); border: 1px solid var(--accent);
+      border-radius: 14px; padding: 18px 22px; max-width: 340px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      animation: helpStepIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+      pointer-events: all;
     }
 
-    /* Loader */
-    .loader-ring {
-      width: 48px; height: 48px;
-      border: 3px solid var(--surface2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-    }
+    .help-step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; flex-shrink: 0; }
+    [data-theme="dark"] .help-step-num { color: #0d1117; }
+    .help-step-dots { display: flex; gap: 6px; }
+    .help-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: all 0.2s; }
+    .help-dot.active { background: var(--accent); width: 20px; border-radius: 100px; }
 
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 50%;
-      transform: translateX(50%);
-      z-index: 9999;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 20px;
-      display: flex; align-items: center; gap: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-      animation: fadeUp 0.3s ease;
-    }
+    /* Sidebar mobile */
+    .sidebar-mobile { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
 
-    /* Mobile */
     @media (max-width: 768px) {
       input, textarea, select { font-size: 16px !important; }
-      
       .data-table thead { display: none; }
       .data-table tbody { display: flex; flex-direction: column; gap: 12px; }
-      .data-table tr {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        grid-template-areas: "chk name time" "chk badges badges" "chk select select" "chk note note";
-        gap: 8px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
-        align-items: start;
-      }
+      .data-table tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "chk name time" "chk badges badges" "chk select select" "chk note note"; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; align-items: start; }
       .data-table td { display: block; padding: 0; border: none; }
       .data-table td:nth-child(1) { grid-area: chk; padding-top: 2px; }
       .data-table td:nth-child(2) { grid-area: name; }
@@ -318,65 +207,34 @@
       .data-table td:nth-child(5) { grid-area: select; }
       .data-table td:nth-child(6) { grid-area: note; }
     }
-
-    /* Sidebar mobile slide */
-    .sidebar-mobile {
-      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    }
-
-    /* Section heading line */
-    .section-line {
-      display: flex; align-items: center; gap: 12px;
-    }
-    .section-line::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    /* Bulk action bar */
-    .bulk-bar {
-      background: rgba(88,166,255,0.08);
-      border: 1px solid rgba(88,166,255,0.25);
-      border-radius: 10px;
-      padding: 10px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    /* Login card glow animation */
-    @keyframes borderGlow {
-      0%, 100% { border-color: var(--border); }
-      50% { border-color: rgba(88,166,255,0.4); }
-    }
-    .login-card {
-      animation: borderGlow 4s ease-in-out infinite;
-    }
-
-    /* Status color helpers */
-    .status-no { color: var(--rose); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
-    .status-late { color: var(--amber); background: rgba(210,153,34,0.1); border-color: rgba(210,153,34,0.25); }
-    .status-perm { color: #a78bfa; background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.25); }
-    .status-duty { color: var(--accent); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
-    .status-yes { color: var(--emerald); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25); }
   </style>
 </head>
 
-<body class="h-screen w-screen overflow-hidden flex flex-col grid-bg" x-data="managerApp()">
+<body class="h-screen w-screen overflow-hidden flex flex-col grid-bg" x-data="managerApp()" :data-theme="theme">
 
 <!-- ==================== LOGIN ==================== -->
 <div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 fade-up overflow-y-auto">
   <div class="card login-card w-full max-w-sm p-8 glow-blue">
     
+    <!-- Theme + Lang toggles at top -->
+    <div class="flex items-center justify-between mb-6">
+      <button @click="toggleTheme()" class="theme-toggle" :title="t('toggleTheme')">
+        <div class="theme-toggle-knob">
+          <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
+        </div>
+      </button>
+      <button @click="toggleLang()" class="btn-ghost text-xs px-3 py-1.5 flex items-center gap-2">
+        <i class="fa fa-language"></i>
+        <span x-text="lang === 'ckb' ? 'English' : 'کوردی'"></span>
+      </button>
+    </div>
+
     <div class="text-center mb-8">
       <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-violet-700 flex items-center justify-center mx-auto mb-4 float" style="box-shadow: 0 8px 32px rgba(88,166,255,0.3)">
         <i class="fa-solid fa-fingerprint text-white text-xl"></i>
       </div>
-      <h1 class="text-xl font-black text-white">پۆرتاڵی بەڕێوەبەر</h1>
-      <p class="text-xs mt-1" style="color: var(--text3)">سیستەمی توێژینەوەی غیابات</p>
+      <h1 class="text-xl font-black" style="color:var(--text)" x-text="t('portalTitle')"></h1>
+      <p class="text-xs mt-1" style="color:var(--text3)" x-text="t('portalSubtitle')"></p>
     </div>
 
     <div x-show="loginError" style="display:none;" class="mb-5 p-3 rounded-lg text-sm font-semibold flex items-start gap-2 fade-up" style="background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.3); color:var(--rose)">
@@ -386,10 +244,10 @@
 
     <div class="space-y-4">
       <div>
-        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)">ناوی بەکارهێنەر</label>
+        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)" x-text="t('username')"></label>
         <div class="relative">
           <select x-model="loginUser" class="fancy-select pr-10" style="padding-right:36px">
-            <option value="">-- هەڵبژێرە --</option>
+            <option value="" x-text="t('selectUser')">-- هەڵبژێرە --</option>
             <template x-for="u in managerUsernames" :key="u">
               <option :value="u" x-text="u"></option>
             </template>
@@ -397,18 +255,18 @@
           <i class="fa fa-user absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
         </div>
         <div x-show="managerUsernames.length === 0" class="text-xs mt-1 font-medium" style="color:var(--accent)">
-          <i class="fa fa-circle-notch fa-spin ml-1"></i> بارکردنی لیست...
+          <i class="fa fa-circle-notch fa-spin ml-1"></i> <span x-text="t('loadingList')"></span>
         </div>
       </div>
 
       <div>
-        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)">وشەی نهێنی</label>
+        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)" x-text="t('password')"></label>
         <div class="relative">
           <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
-            class="fancy-select pr-10 w-full" placeholder="••••••••" style="padding-right:36px">
+            class="fancy-select pr-10 w-full" :placeholder="t('passwordPlaceholder')" style="padding-right:36px">
           <i class="fa fa-key absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
           <button type="button" @click="showPassword = !showPassword"
-            class="absolute top-2.5 left-3 text-xs transition-colors" style="color:var(--text3)" :style="showPassword ? 'color:var(--accent)' : ''">
+            class="absolute top-2.5 left-3 text-xs transition-colors" style="color:var(--text3)">
             <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
           </button>
         </div>
@@ -418,14 +276,21 @@
         <div class="custom-check" :class="rememberMe ? 'checked' : ''" @click="rememberMe = !rememberMe">
           <i x-show="rememberMe" class="fa fa-check text-xs text-white" style="font-size:10px"></i>
         </div>
-        <span class="text-sm font-medium" style="color:var(--text2)">لە ئەم ئامێرەدا بەخاتروم بهێلە</span>
+        <span class="text-sm font-medium" style="color:var(--text2)" x-text="t('rememberMe')"></span>
       </label>
 
       <button @click="doLogin" :disabled="isLoggingIn" class="btn-primary w-full justify-center mt-2">
         <i class="fa fa-sign-in-alt" x-show="!isLoggingIn"></i>
         <i class="fa fa-circle-notch fa-spin" x-show="isLoggingIn" style="display:none"></i>
-        <span x-show="!isLoggingIn">چوونە ژوورەوە</span>
-        <span x-show="isLoggingIn" style="display:none">چاوەڕوانبە...</span>
+        <span x-show="!isLoggingIn" x-text="t('login')"></span>
+        <span x-show="isLoggingIn" style="display:none" x-text="t('loggingIn')"></span>
+      </button>
+
+      <!-- Help button on login -->
+      <button @click="startHelp()" class="w-full text-center text-xs font-semibold mt-2 py-2 rounded-lg transition-colors"
+        style="color:var(--accent); background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15)">
+        <i class="fa fa-circle-question mr-1"></i>
+        <span x-text="t('helpBtn')"></span>
       </button>
     </div>
   </div>
@@ -434,8 +299,8 @@
 <!-- ==================== LOADING ==================== -->
 <div x-show="isLoggedIn && isLoading" style="display:none" class="fixed inset-0 z-[100] flex flex-col items-center justify-center fade-up" style="background:rgba(13,17,23,0.85); backdrop-filter:blur(8px)">
   <div class="loader-ring mb-5"></div>
-  <p class="font-bold text-lg" x-text="loadingMessage">بارکردن...</p>
-  <p class="text-sm mt-1" style="color:var(--text3)">تکایە کەمێک چاوەڕوان بە</p>
+  <p class="font-bold text-lg" x-text="loadingMessage"></p>
+  <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('pleaseWait')"></p>
 </div>
 
 <!-- ==================== MAIN APP ==================== -->
@@ -447,29 +312,42 @@
       <i class="fa fa-bars"></i>
     </button>
     <div class="text-center">
-      <div class="text-sm font-black text-white">پۆرتاڵی بەڕێوەبەر</div>
-      <div class="text-xs" style="color:var(--accent)">سیستەمی غیابات</div>
+      <div class="text-sm font-black" style="color:var(--text)" x-text="t('portalTitle')"></div>
+      <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
     </div>
     <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black" style="background:var(--accent); color:#0d1117" x-text="loggedInManagerName.charAt(0)"></div>
   </div>
 
   <!-- Mobile overlay -->
-  <div x-show="mobileMenuOpen" style="display:none" class="fixed inset-0 z-50 md:hidden" style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px)" @click="mobileMenuOpen = false"></div>
+  <div x-show="mobileMenuOpen" style="display:none" class="fixed inset-0 z-50 md:hidden" @click="mobileMenuOpen = false" style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px)"></div>
 
   <!-- ===== SIDEBAR ===== -->
-  <aside class="fixed inset-y-0 right-0 z-[60] w-72 flex flex-col shrink-0 border-l sidebar-mobile md:relative md:translate-x-0"
+  <aside id="help-sidebar" class="fixed inset-y-0 right-0 z-[60] w-72 flex flex-col shrink-0 border-l sidebar-mobile md:relative md:translate-x-0"
     :class="mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'"
     style="background:var(--surface); border-color:var(--border)">
 
     <!-- Header -->
     <div class="p-5 border-b shrink-0" style="border-color:var(--border)">
-      <div class="hidden md:flex items-center gap-3 mb-4">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white" style="background:linear-gradient(135deg,#1d4ed8,#7c3aed)">
-          <i class="fa-solid fa-fingerprint"></i>
+      <div class="hidden md:flex items-center justify-between gap-3 mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white" style="background:linear-gradient(135deg,#1d4ed8,#7c3aed)">
+            <i class="fa-solid fa-fingerprint"></i>
+          </div>
+          <div>
+            <div class="font-black text-sm" style="color:var(--text)" x-text="t('portalTitle')"></div>
+            <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
+          </div>
         </div>
-        <div>
-          <div class="font-black text-sm text-white">پۆرتاڵی بەڕێوەبەر</div>
-          <div class="text-xs" style="color:var(--accent)">سیستەمی توێژینەوەی غیابات</div>
+        <!-- Theme + lang toggles -->
+        <div class="flex items-center gap-2">
+          <button @click="toggleTheme()" class="theme-toggle w-9 h-5" :title="t('toggleTheme')" style="width:36px;height:20px">
+            <div class="theme-toggle-knob" style="width:15px;height:15px;top:1.5px;font-size:8px">
+              <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
+            </div>
+          </button>
+          <button @click="toggleLang()" class="btn-ghost text-xs px-2 py-1" style="font-size:10px;padding:4px 8px">
+            <span x-text="lang === 'ckb' ? 'EN' : 'KU'"></span>
+          </button>
         </div>
       </div>
 
@@ -478,8 +356,8 @@
           style="background:linear-gradient(135deg,var(--accent),#7c3aed); color:#0d1117"
           x-text="loggedInManagerName.charAt(0)"></div>
         <div class="overflow-hidden">
-          <div class="font-bold text-sm text-white truncate" x-text="loggedInManagerName"></div>
-          <div class="text-xs" style="color:var(--text3)">بەڕێوەبەر</div>
+          <div class="font-bold text-sm truncate" style="color:var(--text)" x-text="loggedInManagerName"></div>
+          <div class="text-xs" style="color:var(--text3)" x-text="t('manager')"></div>
         </div>
         <button @click="mobileMenuOpen = false" class="md:hidden mr-auto p-1" style="color:var(--text3)">
           <i class="fa fa-times"></i>
@@ -493,31 +371,31 @@
       <!-- Departments -->
       <div>
         <div class="section-line mb-3">
-          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)">بەشەکان</span>
+          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)" x-text="t('departments')"></span>
         </div>
-        <div class="space-y-1">
+        <div class="space-y-1" id="help-depts">
           <template x-for="dept in managerDepts" :key="dept.name">
             <button @click="selectedDept = dept.name; updateMonths(); selectedTraining = ''; mobileMenuOpen = false;"
               class="nav-btn" :class="selectedDept === dept.name ? 'active' : ''">
               <span x-text="dept.name" class="flex-1 text-right truncate"></span>
               <span x-show="dept.pendingCount > 0" class="badge text-xs flex-shrink-0"
                 style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"
-                x-text="dept.pendingCount + ' چاوەڕوان'"></span>
+                x-text="dept.pendingCount + ' ' + t('pending')"></span>
             </button>
           </template>
-          <div x-show="managerDepts.length === 0" class="text-xs text-center py-3" style="color:var(--text3)">هیچ بەشێک دیاری نەکراوە</div>
+          <div x-show="managerDepts.length === 0" class="text-xs text-center py-3" style="color:var(--text3)" x-text="t('noDepts')"></div>
         </div>
       </div>
 
       <!-- Month filter + trainings -->
-      <div x-show="selectedDept" class="fade-up">
+      <div x-show="selectedDept" class="fade-up" id="help-trainings">
         <div class="section-line mb-3">
-          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)">پڕۆگرامەکان</span>
+          <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)" x-text="t('programs')"></span>
         </div>
 
         <div class="relative mb-3">
           <select x-model="selectedMonth" class="fancy-select text-xs pr-8" style="padding-right:30px">
-            <option value="">هەموو مانگەکان</option>
+            <option value="" x-text="t('allMonths')"></option>
             <template x-for="m in availableMonths">
               <option :value="m.value" x-text="m.label"></option>
             </template>
@@ -526,28 +404,28 @@
         </div>
 
         <div class="space-y-1.5">
-          <template x-for="t in filteredTrainings" :key="t.key">
-            <button @click="selectTrainingCard(t); mobileMenuOpen = false;"
+          <template x-for="tr in filteredTrainings" :key="tr.key">
+            <button @click="selectTrainingCard(tr); mobileMenuOpen = false;"
               class="nav-btn w-full flex-col items-stretch gap-1 py-3"
-              :class="selectedTraining === t.key ? 'active' : ''">
+              :class="selectedTraining === tr.key ? 'active' : ''">
               <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-black truncate flex-1" :class="selectedTraining === t.key ? 'text-white' : ''" x-text="t.course" style="text-align:right"></span>
-                <template x-if="t.isFullyReviewed">
+                <span class="text-xs font-black truncate flex-1" :class="selectedTraining === tr.key ? '' : ''" x-text="tr.course" style="text-align:right"></span>
+                <template x-if="tr.isFullyReviewed">
                   <span class="badge text-xs flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)"><i class="fa fa-check-double"></i></span>
                 </template>
-                <template x-if="!t.isFullyReviewed && t.isLocked">
+                <template x-if="!tr.isFullyReviewed && tr.isLocked">
                   <span class="badge text-xs flex-shrink-0" style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"><i class="fa fa-lock"></i></span>
                 </template>
               </div>
               <div class="flex items-center justify-between text-xs" style="color:var(--text3)">
-                <span x-text="t.date"></span>
-                <template x-if="!t.isFullyReviewed && !t.isLocked">
-                  <span :style="t.hoursLeft < 12 ? 'color:var(--amber)' : ''" x-text="t.hoursLeft + ' کاتژمێر'"></span>
+                <span x-text="tr.date"></span>
+                <template x-if="!tr.isFullyReviewed && !tr.isLocked">
+                  <span :style="tr.hoursLeft < 12 ? 'color:var(--amber)' : ''" x-text="tr.hoursLeft + ' ' + t('hours')"></span>
                 </template>
               </div>
             </button>
           </template>
-          <div x-show="filteredTrainings.length === 0" class="text-xs text-center py-3 rounded-lg" style="color:var(--text3); background:var(--surface2)">هیچ پڕۆگرامێک نەدۆزرایەوە</div>
+          <div x-show="filteredTrainings.length === 0" class="text-xs text-center py-3 rounded-lg" style="color:var(--text3); background:var(--surface2)" x-text="t('noPrograms')"></div>
         </div>
       </div>
     </div>
@@ -555,10 +433,13 @@
     <!-- Bottom actions -->
     <div class="p-4 border-t shrink-0 flex gap-2" style="border-color:var(--border)">
       <button @click="fetchData()" :disabled="isLoading" class="btn-ghost flex-1 justify-center text-xs">
-        <i class="fa fa-sync-alt" :class="isLoading ? 'fa-spin' : ''"></i> نوێکردنەوە
+        <i class="fa fa-sync-alt" :class="isLoading ? 'fa-spin' : ''"></i> <span x-text="t('refresh')"></span>
+      </button>
+      <button @click="startHelp()" class="btn-ghost text-xs px-3" style="color:var(--accent); border-color:rgba(88,166,255,0.3)" :title="t('helpBtn')">
+        <i class="fa fa-circle-question"></i>
       </button>
       <button @click="logout" class="btn-ghost flex-1 justify-center text-xs" style="color:var(--rose); border-color:rgba(248,81,73,0.3)">
-        <i class="fa fa-sign-out-alt"></i> چوونەدەرەوە
+        <i class="fa fa-sign-out-alt"></i> <span x-text="t('logout')"></span>
       </button>
     </div>
   </aside>
@@ -566,14 +447,16 @@
   <!-- ===== MAIN CONTENT ===== -->
   <main class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col" style="-webkit-overflow-scrolling:touch">
 
-    <!-- Empty states -->
     <div x-show="!selectedDept" class="flex-1 flex items-center justify-center p-6">
       <div class="text-center">
         <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
           <i class="fa-regular fa-building text-2xl" style="color:var(--accent)"></i>
         </div>
-        <p class="font-black text-white text-lg">بەشێک هەڵبژێرە</p>
-        <p class="text-sm mt-1" style="color:var(--text3)">لە لیستی لای راست هەڵبژێرە</p>
+        <p class="font-black text-lg" style="color:var(--text)" x-text="t('selectDept')"></p>
+        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('selectDeptSub')"></p>
+        <button @click="startHelp()" class="mt-5 btn-ghost text-sm" style="color:var(--accent)">
+          <i class="fa fa-circle-question"></i> <span x-text="t('needHelp')"></span>
+        </button>
       </div>
     </div>
 
@@ -582,8 +465,8 @@
         <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
           <i class="fa-solid fa-clipboard-list text-2xl" style="color:var(--accent)"></i>
         </div>
-        <p class="font-black text-white text-lg" x-text="selectedDept"></p>
-        <p class="text-sm mt-1" style="color:var(--text3)">پڕۆگرامێکی پەرتووخانە هەڵبژێرە</p>
+        <p class="font-black text-lg" style="color:var(--text)" x-text="selectedDept"></p>
+        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('selectProgram')"></p>
       </div>
     </div>
 
@@ -592,8 +475,8 @@
         <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.3)">
           <i class="fa fa-check text-2xl" style="color:var(--emerald)"></i>
         </div>
-        <p class="font-black text-white text-lg">هەموویان باشە!</p>
-        <p class="text-sm mt-1" style="color:var(--text3)">هیچ تۆمارێکی چاوەڕوان نییە</p>
+        <p class="font-black text-lg" style="color:var(--text)" x-text="t('allGood')"></p>
+        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('noPending')"></p>
       </div>
     </div>
 
@@ -601,23 +484,22 @@
     <div x-show="selectedTraining && localRecords.length > 0" class="p-4 md:p-6 fade-up flex flex-col gap-5" style="padding-bottom:100px">
 
       <!-- Training header -->
-      <div class="card p-4 md:p-5">
+      <div class="card p-4 md:p-5" id="help-header">
         <div class="flex flex-col md:flex-row md:items-center gap-4">
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2 flex-wrap">
-              <span class="badge status-no border" x-show="absentRecords.length > 0" x-text="absentRecords.length + ' غایب'"></span>
-              <span class="badge status-late border" x-show="lateRecords.length > 0" x-text="lateRecords.length + ' دواکەوتوو'"></span>
+              <span class="badge status-no border" x-show="absentRecords.length > 0" x-text="absentRecords.length + ' ' + t('absent')"></span>
+              <span class="badge status-late border" x-show="lateRecords.length > 0" x-text="lateRecords.length + ' ' + t('late')"></span>
             </div>
-            <h2 class="text-base md:text-lg font-black text-white" x-text="selectedTraining.split('|')[0]"></h2>
+            <h2 class="text-base md:text-lg font-black" style="color:var(--text)" x-text="selectedTraining.split('|')[0]"></h2>
             <div class="flex items-center gap-3 mt-1 text-xs font-medium flex-wrap" style="color:var(--text3)">
               <span class="flex items-center gap-1"><i class="fa-regular fa-calendar" style="color:var(--accent)"></i> <span x-text="selectedTraining.split('|')[1]"></span></span>
             </div>
           </div>
 
-          <!-- Countdown -->
           <div x-show="activeTrainingObj && !activeTrainingObj.isFullyReviewed" class="w-full md:w-56 shrink-0">
             <div class="flex justify-between text-xs font-bold mb-2">
-              <span style="color:var(--text3)">کاتی ماوە</span>
+              <span style="color:var(--text3)" x-text="t('timeLeft')"></span>
               <span :style="activeTrainingObj?.hoursLeft < 12 ? 'color:var(--rose)' : 'color:var(--accent)'"
                 x-text="formatCountdown(activeTrainingObj?.expiresAt)"></span>
             </div>
@@ -627,65 +509,61 @@
             </div>
           </div>
 
-          <!-- Submit / Status buttons -->
           <div class="flex gap-2 flex-shrink-0">
-            <button x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked"
+            <button id="help-submit-btn" x-show="!activeTrainingObj?.isFullyReviewed && !activeTrainingObj?.isLocked"
               @click="submitNotes" class="btn-primary">
-              <i class="fa fa-paper-plane"></i> تەواوکردن
+              <i class="fa fa-paper-plane"></i> <span x-text="t('submit')"></span>
             </button>
             <div x-show="activeTrainingObj?.isFullyReviewed"
               class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(63,185,80,0.1); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)">
-              <i class="fa fa-check-double"></i> تەواوبووە
+              <i class="fa fa-check-double"></i> <span x-text="t('done')"></span>
             </div>
             <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed"
               class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.3)">
-              <i class="fa fa-lock"></i> کاتی تەواوبوو
+              <i class="fa fa-lock"></i> <span x-text="t('expired')"></span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ========== ABSENT SECTION ========== -->
-      <div x-show="absentRecords.length > 0" class="card fade-up">
+      <!-- ABSENT SECTION -->
+      <div x-show="absentRecords.length > 0" class="card fade-up" id="help-absent">
         <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full" style="background:var(--rose); box-shadow:0 0 8px rgba(248,81,73,0.5)"></div>
-            <h3 class="font-black text-sm text-white">کارمەندانی غایب</h3>
+            <h3 class="font-black text-sm" style="color:var(--text)" x-text="t('absentEmployees')"></h3>
             <span class="badge text-xs" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.25)"
               x-text="absentRecords.length"></span>
           </div>
-
-          <!-- Select all for absent -->
           <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
             <button @click="toggleSelectAll('absent')" class="btn-ghost text-xs px-3 py-2">
               <div class="custom-check w-4 h-4" :class="isAllAbsentSelected ? 'checked' : ''">
                 <i x-show="isAllAbsentSelected" class="fa fa-check text-white" style="font-size:9px"></i>
               </div>
-              هەموویان
+              <span x-text="t('selectAll')"></span>
             </button>
           </div>
         </div>
 
-        <!-- Bulk action bar for absent -->
         <div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up">
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
               <i class="fa fa-check-square ml-1"></i>
-              <span x-text="selectedAbsent.length"></span> کارمەند هەڵبژێردرا
+              <span x-text="selectedAbsent.length"></span> <span x-text="t('employeeSelected')"></span>
             </span>
             <div class="flex items-center gap-2 flex-wrap mr-auto">
-              <span class="text-xs font-bold" style="color:var(--text3)">ستاتوس:</span>
+              <span class="text-xs font-bold" style="color:var(--text3)" x-text="t('status') + ':'"></span>
               <select x-model="bulkStatusAbsent" class="fancy-select text-xs w-auto" style="width:auto; min-width:130px">
-                <option value="">هەڵبژێرە</option>
-                <option value="No">غایب</option>
-                <option value="Permission">مۆڵەت</option>
-                <option value="At Duty">لە کارەوە</option>
-                <option value="Yes">ئامادەبووە</option>
+                <option value="" x-text="t('selectOne')"></option>
+                <option value="No" x-text="t('statusNo')"></option>
+                <option value="Permission" x-text="t('statusPerm')"></option>
+                <option value="At Duty" x-text="t('statusDuty')"></option>
+                <option value="Yes" x-text="t('statusYes')"></option>
               </select>
               <button @click="applyBulkAbsent" :disabled="!bulkStatusAbsent" class="btn-primary text-xs px-3 py-2">
-                <i class="fa fa-bolt"></i> جێبەجێ بکە
+                <i class="fa fa-bolt"></i> <span x-text="t('apply')"></span>
               </button>
-              <button @click="clearAbsentSelection" class="btn-ghost text-xs px-3 py-2">پووچەڵکردنەوە</button>
+              <button @click="clearAbsentSelection" class="btn-ghost text-xs px-3 py-2" x-text="t('cancel')"></button>
             </div>
           </div>
         </div>
@@ -700,11 +578,11 @@
                     <i x-show="isAllAbsentSelected" class="fa fa-check text-white" style="font-size:9px"></i>
                   </div>
                 </th>
-                <th>ناوی کارمەند</th>
-                <th>دۆخ</th>
-                <th>چوونەژوورەوە/دەرەوە</th>
-                <th class="w-36">ستاتوس</th>
-                <th class="w-52">تێبینی</th>
+                <th x-text="t('empName')"></th>
+                <th x-text="t('condition')"></th>
+                <th x-text="t('checkInOut')"></th>
+                <th class="w-36" x-text="t('status')"></th>
+                <th class="w-52" x-text="t('note')"></th>
               </tr>
             </thead>
             <tbody>
@@ -721,17 +599,14 @@
                       <i class="fa fa-check-circle text-xs"></i>
                     </div>
                   </td>
-
                   <td>
-                    <div class="font-bold text-white text-sm" x-text="rec.empName"></div>
+                    <div class="font-bold text-sm" style="color:var(--text)" x-text="rec.empName"></div>
                     <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
                   </td>
-
                   <td>
-                    <span x-show="rec.originalStatus === 'No'" class="badge status-no border text-xs">تێپەڕاندووە</span>
-                    <span x-show="rec.originalStatus === 'NONE'" class="badge text-xs" style="background:rgba(110,118,129,0.15); color:var(--text2); border:1px solid var(--border)">داتا نییە</span>
+                    <span x-show="rec.originalStatus === 'No'" class="badge status-no border text-xs" x-text="t('absent')"></span>
+                    <span x-show="rec.originalStatus === 'NONE'" class="badge text-xs" style="background:rgba(110,118,129,0.15); color:var(--text2); border:1px solid var(--border)" x-text="t('noData')"></span>
                   </td>
-
                   <td>
                     <div class="space-y-1 text-xs">
                       <div x-show="rec.start" class="flex items-center gap-1.5 font-semibold" style="color:var(--emerald)">
@@ -740,34 +615,27 @@
                       <div x-show="rec.end" class="flex items-center gap-1.5 font-semibold" style="color:var(--rose)">
                         <i class="fa fa-arrow-right-from-bracket text-xs"></i> <span x-text="rec.end"></span>
                       </div>
-                      <div x-show="!rec.start && !rec.end" class="italic text-xs" style="color:var(--text3)">تۆمار نییە</div>
+                      <div x-show="!rec.start && !rec.end" class="italic text-xs" style="color:var(--text3)" x-text="t('noRecord')"></div>
                     </div>
                   </td>
-
                   <td>
                     <div class="relative">
                       <select x-model="rec.status"
                         :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
                         @change="saveAutoSave(rec)"
                         class="fancy-select text-xs pr-6" style="padding-right:24px; font-size:12px"
-                        :class="{
-                          'status-no': rec.status === 'No',
-                          'status-perm': rec.status === 'Permission',
-                          'status-duty': rec.status === 'At Duty',
-                          'status-yes': rec.status === 'Yes'
-                        }">
-                        <option value="No">غایب</option>
-                        <option value="Permission">مۆڵەت</option>
-                        <option value="At Duty">لە کارەوە</option>
-                        <option value="Yes">ئامادەبووە</option>
+                        :class="{'status-no': rec.status==='No','status-perm': rec.status==='Permission','status-duty': rec.status==='At Duty','status-yes': rec.status==='Yes'}">
+                        <option value="No" x-text="t('statusNo')"></option>
+                        <option value="Permission" x-text="t('statusPerm')"></option>
+                        <option value="At Duty" x-text="t('statusDuty')"></option>
+                        <option value="Yes" x-text="t('statusYes')"></option>
                       </select>
                       <i class="fa fa-chevron-down absolute top-2.5 left-2 text-xs pointer-events-none" style="color:var(--text3)"></i>
                     </div>
                   </td>
-
                   <td>
                     <textarea x-model="rec.managerNote" rows="2" dir="auto"
-                      placeholder="هۆکار بنووسە..."
+                      :placeholder="t('reasonPlaceholder')"
                       :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
                       @input="saveAutoSave(rec)"
                       class="fancy-textarea text-xs" style="min-height:36px"></textarea>
@@ -779,42 +647,38 @@
         </div>
       </div>
 
-      <!-- ========== LATE SECTION ========== -->
-      <div x-show="lateRecords.length > 0" class="card fade-up">
+      <!-- LATE SECTION -->
+      <div x-show="lateRecords.length > 0" class="card fade-up" id="help-late">
         <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full" style="background:var(--amber); box-shadow:0 0 8px rgba(210,153,34,0.5)"></div>
-            <h3 class="font-black text-sm text-white">کارمەندانی دواکەوتوو</h3>
-            <span class="badge text-xs" style="background:rgba(210,153,34,0.1); color:var(--amber); border:1px solid rgba(210,153,34,0.25)"
-              x-text="lateRecords.length"></span>
+            <h3 class="font-black text-sm" style="color:var(--text)" x-text="t('lateEmployees')"></h3>
+            <span class="badge text-xs" style="background:rgba(210,153,34,0.1); color:var(--amber); border:1px solid rgba(210,153,34,0.25)" x-text="lateRecords.length"></span>
           </div>
-
-          <!-- Bulk select for late -->
           <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
             <button @click="toggleSelectAll('late')" class="btn-ghost text-xs px-3 py-2">
               <div class="custom-check w-4 h-4" :class="isAllLateSelected ? 'checked' : ''">
                 <i x-show="isAllLateSelected" class="fa fa-check text-white" style="font-size:9px"></i>
               </div>
-              هەموویان
+              <span x-text="t('selectAll')"></span>
             </button>
           </div>
         </div>
 
-        <!-- Bulk action bar for late -->
         <div x-show="selectedLate.length > 0" class="px-4 pt-3 fade-up">
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
               <i class="fa fa-check-square ml-1"></i>
-              <span x-text="selectedLate.length"></span> کارمەند هەڵبژێردرا
+              <span x-text="selectedLate.length"></span> <span x-text="t('employeeSelected')"></span>
             </span>
             <div class="flex items-center gap-2 flex-wrap mr-auto">
-              <span class="text-xs font-bold" style="color:var(--text3)">تێبینی یەکسان:</span>
-              <input x-model="bulkNoteLate" type="text" placeholder="تێبینی بنووسە..." dir="auto"
+              <span class="text-xs font-bold" style="color:var(--text3)" x-text="t('sameNote') + ':'"></span>
+              <input x-model="bulkNoteLate" type="text" :placeholder="t('writeNote')" dir="auto"
                 class="fancy-select text-xs" style="width:200px; font-size:12px">
               <button @click="applyBulkLate" :disabled="!bulkNoteLate" class="btn-primary text-xs px-3 py-2">
-                <i class="fa fa-bolt"></i> جێبەجێ بکە
+                <i class="fa fa-bolt"></i> <span x-text="t('apply')"></span>
               </button>
-              <button @click="clearLateSelection" class="btn-ghost text-xs px-3 py-2">پووچەڵکردنەوە</button>
+              <button @click="clearLateSelection" class="btn-ghost text-xs px-3 py-2" x-text="t('cancel')"></button>
             </div>
           </div>
         </div>
@@ -823,17 +687,12 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th class="w-10">
-                  <div class="custom-check w-4 h-4" :class="isAllLateSelected ? 'checked' : ''"
-                    @click="toggleSelectAll('late')" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
-                    <i x-show="isAllLateSelected" class="fa fa-check text-white" style="font-size:9px"></i>
-                  </div>
-                </th>
-                <th>ناوی کارمەند</th>
-                <th>وردەکارییەکان</th>
-                <th>چوونەژوورەوە/دەرەوە</th>
-                <th class="w-28">دۆخ</th>
-                <th class="w-52">تێبینی (ئارەزوومەندانە)</th>
+                <th class="w-10"></th>
+                <th x-text="t('empName')"></th>
+                <th x-text="t('details')"></th>
+                <th x-text="t('checkInOut')"></th>
+                <th class="w-28" x-text="t('condition')"></th>
+                <th class="w-52" x-text="t('noteOptional')"></th>
               </tr>
             </thead>
             <tbody>
@@ -850,21 +709,18 @@
                       <i class="fa fa-check-circle text-xs"></i>
                     </div>
                   </td>
-
                   <td>
-                    <div class="font-bold text-white text-sm" x-text="rec.empName"></div>
+                    <div class="font-bold text-sm" style="color:var(--text)" x-text="rec.empName"></div>
                     <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
                   </td>
-
                   <td>
-                    <span class="badge status-late border text-xs mb-1 block w-max" x-text="'دوا کەوتووە ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
+                    <span class="badge status-late border text-xs mb-1 block w-max" x-text="t('lateBy') + ' ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
                     <div class="text-xs mt-1 flex items-center gap-1" style="color:var(--text3)">
                       <i class="fa fa-chart-pie text-xs"></i>
-                      ئامادەبووە: <span class="font-bold text-white" x-text="formatDuration(rec.partDuration)"></span>
+                      <span x-text="t('attended') + ':'"></span> <span class="font-bold" style="color:var(--text)" x-text="formatDuration(rec.partDuration)"></span>
                       / <span x-text="formatDuration(rec.totalDuration)"></span>
                     </div>
                   </td>
-
                   <td>
                     <div class="space-y-1 text-xs">
                       <div x-show="rec.start" class="flex items-center gap-1.5 font-semibold" style="color:var(--emerald)">
@@ -875,16 +731,14 @@
                       </div>
                     </div>
                   </td>
-
                   <td>
                     <span class="badge status-late border text-xs" style="opacity:0.7">
-                      <i class="fa fa-clock text-xs"></i> دواکەوتوو
+                      <i class="fa fa-clock text-xs"></i> <span x-text="t('late')"></span>
                     </span>
                   </td>
-
                   <td>
                     <textarea x-model="rec.managerNote" rows="2" dir="auto"
-                      placeholder="هۆکاری دواکەوتنی..."
+                      :placeholder="t('lateReasonPlaceholder')"
                       :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
                       @input="saveAutoSave(rec)"
                       class="fancy-textarea text-xs" style="min-height:36px; border-color:rgba(210,153,34,0.3)"></textarea>
@@ -896,7 +750,7 @@
         </div>
       </div>
 
-    </div><!-- end records -->
+    </div>
   </main>
 </div>
 
@@ -907,12 +761,12 @@
     <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style="background:rgba(227,179,65,0.1); border:1px solid rgba(227,179,65,0.3)">
       <i class="fa fa-exclamation-triangle text-2xl" style="color:var(--gold)"></i>
     </div>
-    <h3 class="text-lg font-black text-center text-white mb-2">دڵنیابوونەوە</h3>
+    <h3 class="text-lg font-black text-center mb-2" style="color:var(--text)" x-text="t('confirm')"></h3>
     <p class="text-sm text-center font-medium mb-7 leading-relaxed" style="color:var(--text2)" x-html="confirmMessage"></p>
     <div class="flex gap-3">
-      <button @click="showConfirmModal = false" class="btn-ghost flex-1 justify-center">گەڕانەوە</button>
+      <button @click="showConfirmModal = false" class="btn-ghost flex-1 justify-center" x-text="t('back')"></button>
       <button @click="executeSubmit()" class="btn-primary flex-1 justify-center">
-        <i class="fa fa-check"></i> بەڵێ، تەواوبێ
+        <i class="fa fa-check"></i> <span x-text="t('yesSubmit')"></span>
       </button>
     </div>
   </div>
@@ -926,13 +780,243 @@
   <span x-text="toastMsg"></span>
 </div>
 
+<!-- ===== HELP OVERLAY ===== -->
+<div x-show="helpActive" style="display:none" class="help-overlay">
+  <!-- Backdrop -->
+  <div class="help-backdrop" @click="stopHelp()"></div>
+
+  <!-- Spotlight highlight box -->
+  <div class="help-spotlight" x-show="helpSpotlight.visible"
+    :style="`top:${helpSpotlight.top}px; left:${helpSpotlight.left}px; width:${helpSpotlight.width}px; height:${helpSpotlight.height}px;`">
+  </div>
+
+  <!-- Tooltip -->
+  <div class="help-tooltip" :style="helpTooltipStyle" x-show="helpActive">
+    <!-- Step header -->
+    <div class="flex items-center gap-3 mb-3">
+      <div class="help-step-num" x-text="helpStep + 1"></div>
+      <div class="font-black text-sm" style="color:var(--text)" x-text="helpSteps[helpStep]?.title"></div>
+      <button @click="stopHelp()" class="mr-auto text-xs p-1 rounded" style="color:var(--text3)" title="close">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <p class="text-sm leading-relaxed mb-4" style="color:var(--text2)" x-text="helpSteps[helpStep]?.body"></p>
+
+    <!-- Progress dots -->
+    <div class="help-step-dots mb-4">
+      <template x-for="(s, i) in helpSteps" :key="i">
+        <div class="help-dot" :class="i === helpStep ? 'active' : ''"></div>
+      </template>
+    </div>
+
+    <!-- Buttons -->
+    <div class="flex items-center gap-2">
+      <button x-show="helpStep > 0" @click="prevHelpStep()" class="btn-ghost text-xs px-3 py-2">
+        <i class="fa fa-arrow-right"></i> <span x-text="t('prev')"></span>
+      </button>
+      <button x-show="helpStep < helpSteps.length - 1" @click="nextHelpStep()" class="btn-primary text-xs px-4 py-2 mr-auto">
+        <span x-text="t('next')"></span> <i class="fa fa-arrow-left"></i>
+      </button>
+      <button x-show="helpStep === helpSteps.length - 1" @click="stopHelp()" class="btn-primary text-xs px-4 py-2 mr-auto"
+        style="background:var(--emerald)">
+        <i class="fa fa-check"></i> <span x-text="t('understood')"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ===== TRANSLATIONS =====
+const STRINGS = {
+  ckb: {
+    portalTitle: 'پۆرتاڵی بەڕێوەبەر',
+    attendanceSystem: 'سیستەمی توێژینەوەی غیابات',
+    portalSubtitle: 'سیستەمی توێژینەوەی غیابات',
+    username: 'ناوی بەکارهێنەر',
+    selectUser: '-- هەڵبژێرە --',
+    loadingList: 'بارکردنی لیست...',
+    password: 'وشەی نهێنی',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'لە ئەم ئامێرەدا بەخاتروم بهێلە',
+    login: 'چوونە ژوورەوە',
+    loggingIn: 'چاوەڕوانبە...',
+    logout: 'چوونەدەرەوە',
+    refresh: 'نوێکردنەوە',
+    pleaseWait: 'تکایە کەمێک چاوەڕوان بە',
+    manager: 'بەڕێوەبەر',
+    departments: 'بەشەکان',
+    programs: 'پڕۆگرامەکان',
+    allMonths: 'هەموو مانگەکان',
+    pending: 'چاوەڕوان',
+    noDepts: 'هیچ بەشێک دیاری نەکراوە',
+    noPrograms: 'هیچ پڕۆگرامێک نەدۆزرایەوە',
+    hours: 'کاتژمێر',
+    selectDept: 'بەشێک هەڵبژێرە',
+    selectDeptSub: 'لە لیستی لای راست هەڵبژێرە',
+    selectProgram: 'پڕۆگرامێکی پەرتووخانە هەڵبژێرە',
+    allGood: 'هەموویان باشە!',
+    noPending: 'هیچ تۆمارێکی چاوەڕوان نییە',
+    needHelp: 'یارمەتی دەوێت؟',
+    timeLeft: 'کاتی ماوە',
+    submit: 'تەواوکردن',
+    done: 'تەواوبووە',
+    expired: 'کاتی تەواوبوو',
+    absent: 'غایب',
+    late: 'دواکەوتوو',
+    absentEmployees: 'کارمەندانی غایب',
+    lateEmployees: 'کارمەندانی دواکەوتوو',
+    selectAll: 'هەموویان',
+    employeeSelected: 'کارمەند هەڵبژێردرا',
+    status: 'ستاتوس',
+    selectOne: 'هەڵبژێرە',
+    statusNo: 'غایب',
+    statusPerm: 'مۆڵەت',
+    statusDuty: 'لە کارەوە',
+    statusYes: 'ئامادەبووە',
+    apply: 'جێبەجێ بکە',
+    cancel: 'پووچەڵکردنەوە',
+    empName: 'ناوی کارمەند',
+    condition: 'دۆخ',
+    checkInOut: 'چوونەژوورەوە/دەرەوە',
+    note: 'تێبینی',
+    noteOptional: 'تێبینی (ئارەزوومەندانە)',
+    details: 'وردەکارییەکان',
+    noRecord: 'تۆمار نییە',
+    noData: 'داتا نییە',
+    reasonPlaceholder: 'هۆکار بنووسە...',
+    lateReasonPlaceholder: 'هۆکاری دواکەوتنی...',
+    lateBy: 'دوا کەوتووە',
+    attended: 'ئامادەبووە',
+    sameNote: 'تێبینی یەکسان',
+    writeNote: 'تێبینی بنووسە...',
+    confirm: 'دڵنیابوونەوە',
+    back: 'گەڕانەوە',
+    yesSubmit: 'بەڵێ، تەواوبێ',
+    helpBtn: 'یارمەتی و ڕێنمایی',
+    toggleTheme: 'گۆڕینی ڕووکار',
+    prev: 'پێشوو',
+    next: 'دواتر',
+    understood: 'تێگەیشتم',
+    // Help steps
+    h0t: '١. بەشی خۆت هەڵبژێرە',
+    h0b: 'لە لیستی بەشەکان کە لە لای راستەوە، کلیک لەسەر ناوی بەشەکەت بکە. ئەگەر ژمارەی چاوەڕوانی هەبوو (بە رەنگی سووری)، واتا ریڤیوی چاوەڕوانتە.',
+    h1t: '٢. پڕۆگرامی ئەکتیڤ هەڵبژێرە',
+    h1b: 'دوای هەڵبژاردنی بەش، لیستی پڕۆگرامەکان دەردەکەوێت. پڕۆگرامێک هەڵبژێرە کە قوفڵ نەبووبێت (ئایکۆنی قوفڵی نەهەبێت) و ریڤیوی تەواو نەبووبێت.',
+    h2t: '٣. کارمەندی غایب ریڤیو بکە',
+    h2b: 'لە خشتەی "کارمەندانی غایب"، بۆ هەر کارمەندێک دۆخی دیاری بکە (غایب/مۆڵەت/لەکارەوە/ئامادەبووە). ئەگەر هۆکارێک هەبوو لە خانەی تێبینی بینووسە. بۆ چەندین کارمەند دەتوانیت بەک جار هەڵیبژێریت.',
+    h3t: '٤. کارمەندی دواکەوتوو ریڤیو بکە',
+    h3b: 'لە بەشی "کارمەندانی دواکەوتوو"، ئەگەر هۆکارێک بزانیت بۆ دواکەوتنەکە، لە خانەی تێبینی بینووسە. ئەمە ئارەزوومەندانەیە.',
+    h4t: '٥. سەبمیت بکە',
+    h4b: 'دوای تەواوکردنی هەموو خانەکان، کلیک لەسەر دوگمەی "تەواوکردن" بکە. دڵنیابوونەوەیەک دەردەکەوێت، پشتی دووپاتکردنەوە، داتا بە سیستەم دەنێردرێت. ئاگاداربە! دوای سەبمیت ناتوانیت داتا دەستکاری بکەیت.',
+  },
+  en: {
+    portalTitle: 'Manager Portal',
+    attendanceSystem: 'Attendance Review System',
+    portalSubtitle: 'Attendance Review System',
+    username: 'Username',
+    selectUser: '-- Select --',
+    loadingList: 'Loading list...',
+    password: 'Password',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'Remember me on this device',
+    login: 'Sign In',
+    loggingIn: 'Please wait...',
+    logout: 'Sign Out',
+    refresh: 'Refresh',
+    pleaseWait: 'Please wait a moment',
+    manager: 'Manager',
+    departments: 'Departments',
+    programs: 'Programs',
+    allMonths: 'All Months',
+    pending: 'pending',
+    noDepts: 'No departments assigned',
+    noPrograms: 'No programs found',
+    hours: 'hours',
+    selectDept: 'Select a Department',
+    selectDeptSub: 'Choose from the list on the right',
+    selectProgram: 'Select a training program',
+    allGood: 'All done!',
+    noPending: 'No pending records',
+    needHelp: 'Need help?',
+    timeLeft: 'Time remaining',
+    submit: 'Submit',
+    done: 'Completed',
+    expired: 'Time expired',
+    absent: 'Absent',
+    late: 'Late',
+    absentEmployees: 'Absent Employees',
+    lateEmployees: 'Late Employees',
+    selectAll: 'Select All',
+    employeeSelected: 'employee(s) selected',
+    status: 'Status',
+    selectOne: 'Select',
+    statusNo: 'Absent',
+    statusPerm: 'Permission',
+    statusDuty: 'On Duty',
+    statusYes: 'Present',
+    apply: 'Apply',
+    cancel: 'Cancel',
+    empName: 'Employee Name',
+    condition: 'Condition',
+    checkInOut: 'Check In/Out',
+    note: 'Note',
+    noteOptional: 'Note (optional)',
+    details: 'Details',
+    noRecord: 'No record',
+    noData: 'No data',
+    reasonPlaceholder: 'Write reason...',
+    lateReasonPlaceholder: 'Reason for lateness...',
+    lateBy: 'Late by',
+    attended: 'Attended',
+    sameNote: 'Same note',
+    writeNote: 'Write note...',
+    confirm: 'Confirmation',
+    back: 'Go Back',
+    yesSubmit: 'Yes, Submit',
+    helpBtn: 'Help & Guide',
+    toggleTheme: 'Toggle Theme',
+    prev: 'Previous',
+    next: 'Next',
+    understood: 'Got it!',
+    h0t: '1. Select Your Department',
+    h0b: 'In the departments list on the right sidebar, click on your department name. If there is a red "pending" badge, it means reviews are waiting for you.',
+    h1t: '2. Select an Active Program',
+    h1b: 'After selecting a department, the programs list appears. Choose a program that is not locked (no lock icon) and not fully reviewed yet.',
+    h2t: '3. Review Absent Employees',
+    h2b: 'In the "Absent Employees" table, set a status for each employee (Absent/Permission/On Duty/Present). Optionally write a reason in the note field. You can bulk-select multiple employees.',
+    h3t: '4. Review Late Employees',
+    h3b: 'In the "Late Employees" section, if you know the reason for their lateness, write it in the note field. This is optional.',
+    h4t: '5. Submit',
+    h4b: 'After filling in all fields, click the "Submit" button. A confirmation dialog will appear. After confirming, data is saved. Warning: you cannot edit the data after submitting!',
+  }
+};
+
 function managerApp() {
   return {
+    // Lang & Theme
+    lang: 'ckb',
+    theme: 'dark',
+
+    t(key) {
+      return STRINGS[this.lang][key] || key;
+    },
+    toggleLang() {
+      this.lang = this.lang === 'ckb' ? 'en' : 'ckb';
+      document.documentElement.lang = this.lang;
+      document.documentElement.dir = this.lang === 'ckb' ? 'rtl' : 'ltr';
+      localStorage.setItem('portalLang', this.lang);
+    },
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('portalTheme', this.theme);
+    },
+
+    // Auth
     managerUsernames: [],
     isLoggedIn: false,
     loginUser: '',
@@ -941,41 +1025,116 @@ function managerApp() {
     isLoggingIn: false,
     loggedInManagerName: '',
     loggedInManagerDepts: [],
-    resetTimes: {},
+    showPassword: false,
+    rememberMe: false,
+
+    // Data
     isLoading: false,
     loadingMessage: '',
     records: [],
     settings: [],
+    resetTimes: {},
+
+    // Navigation
     selectedDept: '',
     selectedTraining: '',
     localRecords: [],
-    showPassword: false,
-    rememberMe: false,
-    showToast: false,
-    toastMsg: '',
-    mobileMenuOpen: false,
     selectedMonth: '',
     availableMonths: [],
+    mobileMenuOpen: false,
+
+    // UI state
+    showToast: false,
+    toastMsg: '',
     showConfirmModal: false,
     confirmMessage: '',
     nowTimer: Date.now(),
 
-    // Bulk selection
+    // Bulk
     selectedAbsent: [],
     selectedLate: [],
     bulkStatusAbsent: '',
     bulkNoteLate: '',
 
+    // Help system
+    helpActive: false,
+    helpStep: 0,
+    helpSpotlight: { visible: false, top: 0, left: 0, width: 0, height: 0 },
+    helpTooltipStyle: '',
+
+    get helpSteps() {
+      return [
+        { id: 'help-depts',      title: this.t('h0t'), body: this.t('h0b') },
+        { id: 'help-trainings',  title: this.t('h1t'), body: this.t('h1b') },
+        { id: 'help-absent',     title: this.t('h2t'), body: this.t('h2b') },
+        { id: 'help-late',       title: this.t('h3t'), body: this.t('h3b') },
+        { id: 'help-submit-btn', title: this.t('h4t'), body: this.t('h4b') },
+      ];
+    },
+
+    startHelp() {
+      this.helpActive = true;
+      this.helpStep = 0;
+      this.$nextTick(() => this.positionHelp());
+    },
+    stopHelp() {
+      this.helpActive = false;
+      this.helpSpotlight.visible = false;
+    },
+    nextHelpStep() {
+      if (this.helpStep < this.helpSteps.length - 1) {
+        this.helpStep++;
+        this.$nextTick(() => this.positionHelp());
+      }
+    },
+    prevHelpStep() {
+      if (this.helpStep > 0) {
+        this.helpStep--;
+        this.$nextTick(() => this.positionHelp());
+      }
+    },
+    positionHelp() {
+      const step = this.helpSteps[this.helpStep];
+      if (!step) return;
+      const el = document.getElementById(step.id);
+      const pad = 10;
+      const tooltipW = 340;
+
+      if (el) {
+        const r = el.getBoundingClientRect();
+        this.helpSpotlight = {
+          visible: true,
+          top: r.top - pad,
+          left: r.left - pad,
+          width: r.width + pad * 2,
+          height: r.height + pad * 2,
+        };
+
+        // Position tooltip below or above spotlight
+        let tipTop = r.bottom + pad + 16;
+        let tipLeft = r.left;
+        if (tipTop + 260 > window.innerHeight) tipTop = r.top - 280;
+        if (tipLeft + tooltipW > window.innerWidth - 16) tipLeft = window.innerWidth - tooltipW - 16;
+        if (tipLeft < 16) tipLeft = 16;
+        this.helpTooltipStyle = `top:${tipTop}px; left:${tipLeft}px; width:${tooltipW}px;`;
+      } else {
+        // Fallback: center of screen
+        this.helpSpotlight.visible = false;
+        this.helpTooltipStyle = `top:50%; left:50%; transform:translate(-50%,-50%); width:${tooltipW}px;`;
+      }
+    },
+
+    // Getters
     get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
     get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
 
     get isAllAbsentSelected() {
-      const selectable = this.absentRecords.filter(r => !r.isAlreadyReviewed);
-      return selectable.length > 0 && selectable.every(r => this.selectedAbsent.includes(r.empId));
+      const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed);
+      return sel.length > 0 && sel.every(r => this.selectedAbsent.includes(r.empId));
     },
     get isAllLateSelected() {
-      const selectable = this.lateRecords.filter(r => !r.isAlreadyReviewed);
-      return selectable.length > 0 && selectable.every(r => this.selectedLate.includes(r.empId));
+      const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed);
+      return sel.length > 0 && sel.every(r => this.selectedLate.includes(r.empId));
     },
 
     get activeTrainingObj() {
@@ -992,18 +1151,24 @@ function managerApp() {
 
     get managerDepts() {
       if (!this.loggedInManagerDepts || !this.loggedInManagerDepts.length) return [];
-      return this.loggedInManagerDepts.map(deptName => {
-        const trainings = this.getTrainingsNeedingReview(deptName);
-        return {
-          name: deptName,
-          pendingCount: trainings.filter(t => !t.isFullyReviewed).length,
-        };
-      });
+      return this.loggedInManagerDepts.map(deptName => ({
+        name: deptName,
+        pendingCount: this.getTrainingsNeedingReview(deptName).filter(t => !t.isFullyReviewed).length,
+      }));
     },
 
     init() {
+      // Restore preferences
+      try {
+        this.lang = localStorage.getItem('portalLang') || 'ckb';
+        this.theme = localStorage.getItem('portalTheme') || 'dark';
+        document.documentElement.lang = this.lang;
+        document.documentElement.dir = this.lang === 'ckb' ? 'rtl' : 'ltr';
+      } catch(e) {}
+
       this.fetchUsernames();
       setInterval(() => { this.nowTimer = Date.now(); }, 1000);
+
       try {
         const saved = localStorage.getItem('managerRemember');
         if (saved) {
@@ -1011,13 +1176,15 @@ function managerApp() {
           if (d.user && d.pass) { this.loginUser = d.user; this.loginPass = d.pass; this.rememberMe = true; }
         }
       } catch(e) {}
-      this.$watch('selectedTraining', () => { this.loadTargetRecords(); this.clearAbsentSelection(); this.clearLateSelection(); });
+      this.$watch('selectedTraining', () => {
+        this.loadTargetRecords(); this.clearAbsentSelection(); this.clearLateSelection();
+      });
     },
 
     formatCountdown(expiresAt) {
-      if (!expiresAt) return '٠٠s ٠٠m ٠٠h';
+      if (!expiresAt) return '00h 00m 00s';
       const diff = expiresAt - this.nowTimer;
-      if (diff <= 0) return 'کاتی تەواوبوو';
+      if (diff <= 0) return this.t('expired');
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);
@@ -1027,27 +1194,14 @@ function managerApp() {
     async fetchAllRows(table, sortCol = null) {
       let data = [], from = 0, size = 1000, more = true;
       while (more) {
-        try {
-          let query = sb.from(table).select('*');
-          if (sortCol) query = query.order(sortCol, { ascending: true });
-          const res = await query.range(from, from + size - 1);
-          if (res.error) throw res.error;
-          const rows = res.data || [];
-          data.push(...rows);
-          more = rows.length === size;
-          from += size;
-        } catch(e) {
-          // Try without sort if sort fails
-          if (sortCol) {
-            const res2 = await sb.from(table).select('*').range(from, from + size - 1);
-            const rows = res2.data || [];
-            data.push(...rows);
-            more = rows.length === size;
-            from += size;
-          } else {
-            throw e;
-          }
-        }
+        let query = sb.from(table).select('*');
+        if (sortCol) query = query.order(sortCol, { ascending: true });
+        const res = await query.range(from, from + size - 1);
+        if (res.error) throw res.error;
+        const rows = res.data || [];
+        data.push(...rows);
+        more = rows.length === size;
+        from += size;
       }
       return data;
     },
@@ -1062,7 +1216,7 @@ function managerApp() {
     },
 
     async doLogin() {
-      if (!this.loginUser || !this.loginPass) { this.loginError = 'تکایە ناو و وشەی نهێنیت هەڵبژێرە.'; return; }
+      if (!this.loginUser || !this.loginPass) { this.loginError = this.t('login') + '...'; return; }
       this.isLoggingIn = true; this.loginError = '';
       try {
         const data = await this.fetchAllRows('Settings');
@@ -1079,11 +1233,11 @@ function managerApp() {
           else localStorage.removeItem('managerRemember');
           this.fetchData();
         } else {
-          this.loginError = 'دەستوور نییە. وشەی نهێنی بپشکنەرەوە.';
+          this.loginError = this.lang === 'ckb' ? 'دەستوور نییە. وشەی نهێنی بپشکنەرەوە.' : 'Invalid credentials. Please check your password.';
         }
       } catch(e) {
         this.isLoggingIn = false;
-        this.loginError = 'هەڵەی پەیوەندی: ' + e.message;
+        this.loginError = (this.lang === 'ckb' ? 'هەڵەی پەیوەندی: ' : 'Connection error: ') + e.message;
       }
     },
 
@@ -1095,7 +1249,8 @@ function managerApp() {
     },
 
     async fetchData(onComplete = null) {
-      this.isLoading = true; this.loadingMessage = 'داتا بارکردن...';
+      this.isLoading = true;
+      this.loadingMessage = this.lang === 'ckb' ? 'داتا بارکردن...' : 'Loading data...';
       try {
         const settingsData = await this.fetchAllRows('Settings');
         this.settings = (settingsData || []).map(s => ({
@@ -1121,24 +1276,30 @@ function managerApp() {
           managerNote: String(r['M.not'] || r.managerNote || '').trim()
         }));
 
-        const locksData = await this.fetchAllRows('ManagerLocks');
+        // FIX: ManagerLocks table may not exist — gracefully handle error
         this.resetTimes = {};
-        (locksData || []).forEach(l => {
-          if (String(l.manager || '').trim() === this.loggedInManagerName) {
-            const resetKey = String(l.course || '').replace(/\s+/g,'_') + '_' + String(l.date || '');
-            this.resetTimes[resetKey] = {
-              timestamp: l.timestamp,
-              duration: l.duration,
-              isHidden: l.is_hidden
-            };
-          }
-        });
+        try {
+          const locksData = await this.fetchAllRows('ManagerLocks');
+          (locksData || []).forEach(l => {
+            if (String(l.manager || '').trim() === this.loggedInManagerName) {
+              const resetKey = String(l.course || '').replace(/\s+/g,'_') + '_' + String(l.date || '');
+              this.resetTimes[resetKey] = {
+                timestamp: l.timestamp,
+                duration: l.duration,
+                isHidden: l.is_hidden
+              };
+            }
+          });
+        } catch(lockErr) {
+          // Table doesn't exist or access error — not critical, just skip locks
+          console.warn('ManagerLocks table not available (non-critical):', lockErr.message || lockErr);
+        }
 
         this.isLoading = false;
         if (onComplete) onComplete();
       } catch(err) {
         this.isLoading = false;
-        alert('شکستی هێنا: ' + err.message);
+        alert((this.lang === 'ckb' ? 'شکستی هێنا: ' : 'Failed: ') + err.message);
       }
     },
 
@@ -1155,7 +1316,7 @@ function managerApp() {
       });
       this.availableMonths = Array.from(map).sort().reverse().map(m => {
         const d = new Date(m + '-01');
-        return { value: m, label: d.toLocaleDateString('ckb', { month: 'long', year: 'numeric' }) };
+        return { value: m, label: d.toLocaleDateString(this.lang === 'ckb' ? 'ckb' : 'en-GB', { month: 'long', year: 'numeric' }) };
       });
     },
 
@@ -1166,7 +1327,6 @@ function managerApp() {
       } catch(e) {}
     },
 
-    // FIX: robust date parsing + 48h countdown fix
     getTrainingsNeedingReview(dept) {
       if (!dept || !this.records.length) return [];
       const now = new Date();
@@ -1193,7 +1353,6 @@ function managerApp() {
       trainingMap.forEach(t => {
         if (t.totalPending === 0 && t.totalReviewed === 0) return;
 
-        // FIX: robust date parse
         let trainingDate = null;
         if (t.date) {
           if (t.date.includes('/')) {
@@ -1210,7 +1369,6 @@ function managerApp() {
         const resetObj = this.resetTimes[resetKey];
         if (resetObj && resetObj.isHidden) return;
 
-        // FIX: 48h countdown - use training date as base, not reset time unless reset is newer
         let baseTime = trainingDate.getTime();
         let maxHours = 48;
         if (resetObj && resetObj.timestamp) {
@@ -1288,7 +1446,6 @@ function managerApp() {
       });
     },
 
-    // Bulk selection helpers
     toggleAbsentSelect(empId) {
       const idx = this.selectedAbsent.indexOf(empId);
       if (idx === -1) this.selectedAbsent.push(empId);
@@ -1301,13 +1458,11 @@ function managerApp() {
     },
     toggleSelectAll(type) {
       if (type === 'absent') {
-        const selectable = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
-        if (this.isAllAbsentSelected) this.selectedAbsent = [];
-        else this.selectedAbsent = [...selectable];
+        const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
+        this.selectedAbsent = this.isAllAbsentSelected ? [] : [...sel];
       } else {
-        const selectable = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
-        if (this.isAllLateSelected) this.selectedLate = [];
-        else this.selectedLate = [...selectable];
+        const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
+        this.selectedLate = this.isAllLateSelected ? [] : [...sel];
       }
     },
     clearAbsentSelection() { this.selectedAbsent = []; this.bulkStatusAbsent = ''; },
@@ -1322,7 +1477,7 @@ function managerApp() {
         }
       });
       this.clearAbsentSelection();
-      this.notify('ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە');
+      this.notify(this.lang === 'ckb' ? 'ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Status updated for selected employees');
     },
 
     applyBulkLate() {
@@ -1334,21 +1489,21 @@ function managerApp() {
         }
       });
       this.clearLateSelection();
-      this.notify('تێبینی کارمەندانی هەڵبژێردراو نوێکرایەوە');
+      this.notify(this.lang === 'ckb' ? 'تێبینی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Note updated for selected employees');
     },
 
     submitNotes() {
       let unhandled = this.localRecords.filter(r => !r.isAlreadyReviewed && !r.managerNote?.trim() && r.status === r.originalStatus).length;
       this.confirmMessage = unhandled > 0
-        ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} کارمەند بێ تێبینی ماوەتەوە.</span> تێبینیە بووەکان بە (.) دەگوازرێنەوە. دڵنیایت؟`
-        : 'دڵنیایت کە دەتەوێت تەواوی بکەیت؟';
+        ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} ${this.lang === 'ckb' ? 'کارمەند بێ تێبینی ماوەتەوە.' : 'employee(s) without notes.'}</span> ${this.lang === 'ckb' ? 'تێبینیە بووەکان بە (.) دەگوازرێنەوە. دڵنیایت؟' : 'Empty notes will be saved as (.). Are you sure?'}`
+        : (this.lang === 'ckb' ? 'دڵنیایت کە دەتەوێت تەواوی بکەیت؟' : 'Are you sure you want to submit?');
       this.showConfirmModal = true;
     },
 
     async executeSubmit() {
       this.showConfirmModal = false;
       this.isLoading = true;
-      this.loadingMessage = 'ناردن...';
+      this.loadingMessage = this.lang === 'ckb' ? 'ناردن...' : 'Submitting...';
       let hasError = false;
 
       for (const rec of this.localRecords) {
@@ -1366,17 +1521,17 @@ function managerApp() {
 
       this.isLoading = false;
       if (hasError) {
-        this.notify('هەندێ تۆمار نەنوێکرایەوە. دووبارە هەوڵبدەرەوە.');
+        this.notify(this.lang === 'ckb' ? 'هەندێ تۆمار نەنوێکرایەوە. دووبارە هەوڵبدەرەوە.' : 'Some records failed to update. Please try again.');
       } else {
         this.localRecords.forEach(r => { try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {} });
-        this.notify('بەسەرکەوتوویی ناردرا!');
+        this.notify(this.lang === 'ckb' ? 'بەسەرکەوتوویی ناردرا!' : 'Successfully submitted!');
         this.selectedTraining = '';
         this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
       }
     },
 
     formatDuration(mins) {
-      if (!mins || mins <= 0) return '٠m';
+      if (!mins || mins <= 0) return '0m';
       const h = Math.floor(mins / 60);
       const m = Math.round(mins % 60);
       return h > 0 ? `${h}h ${m}m` : `${m}m`;

@@ -164,17 +164,24 @@
 
     /* ===== HELP OVERLAY ===== */
     .help-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
-    .help-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 501; backdrop-filter: blur(2px); animation: spotlightFade 0.3s ease; }
-    [data-theme="light"] .help-backdrop { background: rgba(0,0,0,0.55); }
+    /* Backdrop transparent — spotlight's own box-shadow darkens everything around the hole */
+    .help-backdrop { position: fixed; inset: 0; background: transparent; z-index: 501; pointer-events: all; }
 
     .help-spotlight {
       position: fixed; z-index: 502; pointer-events: none;
       border-radius: 14px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.75), 0 0 0 3px var(--accent), 0 0 40px rgba(88,166,255,0.5);
+      /* The spotlight itself is fully transparent - it's a clear "hole" through the backdrop */
+      background: transparent;
+      /* Ring glow around the highlighted element */
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.78), 0 0 30px rgba(88,166,255,0.6);
       transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
       animation: helpPulse 2s ease-in-out infinite;
     }
-    [data-theme="light"] .help-spotlight { box-shadow: 0 0 0 9999px rgba(0,0,0,0.55), 0 0 0 3px var(--accent), 0 0 40px rgba(9,105,218,0.4); }
+    [data-theme="light"] .help-spotlight {
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(9,105,218,0.5);
+    }
 
     .help-tooltip {
       position: fixed; z-index: 503;
@@ -1007,8 +1014,10 @@ function managerApp() {
     },
     toggleLang() {
       this.lang = this.lang === 'ckb' ? 'en' : 'ckb';
+      const isRtl = this.lang === 'ckb';
       document.documentElement.lang = this.lang;
-      document.documentElement.dir = this.lang === 'ckb' ? 'rtl' : 'ltr';
+      document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+      document.body.style.direction = isRtl ? 'rtl' : 'ltr';
       localStorage.setItem('portalLang', this.lang);
     },
     toggleTheme() {
@@ -1098,29 +1107,50 @@ function managerApp() {
       if (!step) return;
       const el = document.getElementById(step.id);
       const pad = 10;
-      const tooltipW = 340;
+      const tooltipW = Math.min(340, window.innerWidth - 32);
+      const tooltipH = 280; // estimated height
+      const BROWSER_BAR = 60; // safe top margin to avoid browser toolbar
 
       if (el) {
-        const r = el.getBoundingClientRect();
-        this.helpSpotlight = {
-          visible: true,
-          top: r.top - pad,
-          left: r.left - pad,
-          width: r.width + pad * 2,
-          height: r.height + pad * 2,
-        };
+        // Scroll element into view first (centered), then reposition
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Position tooltip below or above spotlight
-        let tipTop = r.bottom + pad + 16;
-        let tipLeft = r.left;
-        if (tipTop + 260 > window.innerHeight) tipTop = r.top - 280;
-        if (tipLeft + tooltipW > window.innerWidth - 16) tipLeft = window.innerWidth - tooltipW - 16;
-        if (tipLeft < 16) tipLeft = 16;
-        this.helpTooltipStyle = `top:${tipTop}px; left:${tipLeft}px; width:${tooltipW}px;`;
+        // Wait for scroll to settle before calculating positions
+        setTimeout(() => {
+          const r = el.getBoundingClientRect();
+
+          this.helpSpotlight = {
+            visible: true,
+            top: r.top - pad,
+            left: r.left - pad,
+            width: r.width + pad * 2,
+            height: r.height + pad * 2,
+          };
+
+          // Try: below the spotlight
+          let tipTop = r.bottom + pad + 16;
+          let tipLeft = r.left;
+
+          // If tooltip would go below screen bottom, put it above
+          if (tipTop + tooltipH > window.innerHeight - 16) {
+            tipTop = r.top - tooltipH - pad - 16;
+          }
+
+          // If it would go above browser bar (e.g. step 3 with sidebar), center vertically on screen
+          if (tipTop < BROWSER_BAR) {
+            tipTop = BROWSER_BAR + 16;
+          }
+
+          // Horizontal: keep inside viewport
+          if (tipLeft + tooltipW > window.innerWidth - 16) tipLeft = window.innerWidth - tooltipW - 16;
+          if (tipLeft < 16) tipLeft = 16;
+
+          this.helpTooltipStyle = `top:${tipTop}px; left:${tipLeft}px; width:${tooltipW}px; position:fixed;`;
+        }, 350);
       } else {
-        // Fallback: center of screen
+        // Fallback: center of screen but below browser bar
         this.helpSpotlight.visible = false;
-        this.helpTooltipStyle = `top:50%; left:50%; transform:translate(-50%,-50%); width:${tooltipW}px;`;
+        this.helpTooltipStyle = `top:${BROWSER_BAR + 40}px; left:50%; transform:translateX(-50%); width:${tooltipW}px; position:fixed;`;
       }
     },
 
@@ -1162,8 +1192,10 @@ function managerApp() {
       try {
         this.lang = localStorage.getItem('portalLang') || 'ckb';
         this.theme = localStorage.getItem('portalTheme') || 'dark';
+        const isRtl = this.lang === 'ckb';
         document.documentElement.lang = this.lang;
-        document.documentElement.dir = this.lang === 'ckb' ? 'rtl' : 'ltr';
+        document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+        document.body.style.direction = isRtl ? 'rtl' : 'ltr';
       } catch(e) {}
 
       this.fetchUsernames();

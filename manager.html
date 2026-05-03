@@ -261,6 +261,10 @@
     }
     .fancy-select:focus { border-color: var(--border2); }
     .fancy-select:disabled { opacity: 0.5; cursor: not-allowed; }
+    .fancy-select option {
+  background: var(--surface-solid);
+  color: var(--text);
+}
 
     .fancy-textarea {
       background: var(--glass); border: 1px solid var(--border); border-radius: 10px;
@@ -349,8 +353,31 @@
     .help-dot.active { background: var(--accent); width: 20px; border-radius: 100px; }
 
     /* ===== SECTION DIVIDER ===== */
+    /* .section-line { display: flex; align-items: center; gap: 12px; }
+    .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); } */
+    /* Fix sidebar section dividers — text should be on RIGHT in RTL, left in LTR */
+.sidebar .section-line {
+  flex-direction: row-reverse;
+}
+[data-theme] body[style*="direction: ltr"] .sidebar .section-line,
+html[dir="ltr"] .sidebar .section-line {
+  flex-direction: row;
+}
+.section-line::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.section-line::after {
+  display: none;
+}
+html[dir="rtl"] .section-line::before { display: none; }
+html[dir="rtl"] .section-line::after { display: block; content: ''; flex: 1; height: 1px; background: var(--border); }
+
     .section-line { display: flex; align-items: center; gap: 12px; }
-    .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+html[dir="rtl"] .section-line::before { content: ''; flex: 1; height: 1px; background: var(--border); }
+html[dir="ltr"] .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
     /* ===== BULK BAR ===== */
     .bulk-bar {
@@ -672,6 +699,18 @@
 
     <!-- Bottom -->
     <div class="p-3 shrink-0" style="border-top:1px solid var(--glass-border)">
+      <!-- Lang + Theme row -->
+      <div class="flex items-center gap-1.5 mb-2">
+        <button @click="toggleTheme()" class="theme-toggle-pill flex-1 justify-center" style="font-size:11px">
+          <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
+          <span x-text="theme === 'dark' ? (lang==='ckb' ? 'تاریک' : 'Dark') : (lang==='ckb' ? 'ڕووناک' : 'Light')"></span>
+        </button>
+        <div class="pill-toggle" style="padding:3px">
+          <button class="pill-option" style="padding:5px 10px;font-size:11px" :class="lang==='ckb' ? 'active' : ''" @click="setLang('ckb')">KU</button>
+          <button class="pill-option" style="padding:5px 10px;font-size:11px" :class="lang==='en' ? 'active' : ''" @click="setLang('en')">EN</button>
+        </div>
+      </div>
+      <!-- Action buttons -->
       <div class="grid grid-cols-3 gap-1.5">
         <button @click="fetchData()" :disabled="isLoading" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; border-radius:12px">
           <i class="fa fa-sync-alt text-sm" :class="isLoading ? 'fa-spin' : ''"></i>
@@ -1041,7 +1080,7 @@
   <div class="help-spotlight" x-show="helpSpotlight.visible"
     :style="`top:${helpSpotlight.top}px; left:${helpSpotlight.left}px; width:${helpSpotlight.width}px; height:${helpSpotlight.height}px;`">
   </div>
-  <div class="help-tooltip" :style="helpTooltipStyle" x-show="helpActive">
+  <div class="help-tooltip" :style="helpTooltipStyle" x-show="helpActive" dir="ltr">
     <div class="flex items-center gap-3 mb-3">
       <div class="help-step-num" x-text="helpStep + 1"></div>
       <div class="font-black text-sm" x-text="helpSteps[helpStep]?.title"></div>
@@ -1055,14 +1094,14 @@
         <div class="help-dot" :class="i === helpStep ? 'active' : ''"></div>
       </template>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2" dir="ltr">
       <button x-show="helpStep > 0" @click="prevHelpStep()" class="btn-ghost text-xs px-3 py-2">
-        <i class="fa fa-arrow-right"></i> <span x-text="t('prev')"></span>
+        <i class="fa fa-arrow-left"></i> <span x-text="t('prev')"></span>
       </button>
-      <button x-show="helpStep < helpSteps.length - 1" @click="nextHelpStep()" class="btn-primary text-xs px-4 py-2 mr-auto">
-        <span x-text="t('next')"></span> <i class="fa fa-arrow-left"></i>
+      <button x-show="helpStep < helpSteps.length - 1" @click="nextHelpStep()" class="btn-primary text-xs px-4 py-2 ml-auto">
+        <span x-text="t('next')"></span> <i class="fa fa-arrow-right"></i>
       </button>
-      <button x-show="helpStep === helpSteps.length - 1" @click="stopHelp()" class="btn-primary text-xs px-4 py-2 mr-auto"
+      <button x-show="helpStep === helpSteps.length - 1" @click="stopHelp()" class="btn-primary text-xs px-4 py-2 ml-auto"
         style="background:var(--emerald)">
         <i class="fa fa-check"></i> <span x-text="t('understood')"></span>
       </button>

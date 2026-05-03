@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ckb" dir="rtl">
+<html lang="ckb" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Manager </title>
+  <title>Manager Portal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,198 +15,386 @@
   <style>
     /* ===== THEME VARIABLES ===== */
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface2: #21262d;
-      --border: #30363d;
-      --accent: #58a6ff;
+      --navy: #1e2749;
+      --navy-light: #2d3a6b;
+      --navy-dark: #141b38;
+      --bg: #0b0f1e;
+      --bg2: #111827;
+      --surface: rgba(30,39,73,0.55);
+      --surface-solid: #1a2340;
+      --surface2: rgba(45,58,107,0.45);
+      --border: rgba(100,120,200,0.18);
+      --border2: rgba(100,120,200,0.35);
+      --accent: #4f8dff;
       --accent2: #7c3aed;
       --gold: #e3b341;
       --rose: #f85149;
       --emerald: #3fb950;
       --amber: #d29922;
-      --text: #e6edf3;
-      --text2: #8b949e;
-      --text3: #6e7681;
-      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --text: #e8edf8;
+      --text2: #a0aecf;
+      --text3: #6270a0;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.09);
+      --shadow: 0 24px 80px rgba(0,0,0,0.5);
+      --bubble1: rgba(79,141,255,0.12);
+      --bubble2: rgba(124,58,237,0.10);
+      --bubble3: rgba(30,39,73,0.3);
     }
 
     [data-theme="light"] {
-      --bg: #f0f4f8;
-      --surface: #ffffff;
-      --surface2: #f3f6fa;
-      --border: #d0d7de;
-      --accent: #0969da;
-      --accent2: #8250df;
-      --gold: #9a6700;
-      --rose: #cf222e;
-      --emerald: #1a7f37;
-      --amber: #9a6700;
-      --text: #1f2328;
-      --text2: #656d76;
-      --text3: #8c959f;
-      --shadow: 0 4px 24px rgba(0,0,0,0.1);
+      --bg: #eef1f8;
+      --bg2: #dde3f0;
+      --surface: rgba(255,255,255,0.65);
+      --surface-solid: #ffffff;
+      --surface2: rgba(230,235,255,0.7);
+      --border: rgba(30,39,73,0.12);
+      --border2: rgba(30,39,73,0.22);
+      --accent: #1e2749;
+      --accent2: #7c3aed;
+      --text: #1a2140;
+      --text2: #3a4a7a;
+      --text3: #7a8ab5;
+      --glass: rgba(30,39,73,0.04);
+      --glass-border: rgba(30,39,73,0.1);
+      --shadow: 0 24px 80px rgba(30,39,73,0.15);
+      --bubble1: rgba(30,39,73,0.06);
+      --bubble2: rgba(124,58,237,0.06);
+      --bubble3: rgba(79,141,255,0.08);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Vazirmatn', sans-serif;
       background: var(--bg);
       color: var(--text);
       direction: rtl;
-      transition: background 0.3s, color 0.3s;
+      transition: background 0.4s, color 0.4s;
+      min-height: 100vh;
+      overflow: hidden;
     }
 
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    /* ===== BACKGROUND BUBBLES ===== */
+    .bg-scene {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    }
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      animation: floatBubble var(--dur, 12s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    .b1 { width: 500px; height: 500px; background: var(--bubble1); top: -150px; right: -100px; --dur: 14s; }
+    .b2 { width: 400px; height: 400px; background: var(--bubble2); bottom: -100px; left: -80px; --dur: 16s; --delay: -4s; }
+    .b3 { width: 320px; height: 320px; background: var(--bubble3); top: 40%; left: 30%; --dur: 10s; --delay: -8s; }
+    .b4 { width: 200px; height: 200px; background: var(--bubble1); bottom: 20%; right: 25%; --dur: 18s; --delay: -2s; }
+    .b5 { width: 160px; height: 160px; background: var(--bubble2); top: 60%; right: 10%; --dur: 11s; --delay: -6s; }
+
+    @keyframes floatBubble {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33% { transform: translate(30px,-40px) scale(1.05); }
+      66% { transform: translate(-20px,25px) scale(0.97); }
+    }
+
+    /* ===== NOISE TEXTURE ===== */
+    .noise::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ===== GLASS CARD ===== */
+    .glass-card {
+      background: var(--surface);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 
-    .grid-bg {
-      background-image: 
-        linear-gradient(rgba(88,166,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(88,166,255,0.04) 1px, transparent 1px);
-      background-size: 40px 40px;
-    }
-    [data-theme="light"] .grid-bg {
-      background-image: 
-        linear-gradient(rgba(9,105,218,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(9,105,218,0.05) 1px, transparent 1px);
-    }
-
-    .glow-blue { box-shadow: 0 0 20px rgba(88,166,255,0.15); }
-    [data-theme="light"] .glow-blue { box-shadow: 0 0 20px rgba(9,105,218,0.12); }
-
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes shimmer { 0% { transform: translateX(150%) skewX(-20deg); } 100% { transform: translateX(-150%) skewX(-20deg); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
-    @keyframes borderGlow { 0%,100%{ border-color:var(--border); } 50%{ border-color:rgba(88,166,255,0.4); } }
-    @keyframes helpPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(88,166,255,0.4); } 50%{ box-shadow:0 0 0 12px rgba(88,166,255,0); } }
-    @keyframes spotlightFade { 0%{ opacity:0; } 100%{ opacity:1; } }
+    /* ===== ANIMATIONS ===== */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes shimmer { 0% { transform:translateX(150%) skewX(-20deg); } 100% { transform:translateX(-150%) skewX(-20deg); } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+    @keyframes helpPulse { 0%,100%{ box-shadow:0 0 0 0 rgba(79,141,255,0.4); } 50%{ box-shadow:0 0 0 12px rgba(79,141,255,0); } }
     @keyframes helpStepIn { from{ opacity:0; transform:translateX(20px); } to{ opacity:1; transform:translateX(0); } }
+    @keyframes borderGlow { 0%,100%{ border-color:var(--glass-border); } 50%{ border-color:rgba(79,141,255,0.35); } }
 
-    .fade-up { animation: fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+    .fade-up { animation: fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) both; }
+    .fade-in { animation: fadeIn 0.3s ease both; }
     .spin { animation: spin 1s linear infinite; }
-    .float { animation: float 3s ease-in-out infinite; }
-    .login-card { animation: borderGlow 4s ease-in-out infinite; }
+    .float { animation: float 4s ease-in-out infinite; }
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
-    .card-hover { transition: all 0.2s; }
-    .card-hover:hover { border-color: var(--accent); background: var(--surface2); }
+    /* ===== LOGIN SPECIFIC ===== */
+    .login-wrap { position:relative; z-index:2; }
+
+    /* Pill toggle */
+    .pill-toggle {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 100px; padding: 4px; font-size: 12px; font-weight: 700;
+    }
+    .pill-option {
+      padding: 5px 14px; border-radius: 100px; cursor: pointer;
+      transition: all 0.2s; color: var(--text3); border: none; background: transparent;
+      font-family: 'Vazirmatn', sans-serif; font-size: 12px; font-weight: 700;
+    }
+    .pill-option.active { background: var(--navy); color: #fff; }
+    [data-theme="light"] .pill-option.active { background: var(--navy); color: #fff; }
+
+    /* Custom dropdown */
+    .custom-dropdown { position: relative; }
+    .dropdown-input {
+      width: 100%; background: var(--glass); border: 1px solid var(--border);
+      border-radius: 16px; color: var(--text); padding: 16px 20px;
+      font-family: 'Vazirmatn', sans-serif; font-size: 15px; font-weight: 600;
+      outline: none; cursor: pointer; transition: all 0.2s; text-align: right;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .dropdown-input:hover, .dropdown-input.open { border-color: var(--border2); background: var(--surface2); }
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 100;
+      background: var(--surface-solid); border: 1px solid var(--border2);
+      border-radius: 16px; overflow: hidden;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: fadeUp 0.2s cubic-bezier(0.16,1,0.3,1) both;
+      max-height: 220px; overflow-y: auto;
+    }
+    .dropdown-item {
+      padding: 13px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: all 0.15s; color: var(--text2); display: flex; align-items: center; gap: 10px;
+    }
+    .dropdown-item:hover { background: var(--surface2); color: var(--text); }
+    .dropdown-item.selected { color: var(--accent); background: rgba(79,141,255,0.08); }
+
+    /* Glass input */
+    .glass-input {
+      width: 100%; background: var(--glass); border: 1px solid var(--border);
+      border-radius: 16px; color: var(--text); padding: 16px 20px;
+      font-family: 'Vazirmatn', sans-serif; font-size: 15px; font-weight: 600;
+      outline: none; transition: all 0.2s;
+    }
+    .glass-input:focus { border-color: var(--border2); background: var(--surface2); }
+    .glass-input::placeholder { color: var(--text3); }
+    .glass-input[dir="ltr"] { text-align: left; }
+
+    /* Login button */
+    .login-btn {
+      width: 100%; background: var(--navy); color: #fff;
+      border: none; border-radius: 16px; padding: 17px 24px;
+      font-family: 'Vazirmatn', sans-serif; font-size: 16px; font-weight: 900;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 8px 32px rgba(30,39,73,0.5), 0 2px 0 rgba(255,255,255,0.06) inset;
+    }
+    .login-btn:hover:not(:disabled) { transform: translateY(-2px) scale(1.01); box-shadow: 0 14px 40px rgba(30,39,73,0.6); }
+    .login-btn:active:not(:disabled) { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Custom checkbox */
+    .custom-check {
+      width: 20px; height: 20px; border: 2px solid var(--border2); border-radius: 6px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; background: var(--glass); flex-shrink: 0;
+    }
+    .custom-check.checked { background: var(--navy); border-color: var(--navy); }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      background: var(--surface);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-left: 1px solid var(--glass-border);
+    }
+    [data-theme="light"] .sidebar { border-left-color: var(--border); }
 
     .nav-btn {
-      width: 100%; text-align: right; padding: 10px 14px; border-radius: 8px;
+      width: 100%; text-align: right; padding: 11px 14px; border-radius: 12px;
       border: 1px solid transparent; font-size: 13px; font-weight: 600; cursor: pointer;
       transition: all 0.15s; background: transparent; color: var(--text2);
       display: flex; align-items: center; gap: 8px; flex-direction: row-reverse;
     }
-    .nav-btn:hover { background: var(--surface2); color: var(--text); }
-    .nav-btn.active { background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.3); color: var(--accent); }
-    [data-theme="light"] .nav-btn.active { background: rgba(9,105,218,0.08); border-color: rgba(9,105,218,0.25); color: var(--accent); }
+    .nav-btn:hover { background: var(--glass); color: var(--text); }
+    .nav-btn.active {
+      background: rgba(30,39,73,0.3); border-color: rgba(79,141,255,0.3);
+      color: var(--accent);
+    }
+    [data-theme="light"] .nav-btn.active {
+      background: rgba(30,39,73,0.08); border-color: rgba(30,39,73,0.25);
+      color: var(--navy);
+    }
 
+    /* ===== TABLES ===== */
     .data-table { width: 100%; border-collapse: collapse; }
-    
-    .data-table th { padding: 10px 14px; text-align: start; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    .data-table td { padding: 12px 14px; font-size: 13px; text-align: start; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: middle; }
-    [data-theme="light"] .data-table td { border-bottom: 1px solid rgba(208,215,222,0.5); }
+    .data-table th {
+      padding: 10px 14px; text-align: start; font-size: 11px; font-weight: 700;
+      color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .data-table td {
+      padding: 12px 14px; font-size: 13px; text-align: start;
+      border-bottom: 1px solid rgba(100,120,200,0.08); vertical-align: middle;
+    }
+    [data-theme="light"] .data-table td { border-bottom: 1px solid rgba(30,39,73,0.07); }
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tbody tr { transition: background 0.15s; }
-    .data-table tbody tr:hover { background: rgba(0,0,0,0.02); }
-    [data-theme="light"] .data-table tbody tr:hover { background: rgba(0,0,0,0.02); }
+    .data-table tbody tr:hover { background: var(--glass); }
 
-    .custom-check { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; background: var(--surface); flex-shrink: 0; }
-    .custom-check.checked { background: var(--accent); border-color: var(--accent); }
-    .custom-check:hover { border-color: var(--accent); }
-
-    .fancy-select { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; transition: border-color 0.15s; appearance: none; -webkit-appearance: none; width: 100%; }
-    .fancy-select:focus { border-color: var(--accent); }
+    /* ===== FANCY SELECT (in table) ===== */
+    .fancy-select {
+      background: var(--glass); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px; font-weight: 600; outline: none; cursor: pointer;
+      transition: border-color 0.15s; appearance: none; -webkit-appearance: none; width: 100%;
+    }
+    .fancy-select:focus { border-color: var(--border2); }
     .fancy-select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .fancy-textarea { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; outline: none; resize: vertical; width: 100%; min-height: 36px; transition: border-color 0.15s; line-height: 1.5; }
-    .fancy-textarea:focus { border-color: var(--accent); }
+    .fancy-textarea {
+      background: var(--glass); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); padding: 8px 12px; font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px; outline: none; resize: vertical; width: 100%; min-height: 36px;
+      transition: border-color 0.15s; line-height: 1.5;
+    }
+    .fancy-textarea:focus { border-color: var(--border2); }
     .fancy-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
     .fancy-textarea::placeholder { color: var(--text3); }
 
+    /* ===== BADGES ===== */
     .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
-
-    .btn-primary { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; }
-    [data-theme="dark"] .btn-primary { color: #0d1117; }
-    .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); }
-    .btn-primary:active { transform: scale(0.97); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .btn-ghost { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 18px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-ghost:hover { background: var(--border); color: var(--text); }
-
-    .progress-track { background: var(--surface2); border-radius: 100px; height: 6px; overflow: hidden; border: 1px solid var(--border); }
-    .progress-fill { height: 100%; border-radius: 100px; transition: width 1s ease; position: relative; overflow: hidden; }
-    .progress-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s infinite; }
-
-    .loader-ring { width: 48px; height: 48px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
-
-    .toast { position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); z-index: 9999; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow); animation: fadeUp 0.3s ease; }
-
     .status-no { color: var(--rose); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
     .status-late { color: var(--amber); background: rgba(210,153,34,0.1); border-color: rgba(210,153,34,0.25); }
     .status-perm { color: #a78bfa; background: rgba(167,139,250,0.1); border-color: rgba(167,139,250,0.25); }
-    .status-duty { color: var(--accent); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
+    .status-duty { color: var(--accent); background: rgba(79,141,255,0.1); border-color: rgba(79,141,255,0.25); }
     .status-yes { color: var(--emerald); background: rgba(63,185,80,0.1); border-color: rgba(63,185,80,0.25); }
 
-    .section-line { display: flex; align-items: center; gap: 12px; }
-    .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    /* ===== BUTTONS ===== */
+    .btn-primary {
+      background: var(--navy); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 800;
+      cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 16px rgba(30,39,73,0.4);
+    }
+    .btn-primary:hover { filter: brightness(1.2); transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-    .bulk-bar { background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.25); border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn-ghost {
+      background: var(--glass); color: var(--text2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 9px 18px; font-family: 'Vazirmatn', sans-serif;
+      font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
 
-    /* Theme toggle */
-    .theme-toggle { width: 44px; height: 24px; background: var(--surface2); border: 1px solid var(--border); border-radius: 100px; position: relative; cursor: pointer; transition: all 0.3s; }
-    .theme-toggle-knob { width: 18px; height: 18px; border-radius: 50%; position: absolute; top: 2px; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 9px; }
-    [data-theme="dark"] .theme-toggle-knob { right: 2px; background: #1d4ed8; color: #fff; }
-    [data-theme="light"] .theme-toggle-knob { left: 2px; background: #fbbf24; color: #fff; }
+    /* ===== PROGRESS ===== */
+    .progress-track { background: var(--glass); border-radius: 100px; height: 6px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill {
+      height: 100%; border-radius: 100px; transition: width 1s ease; position: relative; overflow: hidden;
+    }
+    .progress-fill::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    /* ===== LOADER ===== */
+    .loader-ring {
+      width: 52px; height: 52px; border: 3px solid var(--glass);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); z-index: 9999;
+      background: var(--surface-solid); border: 1px solid var(--border2); border-radius: 14px;
+      padding: 14px 22px; display: flex; align-items: center; gap: 12px;
+      font-size: 14px; font-weight: 600; box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: fadeUp 0.3s ease; backdrop-filter: blur(20px);
+    }
 
     /* ===== HELP OVERLAY ===== */
-    .help-overlay { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
-    /* Backdrop transparent — spotlight's own box-shadow darkens everything around the hole */
-    .help-backdrop { position: fixed; inset: 0; background: transparent; z-index: 501; pointer-events: all; }
-
     .help-spotlight {
-      position: fixed; z-index: 502; pointer-events: none;
-      border-radius: 14px;
-      /* The spotlight itself is fully transparent - it's a clear "hole" through the backdrop */
-      background: transparent;
-      /* Ring glow around the highlighted element */
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.78), 0 0 30px rgba(88,166,255,0.6);
+      position: fixed; z-index: 502; pointer-events: none; border-radius: 16px;
+      background: transparent; outline: 2px solid var(--accent); outline-offset: 3px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.82), 0 0 40px rgba(79,141,255,0.5);
       transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
       animation: helpPulse 2s ease-in-out infinite;
     }
-    [data-theme="light"] .help-spotlight {
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(9,105,218,0.5);
-    }
-
     .help-tooltip {
-      position: fixed; z-index: 503;
-      background: var(--surface); border: 1px solid var(--accent);
-      border-radius: 14px; padding: 18px 22px; max-width: 340px;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-      animation: helpStepIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
-      pointer-events: all;
+      position: fixed; z-index: 503; background: var(--surface-solid);
+      border: 1px solid var(--border2); border-radius: 18px; padding: 22px 24px;
+      max-width: 340px; box-shadow: 0 16px 60px rgba(0,0,0,0.5);
+      animation: helpStepIn 0.35s cubic-bezier(0.16,1,0.3,1) both; pointer-events: all;
+      backdrop-filter: blur(20px);
     }
-
-    .help-step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; flex-shrink: 0; }
-    [data-theme="dark"] .help-step-num { color: #0d1117; }
-    .help-step-dots { display: flex; gap: 6px; }
-    .help-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: all 0.2s; }
+    .help-step-num {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--navy);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; flex-shrink: 0;
+    }
+    .help-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: all 0.2s; }
     .help-dot.active { background: var(--accent); width: 20px; border-radius: 100px; }
 
-    /* Sidebar mobile */
+    /* ===== SECTION DIVIDER ===== */
+    .section-line { display: flex; align-items: center; gap: 12px; }
+    .section-line::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ===== BULK BAR ===== */
+    .bulk-bar {
+      background: rgba(79,141,255,0.07); border: 1px solid rgba(79,141,255,0.2);
+      border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+
+    /* ===== THEME TOGGLE ===== */
+    .theme-toggle-pill {
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 100px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+      color: var(--text2); transition: all 0.2s;
+    }
+    .theme-toggle-pill:hover { background: var(--surface2); color: var(--text); }
+
+    /* ===== SIDEBAR MOBILE ===== */
     .sidebar-mobile { transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ===== FINGERPRINT ICON ===== */
+    .fp-icon-wrap {
+      width: 88px; height: 88px; border-radius: 28px;
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 16px 48px rgba(30,39,73,0.6), 0 0 0 1px rgba(255,255,255,0.07) inset;
+      position: relative; overflow: hidden;
+    }
+    .fp-icon-wrap::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    }
+
+    /* ===== CARD ===== */
+    .card { 
+      background: var(--surface); border: 1px solid var(--glass-border); border-radius: 16px;
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    [data-theme="light"] .card { border-color: var(--border); }
 
     @media (max-width: 768px) {
       input, textarea, select { font-size: 16px !important; }
       .data-table thead { display: none; }
       .data-table tbody { display: flex; flex-direction: column; gap: 12px; }
-      .data-table tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "chk name time" "chk badges badges" "chk select select" "chk note note"; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; align-items: start; }
+      .data-table tr { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "chk name time" "chk badges badges" "chk select select" "chk note note"; gap: 8px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px; align-items: start; }
       .data-table td { display: block; padding: 0; border: none; }
       .data-table td:nth-child(1) { grid-area: chk; padding-top: 2px; }
       .data-table td:nth-child(2) { grid-area: name; }
@@ -218,87 +406,126 @@
   </style>
 </head>
 
-<body class="h-screen w-screen overflow-hidden flex flex-col grid-bg" x-data="managerApp()" :data-theme="theme">
+<body class="h-screen w-screen overflow-hidden flex flex-col noise" x-data="managerApp()" :data-theme="theme">
+
+<!-- ===== BACKGROUND SCENE ===== -->
+<div class="bg-scene">
+  <div class="bubble b1"></div>
+  <div class="bubble b2"></div>
+  <div class="bubble b3"></div>
+  <div class="bubble b4"></div>
+  <div class="bubble b5"></div>
+</div>
 
 <!-- ==================== LOGIN ==================== -->
-<div x-show="!isLoggedIn" class="flex-1 flex items-center justify-center p-4 fade-up overflow-y-auto">
-  <div class="card login-card w-full max-w-sm p-8 glow-blue">
-    
-    <!-- Theme + Lang toggles at top -->
-    <div class="flex items-center justify-between mb-6">
-      <button @click="toggleTheme()" class="theme-toggle" :title="t('toggleTheme')">
-        <div class="theme-toggle-knob">
-          <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
-        </div>
-      </button>
-      <button @click="toggleLang()" class="btn-ghost text-xs px-3 py-1.5 flex items-center gap-2">
-        <i class="fa fa-language"></i>
-        <span x-text="lang === 'ckb' ? 'English' : 'کوردی'"></span>
-      </button>
-    </div>
+<div x-show="!isLoggedIn" class="relative z-10 flex-1 flex items-center justify-center p-4 overflow-y-auto">
+  <div class="glass-card login-wrap w-full max-w-[420px] p-8 fade-up">
 
-    <div class="text-center mb-8">
-      <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-600 to-violet-700 flex items-center justify-center mx-auto mb-4 float" style="box-shadow: 0 8px 32px rgba(88,166,255,0.3)">
-        <i class="fa-solid fa-fingerprint text-white text-xl"></i>
+    <!-- Top controls row -->
+    <div class="flex items-center justify-between mb-8">
+      <!-- Lang switcher -->
+      <div class="pill-toggle">
+        <button class="pill-option" :class="lang==='ckb' ? 'active' : ''" @click="setLang('ckb')">کوردی</button>
+        <button class="pill-option" :class="lang==='en' ? 'active' : ''" @click="setLang('en')">EN</button>
       </div>
-      <h1 class="text-xl font-black" style="color:var(--text)" x-text="t('portalTitle')"></h1>
-      <p class="text-xs mt-1" style="color:var(--text3)" x-text="t('portalSubtitle')"></p>
+      <!-- Theme toggle -->
+      <button @click="toggleTheme()" class="theme-toggle-pill">
+        <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'" style="font-size:12px"></i>
+        <span x-text="theme === 'dark' ? (lang==='ckb' ? 'تاریک' : 'Dark') : (lang==='ckb' ? 'ڕووناک' : 'Light')"></span>
+      </button>
     </div>
 
-    <div x-show="loginError" style="display:none;" class="mb-5 p-3 rounded-lg text-sm font-semibold flex items-start gap-2 fade-up" style="background:rgba(248,81,73,0.1); border:1px solid rgba(248,81,73,0.3); color:var(--rose)">
-      <i class="fa fa-exclamation-circle mt-0.5"></i>
+    <!-- Brand -->
+    <div class="flex flex-col items-center mb-8">
+      <div class="fp-icon-wrap float mb-5">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 6C14.06 6 6 14.06 6 24" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 6C33.94 6 42 14.06 42 24" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 10C16.27 10 10 16.27 10 24C10 25.5 10.2 26.95 10.58 28.33" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 10C31.73 10 38 16.27 38 24C38 30.8 33.6 36.53 27.5 38.5" stroke="rgba(255,255,255,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 14C18.48 14 14 18.48 14 24C14 27.2 15.45 30.07 17.73 32" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 14C29.52 14 34 18.48 34 24C34 26.5 33.07 28.8 31.54 30.55" stroke="rgba(255,255,255,0.65)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 18C20.69 18 18 20.69 18 24C18 27.31 20.69 30 24 30" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M24 18C27.31 18 30 20.69 30 24" stroke="rgba(255,255,255,0.8)" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="2.5" fill="white" opacity="0.9"/>
+          <path d="M24 22V16" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18 36C19.9 37.3 22 38 24 38" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-black tracking-tight mb-1" style="color:var(--text)" x-text="t('portalTitle')"></h1>
+      <p class="text-sm font-medium" style="color:var(--text3)" x-text="t('portalSubtitle')"></p>
+    </div>
+
+    <!-- Error -->
+    <div x-show="loginError" style="display:none" class="mb-5 p-4 rounded-2xl text-sm font-semibold flex items-start gap-2 fade-up"
+      style="background:rgba(248,81,73,0.08); border:1px solid rgba(248,81,73,0.25); color:var(--rose)">
+      <i class="fa fa-exclamation-circle mt-0.5 flex-shrink-0"></i>
       <span x-text="loginError"></span>
     </div>
 
-    <div class="space-y-4">
+    <!-- Form -->
+    <div class="flex flex-col gap-5">
+      <!-- Username dropdown -->
       <div>
-        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)" x-text="t('username')"></label>
-        <div class="relative">
-          <select x-model="loginUser" class="fancy-select pr-10" style="padding-right:36px">
-            <option value="" x-text="t('selectUser')">-- هەڵبژێرە --</option>
+        <label class="block text-xs font-black mb-2.5 uppercase tracking-widest" style="color:var(--text3)" x-text="t('username')"></label>
+        <div class="custom-dropdown" x-data="{ open: false }">
+          <div class="dropdown-input" :class="open ? 'open' : ''" @click="open = !open; $event.stopPropagation()">
+            <span :style="loginUser ? 'color:var(--text)' : 'color:var(--text3)'"
+              x-text="loginUser || t('selectUser')"></span>
+            <i class="fa fa-chevron-down text-xs transition-transform" :style="open ? 'transform:rotate(180deg)' : ''" style="color:var(--text3)"></i>
+          </div>
+          <div class="dropdown-menu" x-show="open" @click.outside="open = false" style="display:none">
             <template x-for="u in managerUsernames" :key="u">
-              <option :value="u" x-text="u"></option>
+              <div class="dropdown-item" :class="loginUser === u ? 'selected' : ''" @click="loginUser = u; open = false">
+                <i class="fa fa-user text-xs flex-shrink-0" style="color:var(--text3)"></i>
+                <span x-text="u"></span>
+                <i x-show="loginUser === u" class="fa fa-check text-xs mr-auto" style="color:var(--accent)"></i>
+              </div>
             </template>
-          </select>
-          <i class="fa fa-user absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
-        </div>
-        <div x-show="managerUsernames.length === 0" class="text-xs mt-1 font-medium" style="color:var(--accent)">
-          <i class="fa fa-circle-notch fa-spin ml-1"></i> <span x-text="t('loadingList')"></span>
+            <div x-show="managerUsernames.length === 0" class="dropdown-item" style="justify-content:center">
+              <i class="fa fa-circle-notch fa-spin text-xs"></i>
+              <span x-text="t('loadingList')"></span>
+            </div>
+          </div>
         </div>
       </div>
 
+      <!-- Password -->
       <div>
-        <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)" x-text="t('password')"></label>
+        <label class="block text-xs font-black mb-2.5 uppercase tracking-widest" style="color:var(--text3)" x-text="t('password')"></label>
         <div class="relative">
-          <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
-            class="fancy-select w-full" dir="ltr"
-            style="padding-left: 36px; padding-right: 36px; text-align: left;"
+          <input :type="showPassword ? 'text' : 'password'" x-model="loginPass"
+            @keyup.enter="doLogin" dir="ltr"
+            class="glass-input" style="padding-left:48px; padding-right:48px; text-align:left"
             :placeholder="t('passwordPlaceholder')">
-          <i class="fa fa-key absolute top-3 left-3 text-xs" style="color:var(--text3)"></i>
+          <i class="fa fa-lock absolute top-1/2 -translate-y-1/2 left-4 text-sm" style="color:var(--text3)"></i>
           <button type="button" @click="showPassword = !showPassword"
-            class="absolute top-2.5 right-3 text-xs transition-colors" style="color:var(--text3)">
+            class="absolute top-1/2 -translate-y-1/2 right-4 transition-colors p-1 rounded-lg"
+            style="color:var(--text3)">
             <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
           </button>
         </div>
       </div>
 
+      <!-- Remember me -->
       <label class="flex items-center gap-3 cursor-pointer">
         <div class="custom-check" :class="rememberMe ? 'checked' : ''" @click="rememberMe = !rememberMe">
-          <i x-show="rememberMe" class="fa fa-check text-xs text-white" style="font-size:10px"></i>
+          <i x-show="rememberMe" class="fa fa-check text-white" style="font-size:10px"></i>
         </div>
-        <span class="text-sm font-medium" style="color:var(--text2)" x-text="t('rememberMe')"></span>
+        <span class="text-sm font-semibold" style="color:var(--text2)" x-text="t('rememberMe')"></span>
       </label>
 
-      <button @click="doLogin" :disabled="isLoggingIn" class="btn-primary w-full justify-center mt-2">
+      <!-- Submit -->
+      <button @click="doLogin" :disabled="isLoggingIn" class="login-btn mt-1">
         <i class="fa fa-sign-in-alt" x-show="!isLoggingIn"></i>
         <i class="fa fa-circle-notch fa-spin" x-show="isLoggingIn" style="display:none"></i>
         <span x-show="!isLoggingIn" x-text="t('login')"></span>
         <span x-show="isLoggingIn" style="display:none" x-text="t('loggingIn')"></span>
       </button>
 
-      <!-- Help button on login -->
-      <button @click="startHelp()" class="w-full text-center text-xs font-semibold mt-2 py-2 rounded-lg transition-colors"
-        style="color:var(--accent); background:rgba(88,166,255,0.06); border:1px solid rgba(88,166,255,0.15)">
+      <!-- Help -->
+      <button @click="startHelp()" class="w-full text-center text-xs font-bold py-2.5 rounded-xl transition-colors"
+        style="color:var(--accent); background:rgba(79,141,255,0.06); border:1px solid rgba(79,141,255,0.15)">
         <i class="fa fa-circle-question mr-1"></i>
         <span x-text="t('helpBtn')"></span>
       </button>
@@ -307,78 +534,83 @@
 </div>
 
 <!-- ==================== LOADING ==================== -->
-<div x-show="isLoggedIn && isLoading" style="display:none" class="fixed inset-0 z-[100] flex flex-col items-center justify-center fade-up" style="background:rgba(13,17,23,0.85); backdrop-filter:blur(8px)">
+<div x-show="isLoggedIn && isLoading" style="display:none" class="fixed inset-0 z-[100] flex flex-col items-center justify-center fade-in"
+  style="background:rgba(11,15,30,0.9); backdrop-filter:blur(12px)">
   <div class="loader-ring mb-5"></div>
-  <p class="font-bold text-lg" x-text="loadingMessage"></p>
+  <p class="font-black text-lg" x-text="loadingMessage"></p>
   <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('pleaseWait')"></p>
 </div>
 
 <!-- ==================== MAIN APP ==================== -->
-<div x-show="isLoggedIn && !isLoading" style="display:none" class="flex flex-col md:flex-row flex-1 overflow-hidden fade-up">
+<div x-show="isLoggedIn && !isLoading" style="display:none" class="relative z-10 flex flex-col md:flex-row flex-1 overflow-hidden fade-in">
 
   <!-- Mobile top bar -->
-  <div class="md:hidden flex items-center justify-between px-4 py-3 shrink-0 border-b" style="background:var(--surface); border-color:var(--border)">
-    <button @click="mobileMenuOpen = true" class="p-2 rounded-lg" style="color:var(--text2)">
+  <div class="md:hidden flex items-center justify-between px-4 py-3 shrink-0" style="background:var(--surface); backdrop-filter:blur(20px); border-bottom:1px solid var(--glass-border)">
+    <button @click="mobileMenuOpen = true" class="p-2 rounded-xl" style="color:var(--text2); background:var(--glass)">
       <i class="fa fa-bars"></i>
     </button>
     <div class="text-center">
-      <div class="text-sm font-black" style="color:var(--text)" x-text="t('portalTitle')"></div>
+      <div class="text-sm font-black" x-text="t('portalTitle')"></div>
       <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
     </div>
-    <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black" style="background:var(--accent); color:#0d1117" x-text="loggedInManagerName.charAt(0)"></div>
+    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black"
+      style="background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(30,39,73,0.4)"
+      x-text="loggedInManagerName.charAt(0)"></div>
   </div>
 
   <!-- Mobile overlay -->
-  <div x-show="mobileMenuOpen" style="display:none" class="fixed inset-0 z-50 md:hidden" @click="mobileMenuOpen = false" style="background:rgba(0,0,0,0.6); backdrop-filter:blur(4px)"></div>
+  <div x-show="mobileMenuOpen" style="display:none" class="fixed inset-0 z-50 md:hidden"
+    @click="mobileMenuOpen = false" style="background:rgba(0,0,0,0.7); backdrop-filter:blur(6px)"></div>
 
   <!-- ===== SIDEBAR ===== -->
-  <aside id="help-sidebar" class="fixed inset-y-0 right-0 z-[60] w-72 flex flex-col shrink-0 border-l sidebar-mobile md:relative md:translate-x-0"
-    :class="mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'"
-    style="background:var(--surface); border-color:var(--border)">
+  <aside id="help-sidebar" class="fixed inset-y-0 right-0 z-[60] w-72 flex flex-col shrink-0 sidebar sidebar-mobile md:relative md:translate-x-0"
+    :class="mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'">
 
     <!-- Header -->
-    <div class="p-5 border-b shrink-0" style="border-color:var(--border)">
+    <div class="p-5 shrink-0" style="border-bottom:1px solid var(--glass-border)">
       <div class="hidden md:flex items-center justify-between gap-3 mb-4">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white" style="background:linear-gradient(135deg,#1d4ed8,#7c3aed)">
-            <i class="fa-solid fa-fingerprint"></i>
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--navy); box-shadow:0 4px 16px rgba(30,39,73,0.5)">
+            <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+              <path d="M24 6C14.06 6 6 14.06 6 24" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
+              <path d="M24 6C33.94 6 42 14.06 42 24" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
+              <path d="M24 14C18.48 14 14 18.48 14 24" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+              <path d="M24 14C29.52 14 34 18.48 34 24" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="3" fill="white" opacity="0.9"/>
+            </svg>
           </div>
           <div>
-            <div class="font-black text-sm" style="color:var(--text)" x-text="t('portalTitle')"></div>
+            <div class="font-black text-sm" x-text="t('portalTitle')"></div>
             <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
           </div>
         </div>
-        <!-- Theme + lang toggles -->
-        <div class="flex items-center gap-2">
-          <button @click="toggleTheme()" class="theme-toggle w-9 h-5" :title="t('toggleTheme')" style="width:36px;height:20px">
-            <div class="theme-toggle-knob" style="width:15px;height:15px;top:1.5px;font-size:8px">
-              <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
-            </div>
+        <div class="flex items-center gap-1.5">
+          <button @click="toggleTheme()" class="theme-toggle-pill text-xs px-2.5 py-1.5" style="font-size:10px">
+            <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
           </button>
-          <button @click="toggleLang()" class="btn-ghost text-xs px-2 py-1" style="font-size:10px;padding:4px 8px">
-            <span x-text="lang === 'ckb' ? 'EN' : 'KU'"></span>
-          </button>
+          <div class="pill-toggle" style="padding:3px">
+            <button class="pill-option" style="padding:4px 8px;font-size:10px" :class="lang==='ckb' ? 'active' : ''" @click="setLang('ckb')">KU</button>
+            <button class="pill-option" style="padding:4px 8px;font-size:10px" :class="lang==='en' ? 'active' : ''" @click="setLang('en')">EN</button>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-3 p-3 rounded-lg" style="background:var(--surface2)">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0"
-          style="background:linear-gradient(135deg,var(--accent),#7c3aed); color:#0d1117"
+      <div class="flex items-center gap-3 p-3 rounded-xl" style="background:var(--glass); border:1px solid var(--glass-border)">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+          style="background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(30,39,73,0.4)"
           x-text="loggedInManagerName.charAt(0)"></div>
         <div class="overflow-hidden">
-          <div class="font-bold text-sm truncate" style="color:var(--text)" x-text="loggedInManagerName"></div>
+          <div class="font-bold text-sm truncate" x-text="loggedInManagerName"></div>
           <div class="text-xs" style="color:var(--text3)" x-text="t('manager')"></div>
         </div>
-        <button @click="mobileMenuOpen = false" class="md:hidden mr-auto p-1" style="color:var(--text3)">
-          <i class="fa fa-times"></i>
+        <button @click="mobileMenuOpen = false" class="md:hidden mr-auto p-1.5 rounded-lg" style="color:var(--text3); background:var(--glass)">
+          <i class="fa fa-times text-xs"></i>
         </button>
       </div>
     </div>
 
-    <!-- Scrollable nav -->
+    <!-- Nav -->
     <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
-
-      <!-- Departments -->
       <div>
         <div class="section-line mb-3">
           <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)" x-text="t('departments')"></span>
@@ -389,28 +621,26 @@
               class="nav-btn" :class="selectedDept === dept.name ? 'active' : ''">
               <span x-text="dept.name" class="flex-1 text-right truncate"></span>
               <span x-show="dept.pendingCount > 0" class="badge text-xs flex-shrink-0"
-                style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"
+                style="background:rgba(248,81,73,0.12); color:var(--rose); border:1px solid rgba(248,81,73,0.25)"
                 x-text="dept.pendingCount + ' ' + t('pending')"></span>
             </button>
           </template>
-          <div x-show="managerDepts.length === 0" class="text-xs text-center py-3" style="color:var(--text3)" x-text="t('noDepts')"></div>
+          <div x-show="managerDepts.length === 0" class="text-xs text-center py-3 rounded-xl" style="color:var(--text3); background:var(--glass)" x-text="t('noDepts')"></div>
         </div>
       </div>
 
-      <!-- Month filter + trainings -->
       <div x-show="selectedDept" class="fade-up" id="help-trainings">
         <div class="section-line mb-3">
           <span class="text-xs font-black uppercase tracking-wider" style="color:var(--text3)" x-text="t('programs')"></span>
         </div>
 
         <div class="relative mb-3">
-          <select x-model="selectedMonth" class="fancy-select text-xs pr-8" style="padding-right:30px">
+          <select x-model="selectedMonth" class="fancy-select text-xs" style="padding-right:10px">
             <option value="" x-text="t('allMonths')"></option>
             <template x-for="m in availableMonths">
               <option :value="m.value" x-text="m.label"></option>
             </template>
           </select>
-          <i class="fa fa-chevron-down absolute top-3 right-3 text-xs pointer-events-none" style="color:var(--text3)"></i>
         </div>
 
         <div class="space-y-1.5">
@@ -419,12 +649,12 @@
               class="nav-btn w-full flex-col items-stretch gap-1 py-3"
               :class="selectedTraining === tr.key ? 'active' : ''">
               <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-black truncate flex-1" :class="selectedTraining === tr.key ? '' : ''" x-text="tr.course" style="text-align:right"></span>
+                <span class="text-xs font-black truncate flex-1" x-text="tr.course" style="text-align:right"></span>
                 <template x-if="tr.isFullyReviewed">
-                  <span class="badge text-xs flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)"><i class="fa fa-check-double"></i></span>
+                  <span class="badge text-xs flex-shrink-0" style="background:rgba(63,185,80,0.12); color:var(--emerald); border:1px solid rgba(63,185,80,0.25)"><i class="fa fa-check-double"></i></span>
                 </template>
                 <template x-if="!tr.isFullyReviewed && tr.isLocked">
-                  <span class="badge text-xs flex-shrink-0" style="background:rgba(248,81,73,0.15); color:var(--rose); border:1px solid rgba(248,81,73,0.3)"><i class="fa fa-lock"></i></span>
+                  <span class="badge text-xs flex-shrink-0" style="background:rgba(248,81,73,0.12); color:var(--rose); border:1px solid rgba(248,81,73,0.25)"><i class="fa fa-lock"></i></span>
                 </template>
               </div>
               <div class="flex items-center justify-between text-xs" style="color:var(--text3)">
@@ -435,29 +665,28 @@
               </div>
             </button>
           </template>
-          <div x-show="filteredTrainings.length === 0" class="text-xs text-center py-3 rounded-lg" style="color:var(--text3); background:var(--surface2)" x-text="t('noPrograms')"></div>
+          <div x-show="filteredTrainings.length === 0" class="text-xs text-center py-3 rounded-xl" style="color:var(--text3); background:var(--glass)" x-text="t('noPrograms')"></div>
         </div>
       </div>
     </div>
 
-    <!-- Bottom actions -->
-    <!-- REPLACE THE BOTTOM ACTIONS DIV WITH THIS: -->
-<div class="p-3 border-t shrink-0" style="border-color:var(--border)">
-  <div class="grid grid-cols-3 gap-1.5">
-    <button @click="fetchData()" :disabled="isLoading" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px">
-      <i class="fa fa-sync-alt text-sm" :class="isLoading ? 'fa-spin' : ''"></i>
-      <span x-text="t('refresh')"></span>
-    </button>
-    <button @click="startHelp()" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; color:var(--accent); border-color:rgba(88,166,255,0.3)">
-      <i class="fa fa-circle-question text-sm"></i>
-      <span x-text="t('helpBtn').split(' ')[0]"></span>
-    </button>
-    <button @click="logout" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; color:var(--rose); border-color:rgba(248,81,73,0.3)">
-      <i class="fa fa-sign-out-alt text-sm"></i>
-      <span x-text="t('logout')"></span>
-    </button>
-  </div>
-</div>
+    <!-- Bottom -->
+    <div class="p-3 shrink-0" style="border-top:1px solid var(--glass-border)">
+      <div class="grid grid-cols-3 gap-1.5">
+        <button @click="fetchData()" :disabled="isLoading" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; border-radius:12px">
+          <i class="fa fa-sync-alt text-sm" :class="isLoading ? 'fa-spin' : ''"></i>
+          <span x-text="t('refresh')"></span>
+        </button>
+        <button @click="startHelp()" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; color:var(--accent); border-color:rgba(79,141,255,0.25); border-radius:12px">
+          <i class="fa fa-circle-question text-sm"></i>
+          <span x-text="lang==='ckb' ? 'یارمەتی' : 'Help'"></span>
+        </button>
+        <button @click="logout" class="btn-ghost flex-col justify-center gap-0.5 py-2 px-1" style="font-size:10px; color:var(--rose); border-color:rgba(248,81,73,0.25); border-radius:12px">
+          <i class="fa fa-sign-out-alt text-sm"></i>
+          <span x-text="t('logout')"></span>
+        </button>
+      </div>
+    </div>
   </aside>
 
   <!-- ===== MAIN CONTENT ===== -->
@@ -465,11 +694,12 @@
 
     <div x-show="!selectedDept" class="flex-1 flex items-center justify-center p-6">
       <div class="text-center">
-        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
-          <i class="fa-regular fa-building text-2xl" style="color:var(--accent)"></i>
+        <div class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 float"
+          style="background:var(--surface); border:1px solid var(--glass-border)">
+          <i class="fa-regular fa-building text-3xl" style="color:var(--accent)"></i>
         </div>
-        <p class="font-black text-lg" style="color:var(--text)" x-text="t('selectDept')"></p>
-        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('selectDeptSub')"></p>
+        <p class="font-black text-xl mb-2" x-text="t('selectDept')"></p>
+        <p class="text-sm" style="color:var(--text3)" x-text="t('selectDeptSub')"></p>
         <button @click="startHelp()" class="mt-5 btn-ghost text-sm" style="color:var(--accent)">
           <i class="fa fa-circle-question"></i> <span x-text="t('needHelp')"></span>
         </button>
@@ -478,21 +708,23 @@
 
     <div x-show="selectedDept && !selectedTraining" class="flex-1 flex items-center justify-center p-6">
       <div class="text-center">
-        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 float" style="background:var(--surface); border:1px solid var(--border)">
-          <i class="fa-solid fa-clipboard-list text-2xl" style="color:var(--accent)"></i>
+        <div class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 float"
+          style="background:var(--surface); border:1px solid var(--glass-border)">
+          <i class="fa-solid fa-clipboard-list text-3xl" style="color:var(--accent)"></i>
         </div>
-        <p class="font-black text-lg" style="color:var(--text)" x-text="selectedDept"></p>
-        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('selectProgram')"></p>
+        <p class="font-black text-xl mb-1" x-text="selectedDept"></p>
+        <p class="text-sm" style="color:var(--text3)" x-text="t('selectProgram')"></p>
       </div>
     </div>
 
     <div x-show="selectedTraining && localRecords.length === 0 && !isLoading" class="flex-1 flex items-center justify-center p-6">
       <div class="text-center">
-        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.3)">
-          <i class="fa fa-check text-2xl" style="color:var(--emerald)"></i>
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+          style="background:rgba(63,185,80,0.1); border:1px solid rgba(63,185,80,0.25)">
+          <i class="fa fa-check text-3xl" style="color:var(--emerald)"></i>
         </div>
-        <p class="font-black text-lg" style="color:var(--text)" x-text="t('allGood')"></p>
-        <p class="text-sm mt-1" style="color:var(--text3)" x-text="t('noPending')"></p>
+        <p class="font-black text-xl mb-1" x-text="t('allGood')"></p>
+        <p class="text-sm" style="color:var(--text3)" x-text="t('noPending')"></p>
       </div>
     </div>
 
@@ -507,9 +739,12 @@
               <span class="badge status-no border" x-show="absentRecords.length > 0" x-text="absentRecords.length + ' ' + t('absent')"></span>
               <span class="badge status-late border" x-show="lateRecords.length > 0" x-text="lateRecords.length + ' ' + t('late')"></span>
             </div>
-            <h2 class="text-base md:text-lg font-black" style="color:var(--text)" x-text="selectedTraining.split('|')[0]"></h2>
+            <h2 class="text-base md:text-lg font-black" x-text="selectedTraining.split('|')[0]"></h2>
             <div class="flex items-center gap-3 mt-1 text-xs font-medium flex-wrap" style="color:var(--text3)">
-              <span class="flex items-center gap-1"><i class="fa-regular fa-calendar" style="color:var(--accent)"></i> <span x-text="selectedTraining.split('|')[1]"></span></span>
+              <span class="flex items-center gap-1">
+                <i class="fa-regular fa-calendar" style="color:var(--accent)"></i>
+                <span x-text="selectedTraining.split('|')[1]"></span>
+              </span>
             </div>
           </div>
 
@@ -521,7 +756,7 @@
             </div>
             <div class="progress-track">
               <div class="progress-fill"
-                :style="`width:${activeTrainingObj?.percentLeft || 0}%; background:${activeTrainingObj?.hoursLeft < 12 ? 'var(--rose)' : 'var(--accent)'}`"></div>
+                :style="`width:${activeTrainingObj?.percentLeft || 0}%; background:${activeTrainingObj?.hoursLeft < 12 ? 'var(--rose)' : 'var(--navy)'}`"></div>
             </div>
           </div>
 
@@ -531,11 +766,11 @@
               <i class="fa fa-paper-plane"></i> <span x-text="t('submit')"></span>
             </button>
             <div x-show="activeTrainingObj?.isFullyReviewed"
-              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(63,185,80,0.1); color:var(--emerald); border:1px solid rgba(63,185,80,0.3)">
+              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(63,185,80,0.1); color:var(--emerald); border:1px solid rgba(63,185,80,0.25)">
               <i class="fa fa-check-double"></i> <span x-text="t('done')"></span>
             </div>
             <div x-show="activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed"
-              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.3)">
+              class="badge px-4 py-2.5 font-bold text-sm" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.25)">
               <i class="fa fa-lock"></i> <span x-text="t('expired')"></span>
             </div>
           </div>
@@ -544,15 +779,14 @@
 
       <!-- ABSENT SECTION -->
       <div x-show="absentRecords.length > 0" class="card fade-up" id="help-absent">
-        <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
+        <div class="p-4 flex items-center justify-between flex-wrap gap-3" style="border-bottom:1px solid var(--glass-border)">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full" style="background:var(--rose); box-shadow:0 0 8px rgba(248,81,73,0.5)"></div>
-            <h3 class="font-black text-sm" style="color:var(--text)" x-text="t('absentEmployees')"></h3>
-            <span class="badge text-xs" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.25)"
-              x-text="absentRecords.length"></span>
+            <h3 class="font-black text-sm" x-text="t('absentEmployees')"></h3>
+            <span class="badge text-xs" style="background:rgba(248,81,73,0.1); color:var(--rose); border:1px solid rgba(248,81,73,0.2)" x-text="absentRecords.length"></span>
           </div>
-          <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
-            <button @click="toggleSelectAll('absent')" class="btn-ghost text-xs px-3 py-2">
+          <div x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+            <button @click="toggleSelectAll('absent')" class="btn-ghost text-xs px-3 py-2" style="border-radius:10px">
               <div class="custom-check w-4 h-4" :class="isAllAbsentSelected ? 'checked' : ''">
                 <i x-show="isAllAbsentSelected" class="fa fa-check text-white" style="font-size:9px"></i>
               </div>
@@ -561,15 +795,15 @@
           </div>
         </div>
 
-<div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; background:var(--surface); padding-bottom:8px; border-bottom:1px solid var(--border);">
+        <div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; padding-bottom:8px; border-bottom:1px solid var(--glass-border); background:var(--surface-solid); backdrop-filter:blur(20px)">
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
-              <i class="fa fa-check-square ml-1"></i>
+              <i class="fa fa-check-square mr-1"></i>
               <span x-text="selectedAbsent.length"></span> <span x-text="t('employeeSelected')"></span>
             </span>
             <div class="flex items-center gap-2 flex-wrap mr-auto">
               <span class="text-xs font-bold" style="color:var(--text3)" x-text="t('status') + ':'"></span>
-              <select x-model="bulkStatusAbsent" class="fancy-select text-xs w-auto" style="width:auto; min-width:130px">
+              <select x-model="bulkStatusAbsent" class="fancy-select text-xs" style="width:auto; min-width:130px">
                 <option value="" x-text="t('selectOne')"></option>
                 <option value="No" x-text="t('statusNo')"></option>
                 <option value="Permission" x-text="t('statusPerm')"></option>
@@ -603,7 +837,7 @@
             </thead>
             <tbody>
               <template x-for="rec in absentRecords" :key="rec.rowIndex">
-                <tr :class="selectedAbsent.includes(rec.empId) ? 'bg-blue-900/10' : ''">
+                <tr :class="selectedAbsent.includes(rec.empId) ? '' : ''" style="">
                   <td>
                     <div class="custom-check w-4 h-4"
                       :class="(selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) ? 'checked' : ''"
@@ -616,12 +850,12 @@
                     </div>
                   </td>
                   <td>
-                    <div class="font-bold text-sm" style="color:var(--text)" x-text="rec.empName"></div>
+                    <div class="font-bold text-sm" x-text="rec.empName"></div>
                     <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
                   </td>
                   <td>
                     <span x-show="rec.originalStatus === 'No'" class="badge status-no border text-xs" x-text="t('absent')"></span>
-                    <span x-show="rec.originalStatus === 'NONE'" class="badge text-xs" style="background:rgba(110,118,129,0.15); color:var(--text2); border:1px solid var(--border)" x-text="t('noData')"></span>
+                    <span x-show="rec.originalStatus === 'NONE'" class="badge text-xs" style="background:rgba(110,118,129,0.1); color:var(--text2); border:1px solid var(--border)" x-text="t('noData')"></span>
                   </td>
                   <td>
                     <div class="space-y-1 text-xs">
@@ -634,28 +868,26 @@
                       <div x-show="!rec.start && !rec.end" class="italic text-xs" style="color:var(--text3)" x-text="t('noRecord')"></div>
                     </div>
                   </td>
-                  <!-- STATUS TD in absent table - replace existing one -->
-<td>
-  <div class="relative">
-    <select x-model="rec.status"
-      :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
-      @change="saveAutoSave(rec)"
-      class="fancy-select text-xs pr-6" style="padding-right:24px; font-size:12px"
-      :style="{
-        color: rec.status==='No' ? 'var(--rose)' : rec.status==='Permission' ? '#a78bfa' : rec.status==='At Duty' ? 'var(--accent)' : rec.status==='Yes' ? 'var(--emerald)' : 'var(--text3)',
-        background: rec.status==='No' ? 'rgba(248,81,73,0.08)' : rec.status==='Permission' ? 'rgba(167,139,250,0.08)' : rec.status==='At Duty' ? 'rgba(88,166,255,0.08)' : rec.status==='Yes' ? 'rgba(63,185,80,0.08)' : 'var(--surface2)',
-        borderColor: rec.status==='No' ? 'rgba(248,81,73,0.3)' : rec.status==='Permission' ? 'rgba(167,139,250,0.3)' : rec.status==='At Duty' ? 'rgba(88,166,255,0.3)' : rec.status==='Yes' ? 'rgba(63,185,80,0.3)' : 'var(--border)',
-        fontWeight: '700'
-      }">
-      <option value="" disabled x-text="t('selectOne')"></option>
-      <option value="No" x-text="t('statusNo')"></option>
-      <option value="Permission" x-text="t('statusPerm')"></option>
-      <option value="At Duty" x-text="t('statusDuty')"></option>
-      <option value="Yes" x-text="t('statusYes')"></option>
-    </select>
-    <i class="fa fa-chevron-down absolute top-2.5 left-2 text-xs pointer-events-none" style="color:var(--text3)"></i>
-  </div>
-</td>
+                  <td>
+                    <div class="relative">
+                      <select x-model="rec.status"
+                        :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                        @change="saveAutoSave(rec)"
+                        class="fancy-select text-xs"
+                        :style="{
+                          color: rec.status==='No' ? 'var(--rose)' : rec.status==='Permission' ? '#a78bfa' : rec.status==='At Duty' ? 'var(--accent)' : rec.status==='Yes' ? 'var(--emerald)' : 'var(--text3)',
+                          background: rec.status==='No' ? 'rgba(248,81,73,0.08)' : rec.status==='Permission' ? 'rgba(167,139,250,0.08)' : rec.status==='At Duty' ? 'rgba(79,141,255,0.08)' : rec.status==='Yes' ? 'rgba(63,185,80,0.08)' : 'var(--glass)',
+                          borderColor: rec.status==='No' ? 'rgba(248,81,73,0.3)' : rec.status==='Permission' ? 'rgba(167,139,250,0.3)' : rec.status==='At Duty' ? 'rgba(79,141,255,0.3)' : rec.status==='Yes' ? 'rgba(63,185,80,0.3)' : 'var(--border)',
+                          fontWeight: '700'
+                        }">
+                        <option value="" disabled x-text="t('selectOne')"></option>
+                        <option value="No" x-text="t('statusNo')"></option>
+                        <option value="Permission" x-text="t('statusPerm')"></option>
+                        <option value="At Duty" x-text="t('statusDuty')"></option>
+                        <option value="Yes" x-text="t('statusYes')"></option>
+                      </select>
+                    </div>
+                  </td>
                   <td>
                     <textarea x-model="rec.managerNote" rows="2" dir="auto"
                       :placeholder="t('reasonPlaceholder')"
@@ -672,14 +904,14 @@
 
       <!-- LATE SECTION -->
       <div x-show="lateRecords.length > 0" class="card fade-up" id="help-late">
-        <div class="p-4 border-b flex items-center justify-between flex-wrap gap-3" style="border-color:var(--border)">
+        <div class="p-4 flex items-center justify-between flex-wrap gap-3" style="border-bottom:1px solid var(--glass-border)">
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full" style="background:var(--amber); box-shadow:0 0 8px rgba(210,153,34,0.5)"></div>
-            <h3 class="font-black text-sm" style="color:var(--text)" x-text="t('lateEmployees')"></h3>
-            <span class="badge text-xs" style="background:rgba(210,153,34,0.1); color:var(--amber); border:1px solid rgba(210,153,34,0.25)" x-text="lateRecords.length"></span>
+            <h3 class="font-black text-sm" x-text="t('lateEmployees')"></h3>
+            <span class="badge text-xs" style="background:rgba(210,153,34,0.1); color:var(--amber); border:1px solid rgba(210,153,34,0.2)" x-text="lateRecords.length"></span>
           </div>
-          <div class="flex items-center gap-2" x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
-            <button @click="toggleSelectAll('late')" class="btn-ghost text-xs px-3 py-2">
+          <div x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+            <button @click="toggleSelectAll('late')" class="btn-ghost text-xs px-3 py-2" style="border-radius:10px">
               <div class="custom-check w-4 h-4" :class="isAllLateSelected ? 'checked' : ''">
                 <i x-show="isAllLateSelected" class="fa fa-check text-white" style="font-size:9px"></i>
               </div>
@@ -688,10 +920,10 @@
           </div>
         </div>
 
-<div x-show="selectedLate.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; background:var(--surface); padding-bottom:8px; border-bottom:1px solid var(--border);">
+        <div x-show="selectedLate.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; padding-bottom:8px; border-bottom:1px solid var(--glass-border); background:var(--surface-solid); backdrop-filter:blur(20px)">
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
-              <i class="fa fa-check-square ml-1"></i>
+              <i class="fa fa-check-square mr-1"></i>
               <span x-text="selectedLate.length"></span> <span x-text="t('employeeSelected')"></span>
             </span>
             <div class="flex items-center gap-2 flex-wrap mr-auto">
@@ -702,10 +934,9 @@
                 <i class="fa fa-bolt"></i> <span x-text="t('apply')"></span>
               </button>
               <button @click="clearLateSelection" class="btn-ghost text-xs px-3 py-2" x-text="t('cancel')"></button>
-           </div>
+            </div>
           </div>
         </div>
-        <!-- end sticky late bulk bar -->
 
         <div class="overflow-x-auto">
           <table class="data-table">
@@ -721,7 +952,7 @@
             </thead>
             <tbody>
               <template x-for="rec in lateRecords" :key="rec.rowIndex">
-                <tr :class="selectedLate.includes(rec.empId) ? 'bg-amber-900/10' : ''" style="background-color: rgba(210,153,34,0.03)">
+                <tr>
                   <td>
                     <div class="custom-check w-4 h-4"
                       :class="selectedLate.includes(rec.empId) ? 'checked' : ''"
@@ -734,14 +965,15 @@
                     </div>
                   </td>
                   <td>
-                    <div class="font-bold text-sm" style="color:var(--text)" x-text="rec.empName"></div>
+                    <div class="font-bold text-sm" x-text="rec.empName"></div>
                     <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
                   </td>
                   <td>
                     <span class="badge status-late border text-xs mb-1 block w-max" x-text="t('lateBy') + ' ' + formatDuration(rec.totalDuration - rec.partDuration)"></span>
                     <div class="text-xs mt-1 flex items-center gap-1" style="color:var(--text3)">
                       <i class="fa fa-chart-pie text-xs"></i>
-                      <span x-text="t('attended') + ':'"></span> <span class="font-bold" style="color:var(--text)" x-text="formatDuration(rec.partDuration)"></span>
+                      <span x-text="t('attended') + ':'"></span>
+                      <span class="font-bold" style="color:var(--text)" x-text="formatDuration(rec.partDuration)"></span>
                       / <span x-text="formatDuration(rec.totalDuration)"></span>
                     </div>
                   </td>
@@ -765,7 +997,7 @@
                       :placeholder="t('lateReasonPlaceholder')"
                       :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
                       @input="saveAutoSave(rec)"
-                      class="fancy-textarea text-xs" style="min-height:36px; border-color:rgba(210,153,34,0.3)"></textarea>
+                      class="fancy-textarea text-xs" style="min-height:36px; border-color:rgba(210,153,34,0.25)"></textarea>
                   </td>
                 </tr>
               </template>
@@ -773,19 +1005,18 @@
           </table>
         </div>
       </div>
-
     </div>
   </main>
 </div>
 
 <!-- ===== CONFIRM MODAL ===== -->
-<div x-show="showConfirmModal" style="display:none" class="fixed inset-0 z-[200] flex items-center justify-center p-4 fade-up"
-  style="background:rgba(0,0,0,0.7); backdrop-filter:blur(8px)">
-  <div class="card w-full max-w-sm p-7 glow-blue" @click.outside="showConfirmModal = false">
-    <div class="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style="background:rgba(227,179,65,0.1); border:1px solid rgba(227,179,65,0.3)">
+<div x-show="showConfirmModal" style="display:none" class="fixed inset-0 z-[200] flex items-center justify-center p-4 fade-in"
+  style="background:rgba(0,0,0,0.75); backdrop-filter:blur(12px)">
+  <div class="glass-card w-full max-w-sm p-7 fade-up" @click.outside="showConfirmModal = false">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(227,179,65,0.1); border:1px solid rgba(227,179,65,0.25)">
       <i class="fa fa-exclamation-triangle text-2xl" style="color:var(--gold)"></i>
     </div>
-    <h3 class="text-lg font-black text-center mb-2" style="color:var(--text)" x-text="t('confirm')"></h3>
+    <h3 class="text-lg font-black text-center mb-2" x-text="t('confirm')"></h3>
     <p class="text-sm text-center font-medium mb-7 leading-relaxed" style="color:var(--text2)" x-html="confirmMessage"></p>
     <div class="flex gap-3">
       <button @click="showConfirmModal = false" class="btn-ghost flex-1 justify-center" x-text="t('back')"></button>
@@ -798,43 +1029,32 @@
 
 <!-- ===== TOAST ===== -->
 <div x-show="showToast" style="display:none" x-transition.opacity.duration.300ms class="toast">
-  <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald)">
+  <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(63,185,80,0.15); color:var(--emerald)">
     <i class="fa fa-check text-xs"></i>
   </div>
   <span x-text="toastMsg"></span>
 </div>
 
 <!-- ===== HELP OVERLAY ===== -->
-<div x-show="helpActive" style="display:none" class="help-overlay">
-  <!-- Backdrop -->
-  <div class="help-backdrop" @click="stopHelp()"></div>
-
-  <!-- Spotlight highlight box -->
+<div x-show="helpActive" style="display:none" class="fixed inset-0 z-[500] pointer-events-none">
+  <div class="fixed inset-0 z-[501] pointer-events-all" @click="stopHelp()"></div>
   <div class="help-spotlight" x-show="helpSpotlight.visible"
     :style="`top:${helpSpotlight.top}px; left:${helpSpotlight.left}px; width:${helpSpotlight.width}px; height:${helpSpotlight.height}px;`">
   </div>
-
-  <!-- Tooltip -->
   <div class="help-tooltip" :style="helpTooltipStyle" x-show="helpActive">
-    <!-- Step header -->
     <div class="flex items-center gap-3 mb-3">
       <div class="help-step-num" x-text="helpStep + 1"></div>
-      <div class="font-black text-sm" style="color:var(--text)" x-text="helpSteps[helpStep]?.title"></div>
-      <button @click="stopHelp()" class="mr-auto text-xs p-1 rounded" style="color:var(--text3)" title="close">
+      <div class="font-black text-sm" x-text="helpSteps[helpStep]?.title"></div>
+      <button @click="stopHelp()" class="mr-auto text-xs p-1 rounded-lg" style="color:var(--text3)">
         <i class="fa fa-times"></i>
       </button>
     </div>
-
     <p class="text-sm leading-relaxed mb-4" style="color:var(--text2)" x-text="helpSteps[helpStep]?.body"></p>
-
-    <!-- Progress dots -->
-    <div class="help-step-dots mb-4">
+    <div class="flex gap-6 mb-4">
       <template x-for="(s, i) in helpSteps" :key="i">
         <div class="help-dot" :class="i === helpStep ? 'active' : ''"></div>
       </template>
     </div>
-
-    <!-- Buttons -->
     <div class="flex items-center gap-2">
       <button x-show="helpStep > 0" @click="prevHelpStep()" class="btn-ghost text-xs px-3 py-2">
         <i class="fa fa-arrow-right"></i> <span x-text="t('prev')"></span>
@@ -855,7 +1075,6 @@ const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ===== TRANSLATIONS =====
 const STRINGS = {
   ckb: {
     portalTitle: 'پۆرتاڵی بەڕێوەبەر',
@@ -926,17 +1145,16 @@ const STRINGS = {
     prev: 'پێشوو',
     next: 'دواتر',
     understood: 'تێگەیشتم',
-    // Help steps
     h0t: '١. بەشی خۆت هەڵبژێرە',
-    h0b: 'لە لیستی بەشەکان کە لە لای راستەوە، کلیک لەسەر ناوی بەشەکەت بکە. ئەگەر ژمارەی چاوەڕوانی هەبوو (بە رەنگی سووری)، واتا ریڤیوی چاوەڕوانتە.',
+    h0b: 'لە لیستی بەشەکان کە لە لای راستەوە، کلیک لەسەر ناوی بەشەکەت بکە.',
     h1t: '٢. پڕۆگرامی ئەکتیڤ هەڵبژێرە',
-    h1b: 'دوای هەڵبژاردنی بەش، لیستی پڕۆگرامەکان دەردەکەوێت. پڕۆگرامێک هەڵبژێرە کە قوفڵ نەبووبێت (ئایکۆنی قوفڵی نەهەبێت) و ریڤیوی تەواو نەبووبێت.',
+    h1b: 'دوای هەڵبژاردنی بەش، لیستی پڕۆگرامەکان دەردەکەوێت. پڕۆگرامێک هەڵبژێرە.',
     h2t: '٣. کارمەندی غایب ریڤیو بکە',
-    h2b: 'لە خشتەی "کارمەندانی غایب"، بۆ هەر کارمەندێک دۆخی دیاری بکە (غایب/مۆڵەت/لەکارەوە/ئامادەبووە). ئەگەر هۆکارێک هەبوو لە خانەی تێبینی بینووسە. بۆ چەندین کارمەند دەتوانیت بەک جار هەڵیبژێریت.',
+    h2b: 'لە خشتەی کارمەندانی غایب، بۆ هەر کارمەندێک دۆخی دیاری بکە.',
     h3t: '٤. کارمەندی دواکەوتوو ریڤیو بکە',
-    h3b: 'لە بەشی "کارمەندانی دواکەوتوو"، ئەگەر هۆکارێک بزانیت بۆ دواکەوتنەکە، لە خانەی تێبینی بینووسە. ئەمە ئارەزوومەندانەیە.',
+    h3b: 'لە بەشی کارمەندانی دواکەوتوو، ئەگەر هۆکارێک بزانیت بینووسە.',
     h4t: '٥. سەبمیت بکە',
-    h4b: 'دوای تەواوکردنی هەموو خانەکان، کلیک لەسەر دوگمەی "تەواوکردن" بکە. دڵنیابوونەوەیەک دەردەکەوێت، پشتی دووپاتکردنەوە، داتا بە سیستەم دەنێردرێت. ئاگاداربە! دوای سەبمیت ناتوانیت داتا دەستکاری بکەیت.',
+    h4b: 'دوای تەواوکردن، کلیک لەسەر دوگمەی تەواوکردن بکە. دڵنیابوونەوەیەک دەردەکەوێت.',
   },
   en: {
     portalTitle: 'Manager Portal',
@@ -1008,41 +1226,39 @@ const STRINGS = {
     next: 'Next',
     understood: 'Got it!',
     h0t: '1. Select Your Department',
-    h0b: 'In the departments list on the right sidebar, click on your department name. If there is a red "pending" badge, it means reviews are waiting for you.',
+    h0b: 'In the departments list on the right sidebar, click on your department name.',
     h1t: '2. Select an Active Program',
-    h1b: 'After selecting a department, the programs list appears. Choose a program that is not locked (no lock icon) and not fully reviewed yet.',
+    h1b: 'After selecting a department, the programs list appears. Choose a program.',
     h2t: '3. Review Absent Employees',
-    h2b: 'In the "Absent Employees" table, set a status for each employee (Absent/Permission/On Duty/Present). Optionally write a reason in the note field. You can bulk-select multiple employees.',
+    h2b: 'In the "Absent Employees" table, set a status for each employee.',
     h3t: '4. Review Late Employees',
-    h3b: 'In the "Late Employees" section, if you know the reason for their lateness, write it in the note field. This is optional.',
+    h3b: 'In the "Late Employees" section, write a reason if you know it.',
     h4t: '5. Submit',
-    h4b: 'After filling in all fields, click the "Submit" button. A confirmation dialog will appear. After confirming, data is saved. Warning: you cannot edit the data after submitting!',
+    h4b: 'After filling in all fields, click the "Submit" button.',
   }
 };
 
 function managerApp() {
   return {
-    // Lang & Theme
     lang: 'ckb',
     theme: 'dark',
 
-    t(key) {
-      return STRINGS[this.lang][key] || key;
-    },
-    toggleLang() {
-      this.lang = this.lang === 'ckb' ? 'en' : 'ckb';
-      const isRtl = this.lang === 'ckb';
-      document.documentElement.lang = this.lang;
+    t(key) { return STRINGS[this.lang][key] || key; },
+
+    setLang(l) {
+      this.lang = l;
+      const isRtl = l === 'ckb';
+      document.documentElement.lang = l;
       document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
       document.body.style.direction = isRtl ? 'rtl' : 'ltr';
-      localStorage.setItem('portalLang', this.lang);
+      localStorage.setItem('portalLang', l);
     },
+    toggleLang() { this.setLang(this.lang === 'ckb' ? 'en' : 'ckb'); },
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('portalTheme', this.theme);
     },
 
-    // Auth
     managerUsernames: [],
     isLoggedIn: false,
     loginUser: '',
@@ -1054,14 +1270,12 @@ function managerApp() {
     showPassword: false,
     rememberMe: false,
 
-    // Data
     isLoading: false,
     loadingMessage: '',
     records: [],
     settings: [],
     resetTimes: {},
 
-    // Navigation
     selectedDept: '',
     selectedTraining: '',
     localRecords: [],
@@ -1069,20 +1283,17 @@ function managerApp() {
     availableMonths: [],
     mobileMenuOpen: false,
 
-    // UI state
     showToast: false,
     toastMsg: '',
     showConfirmModal: false,
     confirmMessage: '',
     nowTimer: Date.now(),
 
-    // Bulk
     selectedAbsent: [],
     selectedLate: [],
     bulkStatusAbsent: '',
     bulkNoteLate: '',
 
-    // Help system
     helpActive: false,
     helpStep: 0,
     helpSpotlight: { visible: false, top: 0, left: 0, width: 0, height: 0 },
@@ -1098,83 +1309,40 @@ function managerApp() {
       ];
     },
 
-    startHelp() {
-      this.helpActive = true;
-      this.helpStep = 0;
-      this.$nextTick(() => this.positionHelp());
-    },
-    stopHelp() {
-      this.helpActive = false;
-      this.helpSpotlight.visible = false;
-    },
-    nextHelpStep() {
-      if (this.helpStep < this.helpSteps.length - 1) {
-        this.helpStep++;
-        this.$nextTick(() => this.positionHelp());
-      }
-    },
-    prevHelpStep() {
-      if (this.helpStep > 0) {
-        this.helpStep--;
-        this.$nextTick(() => this.positionHelp());
-      }
-    },
+    startHelp() { this.helpActive = true; this.helpStep = 0; this.$nextTick(() => this.positionHelp()); },
+    stopHelp() { this.helpActive = false; this.helpSpotlight.visible = false; },
+    nextHelpStep() { if (this.helpStep < this.helpSteps.length - 1) { this.helpStep++; this.$nextTick(() => this.positionHelp()); } },
+    prevHelpStep() { if (this.helpStep > 0) { this.helpStep--; this.$nextTick(() => this.positionHelp()); } },
+
     positionHelp() {
       const step = this.helpSteps[this.helpStep];
       if (!step) return;
       const el = document.getElementById(step.id);
       const pad = 10;
       const tooltipW = Math.min(340, window.innerWidth - 32);
-      const tooltipH = 280; // estimated height
-      const BROWSER_BAR = 60; // safe top margin to avoid browser toolbar
-
+      const tooltipH = 280;
+      const BROWSER_BAR = 60;
       if (el) {
-        // Scroll element into view first (centered), then reposition
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Wait for scroll to settle before calculating positions
         setTimeout(() => {
           const r = el.getBoundingClientRect();
-
-          this.helpSpotlight = {
-            visible: true,
-            top: r.top - pad,
-            left: r.left - pad,
-            width: r.width + pad * 2,
-            height: r.height + pad * 2,
-          };
-
-          // Try: below the spotlight
+          this.helpSpotlight = { visible: true, top: r.top - pad, left: r.left - pad, width: r.width + pad * 2, height: r.height + pad * 2 };
           let tipTop = r.bottom + pad + 16;
           let tipLeft = r.left;
-
-          // If tooltip would go below screen bottom, put it above
-          if (tipTop + tooltipH > window.innerHeight - 16) {
-            tipTop = r.top - tooltipH - pad - 16;
-          }
-
-          // If it would go above browser bar (e.g. step 3 with sidebar), center vertically on screen
-          if (tipTop < BROWSER_BAR) {
-            tipTop = BROWSER_BAR + 16;
-          }
-
-          // Horizontal: keep inside viewport
+          if (tipTop + tooltipH > window.innerHeight - 16) tipTop = r.top - tooltipH - pad - 16;
+          if (tipTop < BROWSER_BAR) tipTop = BROWSER_BAR + 16;
           if (tipLeft + tooltipW > window.innerWidth - 16) tipLeft = window.innerWidth - tooltipW - 16;
           if (tipLeft < 16) tipLeft = 16;
-
           this.helpTooltipStyle = `top:${tipTop}px; left:${tipLeft}px; width:${tooltipW}px; position:fixed;`;
         }, 350);
       } else {
-        // Fallback: center of screen but below browser bar
         this.helpSpotlight.visible = false;
         this.helpTooltipStyle = `top:${BROWSER_BAR + 40}px; left:50%; transform:translateX(-50%); width:${tooltipW}px; position:fixed;`;
       }
     },
 
-    // Getters
     get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
     get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
-
     get isAllAbsentSelected() {
       const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed);
       return sel.length > 0 && sel.every(r => this.selectedAbsent.includes(r.empId));
@@ -1183,19 +1351,16 @@ function managerApp() {
       const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed);
       return sel.length > 0 && sel.every(r => this.selectedLate.includes(r.empId));
     },
-
     get activeTrainingObj() {
       if (!this.selectedDept || !this.selectedTraining) return null;
       return this.getTrainingsNeedingReview(this.selectedDept).find(t => t.key === this.selectedTraining) || null;
     },
-
     get filteredTrainings() {
       if (!this.selectedDept) return [];
       let trs = this.getTrainingsNeedingReview(this.selectedDept);
       if (this.selectedMonth) trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
       return trs;
     },
-
     get managerDepts() {
       if (!this.loggedInManagerDepts || !this.loggedInManagerDepts.length) return [];
       return this.loggedInManagerDepts.map(deptName => ({
@@ -1205,7 +1370,6 @@ function managerApp() {
     },
 
     init() {
-      // Restore preferences
       try {
         this.lang = localStorage.getItem('portalLang') || 'ckb';
         this.theme = localStorage.getItem('portalTheme') || 'dark';
@@ -1227,6 +1391,7 @@ function managerApp() {
           if (d.user && d.pass) { this.loginUser = d.user; this.loginPass = d.pass; this.rememberMe = true; }
         }
       } catch(e) {}
+
       this.$watch('selectedTraining', () => {
         this.loadTargetRecords(); this.clearAbsentSelection(); this.clearLateSelection();
       });
@@ -1329,24 +1494,16 @@ function managerApp() {
           managerNote: String(r['M.not'] || r.managerNote || '').trim()
         }));
 
-        // FIX: ManagerLocks table may not exist — gracefully handle error
         this.resetTimes = {};
         try {
           const locksData = await this.fetchAllRows('ManagerLocks');
           (locksData || []).forEach(l => {
             if (String(l.manager || '').trim() === this.loggedInManagerName) {
               const resetKey = String(l.course || '').replace(/\s+/g,'_') + '_' + String(l.date || '');
-              this.resetTimes[resetKey] = {
-                timestamp: l.timestamp,
-                duration: l.duration,
-                isHidden: l.is_hidden
-              };
+              this.resetTimes[resetKey] = { timestamp: l.timestamp, duration: l.duration, isHidden: l.is_hidden };
             }
           });
-        } catch(lockErr) {
-          // Table doesn't exist or access error — not critical, just skip locks
-          console.warn('ManagerLocks table not available (non-critical):', lockErr.message || lockErr);
-        }
+        } catch(lockErr) { console.warn('ManagerLocks table not available:', lockErr.message || lockErr); }
 
         this.isLoading = false;
         if (onComplete) onComplete();
@@ -1375,9 +1532,7 @@ function managerApp() {
 
     saveAutoSave(rec) {
       if (rec.isAlreadyReviewed) return;
-      try {
-        localStorage.setItem(`autosave_${this.selectedTraining}_${rec.empId}`, JSON.stringify({ status: rec.status, managerNote: rec.managerNote }));
-      } catch(e) {}
+      try { localStorage.setItem(`autosave_${this.selectedTraining}_${rec.empId}`, JSON.stringify({ status: rec.status, managerNote: rec.managerNote })); } catch(e) {}
     },
 
     getTrainingsNeedingReview(dept) {
@@ -1390,22 +1545,17 @@ function managerApp() {
         if (String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
         const stat = String(r.status).toLowerCase();
         if (!['no', 'late'].includes(stat)) return;
-
         const key = `${r.course}|${r.date}`;
-        if (!trainingMap.has(key)) {
-          trainingMap.set(key, { key, course: r.course, date: r.date, trainer: r.trainer, totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0 });
-        }
+        if (!trainingMap.has(key)) trainingMap.set(key, { key, course: r.course, date: r.date, trainer: r.trainer, totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0 });
         const g = trainingMap.get(key);
         const note = String(r.managerNote || '').trim().toLowerCase();
         const isReviewed = note !== '' && note !== 'null' && note !== 'nan' && note !== 'undefined';
-        if (isReviewed) g.totalReviewed++;
-        else g.totalPending++;
+        if (isReviewed) g.totalReviewed++; else g.totalPending++;
       });
 
       const result = [];
       trainingMap.forEach(t => {
         if (t.totalPending === 0 && t.totalReviewed === 0) return;
-
         let trainingDate = null;
         if (t.date) {
           if (t.date.includes('/')) {
@@ -1460,7 +1610,6 @@ function managerApp() {
     loadTargetRecords() {
       if (!this.selectedDept || !this.selectedTraining) { this.localRecords = []; return; }
       const [course, date] = this.selectedTraining.split('|');
-
       this.localRecords = this.records.filter(r => {
         if (String(r.department).toLowerCase() !== String(this.selectedDept).toLowerCase()) return false;
         if (r.course !== course || r.date !== date) return false;
@@ -1472,26 +1621,18 @@ function managerApp() {
       }).map((r, i) => {
         const noteStr = String(r.managerNote || '').trim();
         const isAlreadyReviewed = noteStr !== '' && noteStr.toLowerCase() !== 'null' && noteStr.toLowerCase() !== 'nan' && noteStr.toLowerCase() !== 'undefined';
-
         let statNorm = String(r.status).trim();
         if (statNorm.toLowerCase() === 'no') statNorm = 'No';
         else if (statNorm.toLowerCase() === 'late') statNorm = 'Late';
         else if (!statNorm || statNorm.toLowerCase() === 'none' || statNorm.toLowerCase() === 'null') statNorm = 'NONE';
-
         let currentStatus = statNorm;
         let currentNote = isAlreadyReviewed ? noteStr : '';
-
         if (!isAlreadyReviewed) {
           try {
             const saved = localStorage.getItem(`autosave_${this.selectedTraining}_${r.empId}`);
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (parsed.status) currentStatus = parsed.status;
-              if (parsed.managerNote) currentNote = parsed.managerNote;
-            }
+            if (saved) { const parsed = JSON.parse(saved); if (parsed.status) currentStatus = parsed.status; if (parsed.managerNote) currentNote = parsed.managerNote; }
           } catch(e) {}
         }
-
         return { ...r, rowIndex: i, status: currentStatus, managerNote: currentNote, originalStatus: statNorm, isAlreadyReviewed };
       }).sort((a, b) => {
         const order = { 'No': 1, 'NONE': 2, 'Late': 3 };
@@ -1499,48 +1640,25 @@ function managerApp() {
       });
     },
 
-    toggleAbsentSelect(empId) {
-      const idx = this.selectedAbsent.indexOf(empId);
-      if (idx === -1) this.selectedAbsent.push(empId);
-      else this.selectedAbsent.splice(idx, 1);
-    },
-    toggleLateSelect(empId) {
-      const idx = this.selectedLate.indexOf(empId);
-      if (idx === -1) this.selectedLate.push(empId);
-      else this.selectedLate.splice(idx, 1);
-    },
+    toggleAbsentSelect(empId) { const idx = this.selectedAbsent.indexOf(empId); if (idx === -1) this.selectedAbsent.push(empId); else this.selectedAbsent.splice(idx, 1); },
+    toggleLateSelect(empId) { const idx = this.selectedLate.indexOf(empId); if (idx === -1) this.selectedLate.push(empId); else this.selectedLate.splice(idx, 1); },
     toggleSelectAll(type) {
-      if (type === 'absent') {
-        const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
-        this.selectedAbsent = this.isAllAbsentSelected ? [] : [...sel];
-      } else {
-        const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId);
-        this.selectedLate = this.isAllLateSelected ? [] : [...sel];
-      }
+      if (type === 'absent') { const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId); this.selectedAbsent = this.isAllAbsentSelected ? [] : [...sel]; }
+      else { const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId); this.selectedLate = this.isAllLateSelected ? [] : [...sel]; }
     },
     clearAbsentSelection() { this.selectedAbsent = []; this.bulkStatusAbsent = ''; },
     clearLateSelection() { this.selectedLate = []; this.bulkNoteLate = ''; },
 
     applyBulkAbsent() {
       if (!this.bulkStatusAbsent) return;
-      this.localRecords.forEach(rec => {
-        if (this.selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) {
-          rec.status = this.bulkStatusAbsent;
-          this.saveAutoSave(rec);
-        }
-      });
+      this.localRecords.forEach(rec => { if (this.selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) { rec.status = this.bulkStatusAbsent; this.saveAutoSave(rec); } });
       this.clearAbsentSelection();
       this.notify(this.lang === 'ckb' ? 'ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Status updated for selected employees');
     },
 
     applyBulkLate() {
       if (!this.bulkNoteLate) return;
-      this.localRecords.forEach(rec => {
-        if (this.selectedLate.includes(rec.empId) && !rec.isAlreadyReviewed) {
-          rec.managerNote = this.bulkNoteLate;
-          this.saveAutoSave(rec);
-        }
-      });
+      this.localRecords.forEach(rec => { if (this.selectedLate.includes(rec.empId) && !rec.isAlreadyReviewed) { rec.managerNote = this.bulkNoteLate; this.saveAutoSave(rec); } });
       this.clearLateSelection();
       this.notify(this.lang === 'ckb' ? 'تێبینی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Note updated for selected employees');
     },
@@ -1548,85 +1666,38 @@ function managerApp() {
     submitNotes() {
       let unhandled = this.localRecords.filter(r => !r.isAlreadyReviewed && !r.managerNote?.trim() && r.status === r.originalStatus).length;
       this.confirmMessage = unhandled > 0
-        ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} ${this.lang === 'ckb' ? 'کارمەند بێ تێبینی ماوەتەوە.' : 'employee(s) without notes.'}</span> ${this.lang === 'ckb' ? 'تێبینیە بووەکان بە (.) دەگوازرێنەوە. دڵنیایت؟' : 'Empty notes will be saved as (.). Are you sure?'}`
+        ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} ${this.lang === 'ckb' ? 'کارمەند بێ تێبینی ماوەتەوە.' : 'employee(s) without notes.'}</span> ${this.lang === 'ckb' ? 'دڵنیایت؟' : 'Are you sure?'}`
         : (this.lang === 'ckb' ? 'دڵنیایت کە دەتەوێت تەواوی بکەیت؟' : 'Are you sure you want to submit?');
       this.showConfirmModal = true;
     },
 
     async executeSubmit() {
-  this.showConfirmModal = false;
-  this.isLoading = true;
-  this.loadingMessage = this.lang === 'ckb' ? 'ناردن...' : 'Submitting...';
-  let hasError = false;
-  let errorDetails = '';
+      this.showConfirmModal = false;
+      this.isLoading = true;
+      this.loadingMessage = this.lang === 'ckb' ? 'ناردن...' : 'Submitting...';
+      let hasError = false;
+      let errorDetails = '';
 
-  for (const rec of this.localRecords) {
-    if (rec.isAlreadyReviewed) continue;
-
-    const finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
-    const finalNote = (rec.managerNote || '').trim() || '.';
-    const noteWithAuthor = finalNote + ` (By: ${this.loggedInManagerName})`;
-
-    // Debug: log what we're trying to update
-    console.log('Updating record:', {
-      db_id: rec.db_id,
-      empName: rec.empName,
-      finalStatus,
-      noteWithAuthor
-    });
-
-    // Check if db_id is valid
-    if (!rec.db_id) {
-      console.error('MISSING db_id for:', rec.empName, '| full rec:', rec);
-      hasError = true;
-      errorDetails = 'Missing record ID for: ' + rec.empName;
-      continue;
-    }
-
-    // Try with 'Status' column name first
-    const { error } = await sb
-      .from('TrainingRecord')
-      .update({ 'Status': finalStatus, 'M.not': noteWithAuthor })
-      .eq('db_id', rec.db_id);
-
-    if (error) {
-      console.error('Update FAILED:', JSON.stringify(error), '| rec:', rec.empName, '| db_id:', rec.db_id);
-      errorDetails = error.message || error.code || JSON.stringify(error);
-      hasError = true;
-    } else {
-      console.log('Update SUCCESS:', rec.empName, '| rows affected:', data?.length);
-      // If data is empty array, the eq() filter matched nothing
-      if (data && data.length === 0) {
-        console.warn('WARNING: Update succeeded but 0 rows matched for db_id:', rec.db_id);
-        // Try matching by id instead
-        const { data: data2, error: error2 } = await sb
-          .from('TrainingRecord')
-          .update({ 'Status': finalStatus, 'M.not': noteWithAuthor })
-          .eq('id', rec.db_id)
-          .select();
-        if (error2) {
-          console.error('Fallback by id also failed:', JSON.stringify(error2));
-          hasError = true;
-          errorDetails = error2.message;
-        } else {
-          console.log('Fallback by id SUCCESS:', data2?.length, 'rows');
-        }
+      for (const rec of this.localRecords) {
+        if (rec.isAlreadyReviewed) continue;
+        const finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+        const finalNote = (rec.managerNote || '').trim() || '.';
+        const noteWithAuthor = finalNote + ` (By: ${this.loggedInManagerName})`;
+        if (!rec.db_id) { hasError = true; errorDetails = 'Missing record ID for: ' + rec.empName; continue; }
+        const { error } = await sb.from('TrainingRecord').update({ 'Status': finalStatus, 'M.not': noteWithAuthor }).eq('db_id', rec.db_id);
+        if (error) { errorDetails = error.message || error.code || JSON.stringify(error); hasError = true; }
       }
-    }
-  }
 
-  this.isLoading = false;
-  if (hasError) {
-    this.notify(`❌ ${this.lang === 'ckb' ? 'هەڵە:' : 'Error:'} ${errorDetails}`);
-  } else {
-    this.localRecords.forEach(r => {
-      try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {}
-    });
-    this.notify(this.lang === 'ckb' ? 'بەسەرکەوتوویی ناردرا!' : 'Successfully submitted!');
-    this.selectedTraining = '';
-    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
-  }
-},
+      this.isLoading = false;
+      if (hasError) {
+        this.notify(`❌ ${this.lang === 'ckb' ? 'هەڵە:' : 'Error:'} ${errorDetails}`);
+      } else {
+        this.localRecords.forEach(r => { try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {} });
+        this.notify(this.lang === 'ckb' ? 'بەسەرکەوتوویی ناردرا!' : 'Successfully submitted!');
+        this.selectedTraining = '';
+        this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
+      }
+    },
 
     formatDuration(mins) {
       if (!mins || mins <= 0) return '0m';
@@ -1635,35 +1706,26 @@ function managerApp() {
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
     },
 
-    notify(msg) {
-      this.toastMsg = msg; this.showToast = true;
-      setTimeout(() => { this.showToast = false; }, 3500);
+    notify(msg) { this.toastMsg = msg; this.showToast = true; setTimeout(() => { this.showToast = false; }, 3500); },
+
+    async syncPasswordsFromSheet() {
+      const SHEET_ID = '10SwsZlPty4tU1H5eDiE16ZXgVDg-VRPtslNMq6NjoKg';
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+      try {
+        const res = await fetch(url);
+        const csv = await res.text();
+        const lines = csv.split(/\r?\n/).filter(l => l.trim());
+        let updated = 0;
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g,'').trim());
+          const managerName = cols[0];
+          const newPassword = cols[1];
+          if (!managerName || !newPassword) continue;
+          const { error } = await sb.from('Settings').update({ Password: newPassword }).eq('Manager', managerName);
+          if (!error) updated++;
+        }
+      } catch(e) { /* silent */ }
     },
-    // ===== GOOGLE SHEET PASSWORD SYNC =====
-async syncPasswordsFromSheet() {
-  const SHEET_ID = '10SwsZlPty4tU1H5eDiE16ZXgVDg-VRPtslNMq6NjoKg';
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
-  try {
-    const res = await fetch(url);
-    const csv = await res.text();
-    const lines = csv.split(/\r?\n/).filter(l => l.trim());
-    // Skip header row, parse: username, password (adjust columns as needed)
-    let updated = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g,'').trim());
-      const managerName = cols[0]; // Column A: manager name
-      const newPassword  = cols[1]; // Column B: password
-      if (!managerName || !newPassword) continue;
-      const { error } = await sb.from('Settings')
-        .update({ Password: newPassword })
-        .eq('Manager', managerName);
-      if (!error) updated++;
-    }
-    this.notify(`✓ ${updated} password(s) synced from sheet`);
-  } catch(e) {
-    this.notify('Sheet sync error: ' + e.message);
-  }
-},
   };
 }
 </script>

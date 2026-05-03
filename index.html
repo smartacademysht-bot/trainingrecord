@@ -1453,43 +1453,92 @@ function app() {
     // We derive dateOnly from Timestamp itself
     async fetchZKTecoData() {
   try {
+    // First, fetch a single row to inspect the actual column names
+    const {data: sampleData, error: sampleError} = await sb.from('ZKTecoLogs').select('*').limit(1);
+    if(sampleError) throw sampleError;
+    
+    if(!sampleData || sampleData.length === 0) {
+      this.showNotification('ZKTeco table is empty or inaccessible', 'error');
+      return;
+    }
+
+    // Detect actual column names from the first row
+    const firstRow = sampleData[0];
+    const allKeys = Object.keys(firstRow);
+    console.log('ZKTecoLogs columns:', allKeys);
+    console.log('Sample row:', firstRow);
+
+    // Find the timestamp/date column — try common names
+    const tsCol = allKeys.find(k => 
+      k.toLowerCase() === 'timestamp' || 
+      k.toLowerCase() === 'datetime' || 
+      k.toLowerCase() === 'date' ||
+      k.toLowerCase() === 'time' ||
+      k.toLowerCase() === 'punch_time' ||
+      k.toLowerCase() === 'checktime'
+    ) || allKeys[0];
+
+    // Find UserID column
+    const userCol = allKeys.find(k => 
+      k.toLowerCase() === 'userid' || 
+      k.toLowerCase() === 'user_id' || 
+      k.toLowerCase() === 'id' ||
+      k.toLowerCase() === 'pin' ||
+      k.toLowerCase() === 'badgenumber'
+    ) || 'UserID';
+
+    // Find DeviceName column
+    const deviceCol = allKeys.find(k => 
+      k.toLowerCase() === 'devicename' || 
+      k.toLowerCase() === 'device_name' || 
+      k.toLowerCase() === 'device' ||
+      k.toLowerCase() === 'sn' ||
+      k.toLowerCase() === 'machinename'
+    );
+
+    console.log(`Using columns — timestamp: "${tsCol}", user: "${userCol}", device: "${deviceCol}"`);
+
+    // Now fetch with correct column for date range
     let query = sb.from('ZKTecoLogs').select('*');
 
     if(this.zkFromMonth) {
-      query = query.gte('Timestamp', this.zkFromMonth + '-01 00:00:00');
+      query = query.gte(tsCol, this.zkFromMonth + '-01 00:00:00');
     }
     if(this.zkToMonth) {
       const [y,m] = this.zkToMonth.split('-').map(Number);
       const lastDay = new Date(y, m, 0).getDate();
-      query = query.lte('Timestamp', `${this.zkToMonth}-${lastDay} 23:59:59`);
+      query = query.lte(tsCol, `${this.zkToMonth}-${lastDay} 23:59:59`);
     }
-    query = query.order('Timestamp', {ascending: false}).limit(5000);
+    query = query.order(tsCol, {ascending: false}).limit(5000);
 
     const {data, error} = await query;
     if(error) throw error;
 
     const grouped = new Map();
     (data||[]).forEach(row => {
+      const tsValue = row[tsCol];
       let dateOnly = '';
-      if(row.Timestamp) {
-        const ts = String(row.Timestamp);
+      let timeStr = '';
+
+      if(tsValue) {
+        const ts = String(tsValue);
         dateOnly = ts.substring(0, 10);
+        const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
+        if(tPart) timeStr = tPart.substring(0, 5);
       }
-      const key = `${row.UserID}|${dateOnly}|${row.DeviceName||''}`;
+
+      const userId = row[userCol] || row['UserID'] || row['userid'] || '';
+      const deviceName = deviceCol ? (row[deviceCol] || '') : '';
+
+      const key = `${userId}|${dateOnly}|${deviceName}`;
       if(!grouped.has(key)) {
         grouped.set(key, {
           id: key,
-          UserID: row.UserID,
-          DeviceName: row.DeviceName || '',
+          UserID: userId,
+          DeviceName: deviceName,
           dateOnly,
           punches: []
         });
-      }
-      let timeStr = '';
-      if(row.Timestamp) {
-        const ts = String(row.Timestamp);
-        const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
-        if(tPart) timeStr = tPart.substring(0,5);
       }
       if(timeStr) grouped.get(key).punches.push(timeStr);
     });
@@ -1499,13 +1548,13 @@ function app() {
       const emp = this.employees.find(e => String(e.ID) === String(g.UserID));
       return {
         ...g,
-        empName: emp ? emp.name : ('User '+g.UserID),
+        empName: emp ? emp.name : ('User ' + g.UserID),
         department: emp ? emp.department : 'Unknown',
         checkin: punches[0] || '-',
-        checkout: punches.length > 1 ? punches[punches.length-1] : '-',
+        checkout: punches.length > 1 ? punches[punches.length - 1] : '-',
         status: punches.length > 0 ? 'Yes' : 'No'
       };
-    }).sort((a,b) => b.dateOnly.localeCompare(a.dateOnly));
+    }).sort((a, b) => b.dateOnly.localeCompare(a.dateOnly));
 
     this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
   } catch(e) {

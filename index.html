@@ -45,17 +45,15 @@
       </template>
     </nav>
     <div class="px-3 py-3 border-t border-slate-700 space-y-2">
-        <a href="https://smartacademysht-bot.github.io/trainingrecord/manager.html" 
-   target="_blank" 
-   class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded flex items-center gap-2 transition shadow">
-   <i class="fa-solid fa-building-user"></i> Open Manager Portal
-</a>
+      <a href="https://smartacademysht-bot.github.io/trainingrecord/manager.html" target="_blank"
+         class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded flex items-center gap-2 transition shadow">
+        <i class="fa-solid fa-building-user"></i> Open Manager Portal
+      </a>
       <div class="flex items-center justify-between bg-slate-700/50 rounded px-2 py-1.5">
         <div class="flex items-center gap-2 min-w-0">
           <i class="fa-solid fa-database text-blue-300 text-xs shrink-0"></i>
           <span class="text-[11px] text-slate-300 truncate">Supabase</span>
         </div>
-      
         <div class="flex items-center gap-1 shrink-0 ml-1">
           <template x-if="dbStatus === 'checking'">
             <i class="fa-solid fa-circle-notch fa-spin text-yellow-400 text-xs"></i>
@@ -94,59 +92,59 @@
 
     <main class="flex-1 overflow-auto p-6 relative">
 
-      <!-- ATTENDANCE TOOL TAB -->
-<div x-show="currentTab === 'attendanceTool'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col overflow-auto">
-  <div class="mb-4">
-    <h3 class="text-lg font-bold text-gray-800">Attendance Filter Tool</h3>
-    <p class="text-sm text-gray-500">Compare a master list against attendees to identify who is missing.</p>
-  </div>
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
-    <div class="space-y-6">
-      <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-        <div class="flex justify-between items-center mb-2">
-          <label class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">1. Master List (Expected Names)</label>
+      <!-- ========== ATTENDANCE TOOL TAB ========== -->
+      <div x-show="currentTab === 'attendanceTool'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col overflow-auto">
+        <div class="mb-4">
+          <h3 class="text-lg font-bold text-gray-800">Attendance Filter Tool</h3>
+          <p class="text-sm text-gray-500">Compare a master list against attendees to identify who is missing.</p>
         </div>
-        <textarea x-model="customMasterInput" @input="processCustomAttendance"
-          placeholder="Enter names here (one per line)..."
-          class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none custom-scrollbar"></textarea>
-        <div class="mt-2 text-xs text-gray-400">Total expected: <span class="text-gray-600 font-bold" x-text="attendanceStats.master">0</span></div>
-      </div>
-      <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-        <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">2. Actual Attendees</label>
-        <textarea x-model="customAttendeeInput" @input="processCustomAttendance"
-          placeholder="Enter names of people who showed up..."
-          class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none custom-scrollbar"></textarea>
-        <div class="mt-2 flex gap-4 text-xs font-medium">
-          <span class="text-gray-400">Raw: <span class="text-gray-600 font-bold" x-text="attendanceStats.attendeeRaw">0</span></span>
-          <span class="text-green-600">Unique: <span class="font-bold" x-text="attendanceStats.attendeeUnique">0</span></span>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1">
+          <div class="space-y-6">
+            <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+              <div class="flex justify-between items-center mb-2">
+                <label class="block text-sm font-semibold text-gray-700 uppercase tracking-wider">1. Master List (Expected Names)</label>
+              </div>
+              <textarea x-model="customMasterInput" @input="processCustomAttendance"
+                placeholder="Enter names here (one per line)..."
+                class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none custom-scrollbar"></textarea>
+              <div class="mt-2 text-xs text-gray-400">Total expected: <span class="text-gray-600 font-bold" x-text="attendanceStats.master">0</span></div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col">
+              <label class="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wider">2. Actual Attendees</label>
+              <textarea x-model="customAttendeeInput" @input="processCustomAttendance"
+                placeholder="Enter names of people who showed up..."
+                class="w-full h-48 p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none resize-none custom-scrollbar"></textarea>
+              <div class="mt-2 flex gap-4 text-xs font-medium">
+                <span class="text-gray-400">Raw: <span class="text-gray-600 font-bold" x-text="attendanceStats.attendeeRaw">0</span></span>
+                <span class="text-green-600">Unique: <span class="font-bold" x-text="attendanceStats.attendeeUnique">0</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <div class="bg-red-50 p-6 rounded-xl shadow-sm border border-red-100 flex flex-col h-[280px]">
+              <div class="flex justify-between items-center mb-4">
+                <label class="text-sm font-bold text-red-700 uppercase tracking-wider">Not Attended (Missing)</label>
+                <button @click="copyCustomList('absent')" class="text-xs bg-white border hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
+              </div>
+              <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-red-100 text-sm whitespace-pre-wrap custom-scrollbar text-red-800" x-text="attendanceResults.absent"></div>
+              <div class="mt-2 text-xs text-red-600 font-bold">Total missing: <span x-text="attendanceStats.absent">0</span></div>
+            </div>
+            <div class="bg-green-50 p-6 rounded-xl shadow-sm border border-green-100 flex flex-col h-[280px]">
+              <div class="flex justify-between items-center mb-4">
+                <label class="text-sm font-bold text-green-700 uppercase tracking-wider">Attended (Verified)</label>
+                <button @click="copyCustomList('present')" class="text-xs bg-white border hover:bg-green-100 text-green-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
+              </div>
+              <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-green-100 text-sm whitespace-pre-wrap custom-scrollbar text-green-800" x-text="attendanceResults.present"></div>
+              <div class="mt-2 text-xs text-green-600 font-bold">Total verified: <span x-text="attendanceStats.present">0</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end mt-4">
+          <button @click="transferAttendanceToUpload()" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 font-bold flex items-center transition">
+            <i class="fa fa-paper-plane mr-2"></i> Transfer Attendees to Upload Form
+          </button>
         </div>
       </div>
-    </div>
-    <div class="space-y-6">
-      <div class="bg-red-50 p-6 rounded-xl shadow-sm border border-red-100 flex flex-col h-[280px]">
-        <div class="flex justify-between items-center mb-4">
-          <label class="text-sm font-bold text-red-700 uppercase tracking-wider">Not Attended (Missing)</label>
-          <button @click="copyCustomList('absent')" class="text-xs bg-white border hover:bg-red-100 text-red-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
-        </div>
-        <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-red-100 text-sm whitespace-pre-wrap custom-scrollbar text-red-800" x-text="attendanceResults.absent"></div>
-        <div class="mt-2 text-xs text-red-600 font-bold">Total missing: <span x-text="attendanceStats.absent">0</span></div>
-      </div>
-      <div class="bg-green-50 p-6 rounded-xl shadow-sm border border-green-100 flex flex-col h-[280px]">
-        <div class="flex justify-between items-center mb-4">
-          <label class="text-sm font-bold text-green-700 uppercase tracking-wider">Attended (Verified)</label>
-          <button @click="copyCustomList('present')" class="text-xs bg-white border hover:bg-green-100 text-green-600 px-3 py-1 rounded-lg font-bold">Copy List</button>
-        </div>
-        <div class="flex-grow overflow-y-auto bg-white p-4 rounded-xl border border-green-100 text-sm whitespace-pre-wrap custom-scrollbar text-green-800" x-text="attendanceResults.present"></div>
-        <div class="mt-2 text-xs text-green-600 font-bold">Total verified: <span x-text="attendanceStats.present">0</span></div>
-      </div>
-    </div>
-  </div>
-  <div class="flex justify-end mt-4">
-    <button @click="transferAttendanceToUpload()" class="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 font-bold flex items-center transition">
-      <i class="fa fa-paper-plane mr-2"></i> Transfer Attendees to Upload Form
-    </button>
-  </div>
-</div>
 
       <!-- ========== DASHBOARD TAB ========== -->
       <div x-show="currentTab === 'dashboard'" class="h-full flex flex-col">
@@ -431,6 +429,17 @@
         <h3 class="text-lg font-bold mb-4">Upload New Training Session</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div class="space-y-4">
+            <!-- Training selector from schedule -->
+            <div class="bg-indigo-50 p-3 rounded border border-indigo-200">
+              <label class="block text-xs font-bold text-indigo-900 mb-2"><i class="fa fa-calendar-check mr-1"></i> Quick-fill from Schedule</label>
+              <select @change="fillUploadFromSchedule($event.target.value)" class="w-full text-sm border border-indigo-300 rounded p-2 focus:ring-2 focus:ring-indigo-500">
+                <option value="">-- Select Training (Past &amp; Today) --</option>
+                <template x-for="t in trainingSchedule.filter(x=>x.date<=new Date().toISOString().split('T')[0]).sort((a,b)=>new Date(b.date)-new Date(a.date))" :key="t.id">
+                  <option :value="t.id" x-text="'#'+t.id+' · '+t.course+' ('+t.date+')'"></option>
+                </template>
+              </select>
+            </div>
+
             <div class="bg-blue-50 p-4 rounded border border-blue-200">
               <label class="block text-sm font-bold text-blue-900 mb-2">Training Details</label>
               <div class="space-y-3">
@@ -480,7 +489,7 @@
               <label class="block w-full">
                 <input type="file" id="uploadFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
               </label>
-              <button @click="processUpload" class="mt-6 w-full bg-blue-600 text-white py-2 rounded shadow font-bold hover:bg-blue-700">Process File & Preview</button>
+              <button @click="processUpload" class="mt-6 w-full bg-blue-600 text-white py-2 rounded shadow font-bold hover:bg-blue-700">Process File &amp; Preview</button>
             </div>
             <div x-show="uploadMethod==='manual'" class="flex-1 flex flex-col">
               <div class="flex-1 border rounded bg-white overflow-hidden flex flex-col">
@@ -523,7 +532,7 @@
             <div><h4 class="font-bold text-yellow-800">Preview Data</h4><p class="text-sm text-gray-500" x-text="(previewData?.attend.length||0) + ' attend, ' + (previewData?.notAttend.length||0) + ' absent'"></p></div>
             <div class="space-x-2">
               <button @click="previewData=null" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">Cancel</button>
-              <button @click="savePreview" class="px-4 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700 transition shadow">Confirm & Save</button>
+              <button @click="savePreview" class="px-4 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700 transition shadow">Confirm &amp; Save</button>
             </div>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -580,11 +589,11 @@
               <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
             </select>
             <select x-model="zkSelectedTrainingId" @change="syncZkWithSchedule" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
-  <option value="">-- Select Training (Up to Today) --</option>
-  <template x-for="t in filteredZkScheduleOptions" :key="t.id">
-    <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
-  </template>
-</select>
+              <option value="">-- Select Training (Up to Today) --</option>
+              <template x-for="t in filteredZkScheduleOptions" :key="t.id">
+                <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
+              </template>
+            </select>
             <input type="date" x-model="zktecoFilterDate" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
             <div class="flex items-center gap-1 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
               <input type="month" x-model="zkFromMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
@@ -817,228 +826,17 @@
       </div>
 
       <!-- ========== SETTINGS TAB ========== -->
-      <div x-show="currentTab === 'settings'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col" x-data="{settingsView:'dept_mgmt',selectedDeptCard:null}">
-        <!-- In Settings Tab, replace the tab buttons div -->
-<div class="flex space-x-4 border-b mb-4 flex-wrap gap-y-2">
-  <button @click="settingsView='dept_mgmt'" :class="settingsView==='dept_mgmt' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Department Management</button>
-  <button @click="settingsView='employees'" :class="settingsView==='employees' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Employees</button>
-  <button @click="settingsView='sync'" :class="settingsView==='sync' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Sync Database</button>
-  <button @click="settingsView='manager_lock'" :class="settingsView==='manager_lock' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500'" class="pb-2 font-bold px-4 flex items-center gap-1">
-    <i class="fa fa-lock text-xs"></i> Manager Lock
-  </button>
-</div>
-
-        <!-- SYNC DATABASE VIEW -->
-<div x-show="settingsView === 'sync'" class="flex-1 flex flex-col space-y-4" x-data="{ syncPreview: null }">
-  <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-    <h4 class="font-bold text-blue-900 text-lg mb-2 flex items-center">
-      <i class="fa fa-sync-alt mr-2"></i> Sync Employee Database
-    </h4>
-    <p class="text-sm text-blue-700 mb-4">
-      Upload an Excel (.xlsx) file to update the employee list.<br>
-      - <b>Column A</b>: Employee ID <span class="text-orange-700 font-bold">(Optional)</span><br>
-      - <b>Column B</b>: Full Name <span class="text-orange-700 font-bold">(Required)</span><br>
-      - <b>Column I</b>: Department<br><br>
-      System will: <b class="text-green-700">Add new names</b>, <b class="text-red-700">mark missing as Inactive</b>, and <b class="text-blue-700">update incorrect names/departments</b>.
-    </p>
-    <div class="flex gap-4 items-center">
-      <input type="file" id="syncFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"/>
-      <button @click="processSyncFile(syncPreview, $set)" class="bg-blue-600 text-white px-6 py-2 rounded shadow font-bold hover:bg-blue-700 transition">Analyze File</button>
-    </div>
-  </div>
-
-  <div x-show="syncPreview" class="flex-1 flex flex-col space-y-4 fade-in">
-    <div class="flex justify-between items-center bg-yellow-50 p-3 border border-yellow-200 rounded">
-      <div class="text-sm">
-        <span class="font-bold text-green-700 mr-4"><i class="fa fa-plus-circle"></i> <span x-text="syncPreview?.newEmps?.filter(x=>x.selected).length"></span> To Add</span>
-        <span class="font-bold text-red-700 mr-4"><i class="fa fa-user-slash"></i> <span x-text="syncPreview?.inactiveEmps?.length"></span> To Inactive</span>
-        <span class="font-bold text-blue-700"><i class="fa fa-pencil"></i> <span x-text="syncPreview?.updateEmps?.length"></span> To Update</span>
-      </div>
-      <div>
-        <button @click="syncPreview = null" class="text-gray-500 hover:text-gray-700 mr-3">Cancel</button>
-        <button @click="confirmSyncLocal(syncPreview)" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700">Confirm & Sync</button>
-      </div>
-    </div>
-
-    <div x-show="syncPreview?.updateEmps?.length > 0" class="bg-blue-50 border border-blue-200 rounded flex flex-col max-h-48">
-      <div class="bg-blue-100 p-2 text-blue-800 font-bold text-sm">Names/Departments to Update</div>
-      <div class="flex-1 overflow-auto bg-white">
-        <table class="w-full text-xs divide-y">
-          <thead class="bg-gray-50 sticky top-0">
-            <tr>
-              <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.updateEmps.forEach(e=>e.selected=$event.target.checked)"></th>
-              <th class="p-2 text-left">ID</th>
-              <th class="p-2 text-left">Old Name</th>
-              <th class="p-2 text-left">New Name</th>
-              <th class="p-2 text-left">Old Dept</th>
-              <th class="p-2 text-left">New Dept</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-for="e in syncPreview?.updateEmps">
-              <tr class="hover:bg-gray-50" :class="e.selected ? 'bg-blue-50' : ''">
-                <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
-                <td class="p-2 font-mono" x-text="e.id || '-'"></td>
-                <td class="p-2 text-red-600 line-through" x-text="e.oldName"></td>
-                <td class="p-2 text-green-600 font-bold" x-text="e.name"></td>
-                <td class="p-2 text-gray-500" x-text="e.oldDept || '-'"></td>
-                <td class="p-2 text-blue-600" x-text="e.department || '-'"></td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="flex-1 grid grid-cols-2 gap-4 overflow-hidden" style="min-height:200px">
-      <div class="border rounded flex flex-col">
-        <div class="bg-green-100 p-2 text-green-800 font-bold text-sm flex justify-between items-center">
-          <span>New Employees</span>
-          <div class="flex gap-1">
-            <button @click="syncPreview.newEmps.forEach(e=>e.selected=true)" class="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">All</button>
-            <button @click="syncPreview.newEmps.forEach(e=>e.selected=false)" class="text-[10px] bg-gray-400 text-white px-2 py-0.5 rounded">None</button>
-          </div>
+      <div x-show="currentTab === 'settings'" class="bg-white p-6 rounded-xl shadow h-full flex flex-col"
+           x-data="{settingsView:'dept_mgmt', selectedDeptCard:null, syncPreview:null, lockManagerFilter:'', lockedTrainings:[], lockLoading:false}">
+        <div class="flex space-x-4 border-b mb-4 flex-wrap gap-y-2">
+          <button @click="settingsView='dept_mgmt'" :class="settingsView==='dept_mgmt' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Department Management</button>
+          <button @click="settingsView='employees'" :class="settingsView==='employees' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Employees</button>
+          <button @click="settingsView='sync'" :class="settingsView==='sync' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'" class="pb-2 font-bold px-4">Sync Database</button>
+          <button @click="settingsView='manager_lock'" :class="settingsView==='manager_lock' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500'" class="pb-2 font-bold px-4 flex items-center gap-1">
+            <i class="fa fa-lock text-xs"></i> Manager Lock
+          </button>
         </div>
-        <div class="flex-1 overflow-auto bg-white">
-          <table class="w-full text-xs divide-y">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.newEmps.forEach(e=>e.selected=$event.target.checked)"></th>
-                <th class="p-2 text-left">ID</th>
-                <th class="p-2 text-left">Name</th>
-                <th class="p-2 text-left">Dept</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template x-for="e in syncPreview?.newEmps">
-                <tr class="hover:bg-gray-50">
-                  <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
-                  <td class="p-1"><input type="text" x-model="e.customId" class="w-full border p-1 rounded text-center text-xs" placeholder="ID"></td>
-                  <td class="p-2" x-text="e.name"></td>
-                  <td class="p-2" x-text="e.department"></td>
-                </tr>
-              </template>
-              <tr x-show="!syncPreview?.newEmps?.length">
-                <td colspan="4" class="p-4 text-center text-gray-400">No new employees found</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="border rounded flex flex-col">
-        <div class="bg-red-100 p-2 text-red-800 font-bold text-sm">Missing (Will be Inactive)</div>
-        <div class="flex-1 overflow-auto bg-white">
-          <table class="w-full text-xs divide-y">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr><th class="p-2 text-left">ID</th><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th></tr>
-            </thead>
-            <tbody>
-              <template x-for="e in syncPreview?.inactiveEmps">
-                <tr><td class="p-2 font-mono" x-text="e.id"></td><td class="p-2" x-text="e.name"></td><td class="p-2" x-text="e.department"></td></tr>
-              </template>
-              <tr x-show="!syncPreview?.inactiveEmps?.length">
-                <td colspan="3" class="p-4 text-center text-gray-400">No missing employees</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-        <!-- MANAGER LOCK VIEW -->
-<div x-show="settingsView === 'manager_lock'" class="flex-1 flex flex-col space-y-4 fade-in"
-     x-data="{ lockManagerFilter: '', lockedTrainings: [], lockLoading: false }">
-  <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-    <h4 class="font-bold text-orange-900 text-lg mb-1 flex items-center gap-2">
-      <i class="fa fa-lock text-orange-600"></i> Manager Review Lock Control (48hr)
-    </h4>
-    <p class="text-sm text-orange-700">Select a manager to see their training reviews. Locked ones (48hr expired) can be renewed.</p>
-  </div>
 
-  <div class="flex items-center gap-3 flex-wrap">
-    <label class="text-xs font-bold text-gray-600 uppercase">Select Manager:</label>
-    <select x-model="lockManagerFilter" @change="loadLockTrainings(lockManagerFilter, $set)"
-            class="border-2 border-orange-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none w-64 font-bold text-gray-800">
-      <option value="">-- Choose Manager --</option>
-      <template x-for="m in [...new Set(settings.map(s=>s.manager).filter(Boolean))].sort()" :key="m">
-        <option :value="m" x-text="m"></option>
-      </template>
-    </select>
-    <span x-show="lockLoading" class="text-xs text-orange-600 animate-pulse font-bold">
-      <i class="fa fa-circle-notch fa-spin mr-1"></i>Loading...
-    </span>
-  </div>
-
-  <div x-show="!lockManagerFilter" class="flex-1 flex items-center justify-center text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl p-12">
-    <div>
-      <i class="fa fa-user-lock text-5xl mb-4 block text-gray-300"></i>
-      <p class="font-bold text-gray-500">Select a manager above</p>
-      <p class="text-sm mt-1">Their trainings will appear here automatically</p>
-    </div>
-  </div>
-
-  <div x-show="lockManagerFilter" class="flex-1 overflow-auto border rounded-lg shadow-sm">
-    <div class="bg-orange-100 px-4 py-2 border-b border-orange-200 flex items-center justify-between">
-      <span class="text-sm font-bold text-orange-900 flex items-center gap-2">
-        <i class="fa fa-user-tie"></i>
-        <span x-text="'Manager: ' + lockManagerFilter"></span>
-      </span>
-      <span class="text-xs text-orange-700 font-bold" x-text="lockedTrainings.length + ' training(s) pending review'"></span>
-    </div>
-    <table class="w-full text-sm">
-      <thead class="bg-gray-50 sticky top-0 shadow-sm">
-        <tr>
-          <th class="p-3 text-left text-gray-700 font-bold">Department</th>
-          <th class="p-3 text-left text-gray-700 font-bold">Course</th>
-          <th class="p-3 text-left text-gray-700 font-bold">Date</th>
-          <th class="p-3 text-left text-gray-700 font-bold">Status</th>
-          <th class="p-3 text-center text-gray-700 font-bold">Action</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y">
-        <template x-for="item in lockedTrainings" :key="item.key">
-          <tr class="hover:bg-orange-50 transition-colors" :class="item.isLocked ? 'bg-red-50' : ''">
-            <td class="p-3 text-gray-700 font-medium" x-text="item.department"></td>
-            <td class="p-3 font-bold text-gray-800" x-text="item.course"></td>
-            <td class="p-3 text-gray-500 font-mono text-xs" x-text="item.date"></td>
-            <td class="p-3">
-              <template x-if="item.isLocked">
-                <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 w-fit">
-                  <i class="fa fa-lock"></i> Locked — 48hr Expired
-                </span>
-              </template>
-              <template x-if="!item.isLocked">
-                <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
-                  <i class="fa fa-clock"></i> <span x-text="item.hoursLeft + 'h remaining'"></span>
-                </span>
-              </template>
-            </td>
-            <td class="p-3 text-center">
-              <div class="flex items-center justify-center gap-2">
-                <button @click="renewLockLocal(item, 48, lockedTrainings)"
-                        class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
-                  <i class="fa fa-redo"></i> Renew 48hr
-                </button>
-                <button @click="renewLockLocal(item, 72, lockedTrainings)"
-                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
-                  <i class="fa fa-redo"></i> 72hr
-                </button>
-              </div>
-            </td>
-          </tr>
-        </template>
-        <tr x-show="lockedTrainings.length === 0 && lockManagerFilter">
-          <td colspan="5" class="p-10 text-center text-gray-400">
-            <i class="fa fa-check-circle text-green-400 text-3xl mb-2 block"></i>
-            <p class="font-bold">No pending review trainings for this manager.</p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-        
         <!-- DEPT MANAGEMENT -->
         <div x-show="settingsView==='dept_mgmt'" class="flex-1 flex flex-col">
           <div class="flex justify-between mb-4">
@@ -1088,7 +886,6 @@
                 <div x-show="isEditingSettings" class="flex gap-2 pt-2">
                   <button @click="saveDeptSettings(selectedDeptCard)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition">Save Changes</button>
                 </div>
-                <!-- Active Employees -->
                 <div class="border rounded overflow-hidden mt-4">
                   <div class="bg-green-50 p-2 font-bold text-green-800 text-sm border-b">Active Employees</div>
                   <div class="max-h-48 overflow-auto">
@@ -1164,7 +961,221 @@
             </table>
           </div>
         </div>
-      </div>
+
+        <!-- SYNC DATABASE VIEW -->
+        <div x-show="settingsView === 'sync'" class="flex-1 flex flex-col space-y-4">
+          <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+            <h4 class="font-bold text-blue-900 text-lg mb-2 flex items-center">
+              <i class="fa fa-sync-alt mr-2"></i> Sync Employee Database
+            </h4>
+            <p class="text-sm text-blue-700 mb-4">
+              Upload an Excel (.xlsx) file to update the employee list.<br>
+              - <b>Column A</b>: Employee ID <span class="text-orange-700 font-bold">(Optional)</span><br>
+              - <b>Column B</b>: Full Name <span class="text-orange-700 font-bold">(Required)</span><br>
+              - <b>Column I</b>: Department<br><br>
+              System will: <b class="text-green-700">Add new names</b>, <b class="text-red-700">mark missing as Inactive</b>, and <b class="text-blue-700">update incorrect names/departments</b>.
+            </p>
+            <div class="flex gap-4 items-center">
+              <input type="file" id="syncFile" accept=".xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"/>
+              <button @click="processSyncFile(syncPreview, val => syncPreview = val)" class="bg-blue-600 text-white px-6 py-2 rounded shadow font-bold hover:bg-blue-700 transition whitespace-nowrap">Analyze File</button>
+            </div>
+          </div>
+
+          <div x-show="syncPreview" class="flex-1 flex flex-col space-y-4 fade-in">
+            <div class="flex justify-between items-center bg-yellow-50 p-3 border border-yellow-200 rounded">
+              <div class="text-sm">
+                <span class="font-bold text-green-700 mr-4"><i class="fa fa-plus-circle"></i> <span x-text="syncPreview?.newEmps?.filter(x=>x.selected).length||0"></span> To Add</span>
+                <span class="font-bold text-red-700 mr-4"><i class="fa fa-user-slash"></i> <span x-text="syncPreview?.inactiveEmps?.length||0"></span> To Inactive</span>
+                <span class="font-bold text-blue-700"><i class="fa fa-pencil"></i> <span x-text="syncPreview?.updateEmps?.length||0"></span> To Update</span>
+              </div>
+              <div>
+                <button @click="syncPreview = null" class="text-gray-500 hover:text-gray-700 mr-3">Cancel</button>
+                <button @click="confirmSyncLocal(syncPreview)" class="bg-green-600 text-white px-4 py-2 rounded font-bold shadow hover:bg-green-700">Confirm &amp; Sync</button>
+              </div>
+            </div>
+
+            <div x-show="syncPreview?.updateEmps?.length > 0" class="bg-blue-50 border border-blue-200 rounded flex flex-col max-h-48">
+              <div class="bg-blue-100 p-2 text-blue-800 font-bold text-sm">Names/Departments to Update</div>
+              <div class="flex-1 overflow-auto bg-white">
+                <table class="w-full text-xs divide-y">
+                  <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.updateEmps.forEach(e=>e.selected=$event.target.checked)"></th>
+                      <th class="p-2 text-left">ID</th><th class="p-2 text-left">Old Name</th><th class="p-2 text-left">New Name</th><th class="p-2 text-left">Old Dept</th><th class="p-2 text-left">New Dept</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="e in syncPreview?.updateEmps">
+                      <tr class="hover:bg-gray-50" :class="e.selected ? 'bg-blue-50' : ''">
+                        <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
+                        <td class="p-2 font-mono" x-text="e.id || '-'"></td>
+                        <td class="p-2 text-red-600 line-through" x-text="e.oldName"></td>
+                        <td class="p-2 text-green-600 font-bold" x-text="e.name"></td>
+                        <td class="p-2 text-gray-500" x-text="e.oldDept || '-'"></td>
+                        <td class="p-2 text-blue-600" x-text="e.department || '-'"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="flex-1 grid grid-cols-2 gap-4 overflow-hidden" style="min-height:200px">
+              <div class="border rounded flex flex-col">
+                <div class="bg-green-100 p-2 text-green-800 font-bold text-sm flex justify-between items-center">
+                  <span>New Employees</span>
+                  <div class="flex gap-1">
+                    <button @click="syncPreview.newEmps.forEach(e=>e.selected=true)" class="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded">All</button>
+                    <button @click="syncPreview.newEmps.forEach(e=>e.selected=false)" class="text-[10px] bg-gray-400 text-white px-2 py-0.5 rounded">None</button>
+                  </div>
+                </div>
+                <div class="flex-1 overflow-auto bg-white">
+                  <table class="w-full text-xs divide-y">
+                    <thead class="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th class="p-2 w-8"><input type="checkbox" @change="syncPreview.newEmps.forEach(e=>e.selected=$event.target.checked)"></th>
+                        <th class="p-2 text-left">ID</th><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="e in syncPreview?.newEmps">
+                        <tr class="hover:bg-gray-50">
+                          <td class="p-2 text-center"><input type="checkbox" x-model="e.selected"></td>
+                          <td class="p-1"><input type="text" x-model="e.customId" class="w-full border p-1 rounded text-center text-xs" placeholder="ID"></td>
+                          <td class="p-2" x-text="e.name"></td>
+                          <td class="p-2" x-text="e.department"></td>
+                        </tr>
+                      </template>
+                      <tr x-show="!syncPreview?.newEmps?.length">
+                        <td colspan="4" class="p-4 text-center text-gray-400">No new employees found</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="border rounded flex flex-col">
+                <div class="bg-red-100 p-2 text-red-800 font-bold text-sm">Missing (Will be Inactive)</div>
+                <div class="flex-1 overflow-auto bg-white">
+                  <table class="w-full text-xs divide-y">
+                    <thead class="bg-gray-50 sticky top-0">
+                      <tr><th class="p-2 text-left">ID</th><th class="p-2 text-left">Name</th><th class="p-2 text-left">Dept</th></tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="e in syncPreview?.inactiveEmps">
+                        <tr><td class="p-2 font-mono" x-text="e.ID||e.id||'-'"></td><td class="p-2" x-text="e.name"></td><td class="p-2" x-text="e.department"></td></tr>
+                      </template>
+                      <tr x-show="!syncPreview?.inactiveEmps?.length">
+                        <td colspan="3" class="p-4 text-center text-gray-400">No missing employees</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANAGER LOCK VIEW -->
+        <div x-show="settingsView === 'manager_lock'" class="flex-1 flex flex-col space-y-4 fade-in">
+          <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+            <h4 class="font-bold text-orange-900 text-lg mb-1 flex items-center gap-2">
+              <i class="fa fa-lock text-orange-600"></i> Manager Review Lock Control (48hr)
+            </h4>
+            <p class="text-sm text-orange-700">Select a manager to see their pending trainings. Trainings with unreviewed absences (No/NONE status with no manager note) are shown here.</p>
+          </div>
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <label class="text-xs font-bold text-gray-600 uppercase">Select Manager:</label>
+            <select x-model="lockManagerFilter" @change="loadLockTrainingsFromSupabase(lockManagerFilter, lockedTrainings)"
+                    class="border-2 border-orange-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-400 outline-none w-64 font-bold text-gray-800">
+              <option value="">-- Choose Manager --</option>
+              <template x-for="m in [...new Set(settings.map(s=>s.manager||s.Manager).filter(Boolean))].sort()" :key="m">
+                <option :value="m" x-text="m"></option>
+              </template>
+            </select>
+            <button x-show="lockManagerFilter" @click="loadLockTrainingsFromSupabase(lockManagerFilter, lockedTrainings)"
+                    class="bg-orange-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-orange-600 transition flex items-center gap-2">
+              <i class="fa fa-sync-alt"></i> Refresh
+            </button>
+            <span x-show="lockLoading" class="text-xs text-orange-600 animate-pulse font-bold">
+              <i class="fa fa-circle-notch fa-spin mr-1"></i>Loading...
+            </span>
+          </div>
+
+          <div x-show="!lockManagerFilter" class="flex-1 flex items-center justify-center text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl p-12">
+            <div>
+              <i class="fa fa-user-lock text-5xl mb-4 block text-gray-300"></i>
+              <p class="font-bold text-gray-500">Select a manager above</p>
+              <p class="text-sm mt-1">Their pending trainings will appear here automatically</p>
+            </div>
+          </div>
+
+          <div x-show="lockManagerFilter" class="flex-1 overflow-auto border rounded-lg shadow-sm">
+            <div class="bg-orange-100 px-4 py-2 border-b border-orange-200 flex items-center justify-between">
+              <span class="text-sm font-bold text-orange-900 flex items-center gap-2">
+                <i class="fa fa-user-tie"></i>
+                <span x-text="'Manager: ' + lockManagerFilter"></span>
+              </span>
+              <span class="text-xs text-orange-700 font-bold" x-text="lockedTrainings.length + ' training(s) pending review'"></span>
+            </div>
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 sticky top-0 shadow-sm">
+                <tr>
+                  <th class="p-3 text-left text-gray-700 font-bold">Department</th>
+                  <th class="p-3 text-left text-gray-700 font-bold">Course</th>
+                  <th class="p-3 text-left text-gray-700 font-bold">Date</th>
+                  <th class="p-3 text-left text-gray-700 font-bold">Unreviewed</th>
+                  <th class="p-3 text-left text-gray-700 font-bold">Status</th>
+                  <th class="p-3 text-center text-gray-700 font-bold">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <template x-for="item in lockedTrainings" :key="item.key">
+                  <tr class="hover:bg-orange-50 transition-colors" :class="item.isLocked ? 'bg-red-50' : ''">
+                    <td class="p-3 text-gray-700 font-medium" x-text="item.department"></td>
+                    <td class="p-3 font-bold text-gray-800" x-text="item.course"></td>
+                    <td class="p-3 text-gray-500 font-mono text-xs" x-text="item.date"></td>
+                    <td class="p-3 text-center">
+                      <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200" x-text="item.unreviewedCount + ' records'"></span>
+                    </td>
+                    <td class="p-3">
+                      <template x-if="item.isLocked">
+                        <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 w-fit">
+                          <i class="fa fa-lock"></i> Locked — 48hr Expired
+                        </span>
+                      </template>
+                      <template x-if="!item.isLocked">
+                        <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
+                          <i class="fa fa-clock"></i> <span x-text="item.hoursLeft + 'h remaining'"></span>
+                        </span>
+                      </template>
+                    </td>
+                    <td class="p-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button @click="renewLockLocal(item, 48, lockedTrainings)"
+                                class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
+                          <i class="fa fa-redo"></i> Renew 48hr
+                        </button>
+                        <button @click="renewLockLocal(item, 72, lockedTrainings)"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
+                          <i class="fa fa-redo"></i> 72hr
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="!lockLoading && lockedTrainings.length === 0 && lockManagerFilter">
+                  <td colspan="6" class="p-10 text-center text-gray-400">
+                    <i class="fa fa-check-circle text-green-400 text-3xl mb-2 block"></i>
+                    <p class="font-bold">No pending review trainings found for this manager.</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- end settings -->
 
     </main>
 
@@ -1221,138 +1232,119 @@
 </div>
 
 <script>
-// ==================== SUPABASE CONFIG ====================
 const SUPABASE_URL = 'https://hqphpfyvhqqupqyrpmvn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcGhwZnl2aHFxdXBxeXJwbXZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MjkwODQsImV4cCI6MjA5MzAwNTA4NH0.GRWqD3gFLEZw3s9ox4sGNO2X9KaONTvC_oe-qRgu_TI';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ==================== ALPINE APP ====================
 function app() {
   const now = new Date();
   const curMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
   const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
- 
 
   return {
     currentTab: 'dashboard', dashView: 'home', isLoading: false, loadingProgress: 0,
     dbStatus: 'checking',
-    trainingSchedule: [], // لیستی دەورەکان لێرە خەزن دەبێت
-zkSelectedTrainingId: '',
+    trainingSchedule: [],
+    zkSelectedTrainingId: '',
 
-    
     menuItems: [
       {id:'dashboard', label:'Dashboard', icon:'fa-solid fa-gauge'},
       {id:'upload', label:'Upload Training', icon:'fa-solid fa-upload'},
       {id:'zkteco', label:'ZKTeco Attendance', icon:'fa-solid fa-fingerprint'},
+      {id:'attendanceTool', label:'Attendance Tool', icon:'fa-solid fa-clipboard-list'},
       {id:'allTrainings', label:'Training List', icon:'fa-solid fa-list'},
       {id:'records', label:'Records', icon:'fa-solid fa-table'},
       {id:'punishments', label:'Punishments', icon:'fa-solid fa-gavel'},
       {id:'settings', label:'Settings', icon:'fa-solid fa-cog'},
-      {id:'attendanceTool', label:'Attendance Tool', icon:'fa-solid fa-clipboard-list'},
     ],
 
-    // ---- Data ----
     employees: [], records: [], settings: [],
     zktecoData: [],
 
-    // ---- Dashboard ----
     selectedDept: null, selectedTraining: null,
     deptMonthFilter: '',
     selectedAttend: [], selectedNotAttend: [], bulkStatus: '',
     pendingUpdates: {},
     stats: {totalTrainings:0, totalPunishments:0, medicalTrainings:0, nonMedicalTrainings:0},
 
-    // ---- Upload ----
     uploadMethod: 'file',
     uploadForm: {course:'', trainer:'', date:'', startTime:'', endTime:'', trainerType:'Internal'},
     manualRows: [],
     previewData: null,
     isMultiGroup: false,
 
-    // ---- ZKTeco ----
     zktecoTab: 'floor14', zktecoSearch: '', zktecoFilterDept: '',
     zktecoFilterDate: '', zkFromMonth: prevMonth, zkToMonth: curMonth,
 
-    // ---- Records/Filters ----
     searchTrainingList: '',
     currentPage: 1, pageSize: 50,
     filters: {name:'', dept:'', date:'', course:'', status:''},
     searchEmp: '', empStatusFilter: '', searchSettings: '', isEditingSettings: false,
 
-    // ---- Punishments ----
     punishmentFilterMonth: curMonth, punishmentSearch: '', punishmentFilterDept: '',
 
-    // ---- Edit modal ----
     editingRecord: null,
 
-    // ---- Toast/Confirm ----
     showToast: false, toastMsg: '', toastType: 'success',
     confirmOpen: false, confirmMsg: '', confirmAction: ()=>{},
 
+    // Attendance Tool
+    customMasterInput: '',
+    customAttendeeInput: '',
+    attendanceStats: { master: 0, attendeeRaw: 0, attendeeUnique: 0, present: 0, absent: 0 },
+    attendanceResults: { present: '', absent: '' },
+
     // ==================== INIT ====================
-async init() {
+    async init() {
       await this.fetchData();
       await this.fetchZKTecoData();
-      await this.fetchExternalGoogleSheet(); // هێنانی لیستی دەورەکان لێرە
+      await this.fetchExternalGoogleSheet();
     },
-// ١. هێنانی داتا لە گووگڵ شیت
+
+    // ==================== EXTERNAL SCHEDULE ====================
     async fetchExternalGoogleSheet() {
       const SPREADSHEET_ID = '12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU';
       const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=0`;
-
       try {
         const response = await fetch(url);
         const csvText = await response.text();
-        
-        // جیاکردنەوەی ڕیزەکان
         const lines = csvText.split(/\r?\n/);
         const result = [];
-
         for (let i = 1; i < lines.length; i++) {
           const r = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           if (r.length < 3) continue;
-
           let rawDate = r[1]?.replace(/"/g, '').trim();
-          // فۆرماتکردنی بەروار بۆ YYYY-MM-DD ئەگەر بە شێوازی تاقیکردنەوە بێت
           let formattedDate = rawDate;
-          if (rawDate.includes('/')) {
-              const parts = rawDate.split('/');
-              if (parts[0].length < 4) formattedDate = `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+          if (rawDate && rawDate.includes('/')) {
+            const parts = rawDate.split('/');
+            if (parts[0].length < 4) formattedDate = `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
           }
-
           result.push({
             id: r[0]?.replace(/"/g, '').trim() || i,
             date: formattedDate,
             course: r[2]?.replace(/"/g, '').trim(),
-            trainer: r[3]?.replace(/"/g, '').trim()
+            trainer: r[3]?.replace(/"/g, '').trim(),
+            start: r[4]?.replace(/"/g, '').trim() || '',
+            end: r[5]?.replace(/"/g, '').trim() || ''
           });
         }
-
         this.trainingSchedule = result.filter(t => t.course && t.date);
-        console.log("Data loaded from Sheet:", this.trainingSchedule);
       } catch (e) {
-        console.error("Fetch Error:", e);
+        console.error("Schedule fetch error:", e);
         this.showNotification("Error loading external courses", "error");
       }
     },
 
-    // ٢. فلتەرکردنی دەورەکان (تەنها هی ڕابردوو و ئەمڕۆ + نوێترین لە سەرەوە)
     get filteredZkScheduleOptions() {
       if (!this.trainingSchedule.length) return [];
-      
       const today = new Date();
-      today.setHours(23, 59, 59, 999); // تا کۆتایی ئەمڕۆ قبوڵ بکات
-
+      today.setHours(23, 59, 59, 999);
       return this.trainingSchedule
-        .filter(t => {
-            const d = new Date(t.date);
-            return !isNaN(d.getTime()) && d <= today;
-        })
+        .filter(t => { const d = new Date(t.date); return !isNaN(d.getTime()) && d <= today; })
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     },
 
-    // ٣. کاتێک لە لیستەکە دەورەیەک هەڵدەبژێریت
     syncZkWithSchedule() {
       if(!this.zkSelectedTrainingId) return;
       const selected = this.trainingSchedule.find(t => String(t.id) === String(this.zkSelectedTrainingId));
@@ -1361,11 +1353,24 @@ async init() {
         this.showNotification(`Linked with: ${selected.course}`);
       }
     },
+
+    fillUploadFromSchedule(id) {
+      if(!id) return;
+      const t = this.trainingSchedule.find(x => String(x.id) === String(id));
+      if(t) {
+        this.uploadForm.course = t.course || '';
+        this.uploadForm.trainer = t.trainer || '';
+        this.uploadForm.date = t.date || '';
+        this.uploadForm.startTime = t.start || '';
+        this.uploadForm.endTime = t.end || '';
+        this.showNotification(`Loaded: ${t.course}`);
+      }
+    },
+
     // ==================== LOADING ====================
     startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
-    stopLoading() { this.loadingProgress=100; setTimeout(()=>{this.isLoading=false; this.loadingProgress=0;}, 400); },
+    stopLoading() { this.loadingProgress=100; setTimeout(()=>{ this.isLoading=false; this.loadingProgress=0; }, 400); },
 
-    // ==================== NOTIFICATIONS ====================
     showNotification(msg, type='success') {
       this.toastMsg=msg; this.toastType=type; this.showToast=true;
       setTimeout(()=>{ this.showToast=false; }, 3500);
@@ -1373,15 +1378,14 @@ async init() {
     askConfirm(msg, cb) { this.confirmMsg=msg; this.confirmAction=cb; this.confirmOpen=true; },
 
     // ==================== FETCH DATA ====================
-    // ئەم فەنکشنە یارمەتیدەرە بۆ هێنانی داتا بەبێ کێشەی لیمتی ١٠٠٠ دانەیی
     async fetchAllRows(table) {
-      let data =[], from = 0, size = 1000, more = true;
+      let data=[], from=0, size=1000, more=true;
       while(more) {
-          const res = await sb.from(table).select('*').range(from, from + size - 1);
-          if(res.error) throw res.error;
-          data.push(...(res.data ||[]));
-          if(res.data.length < size) more = false;
-          else from += size;
+        const res = await sb.from(table).select('*').range(from, from+size-1);
+        if(res.error) throw res.error;
+        data.push(...(res.data||[]));
+        if(res.data.length < size) more=false;
+        else from += size;
       }
       return data;
     },
@@ -1389,19 +1393,48 @@ async init() {
     async fetchData() {
       this.startLoading(5);
       try {
-        // ١. Settings
         const settingsData = await this.fetchAllRows('Settings');
-        this.settings = settingsData.map(s => ({ ...s, department: String(s.Department||s.department||'').trim(), category: String(s.Category||s.category||'').trim(), manager: String(s.Manager||s.manager||'').trim(), Department: String(s.Department||s.department||'').trim() }));
+        this.settings = settingsData.map(s => ({
+          ...s,
+          department: String(s.Department||s.department||'').trim(),
+          category: String(s.Category||s.category||'').trim(),
+          manager: String(s.Manager||s.manager||'').trim(),
+          Department: String(s.Department||s.department||'').trim()
+        }));
         this.loadingProgress = 30;
 
-        // ٢. Employees
         const empData = await this.fetchAllRows('Employees');
-        this.employees = empData.map(e => ({ ...e, db_id: e.db_id||e.id, ID: e.ID||e.id||'', name: String(e.Name||e.name||'').trim(), department: String(e.Department||e.department||'').trim(), status: String(e.Status||e.status||'Active').trim() }));
+        this.employees = empData.map(e => ({
+          ...e,
+          db_id: e.db_id||e.id,
+          ID: e.ID||e.id||'',
+          name: String(e.Name||e.name||'').trim(),
+          department: String(e.Department||e.department||'').trim(),
+          status: String(e.Status||e.status||'Active').trim()
+        }));
         this.loadingProgress = 60;
 
-        // ٣. Training Records
         const recData = await this.fetchAllRows('TrainingRecord');
-        this.records = recData.map(r => ({ ...r, db_id: r.db_id||r.id, no: r.id||r.no||'', empId: String(r.Userid||r.empId||r.User_ID||'').trim(), department: String(r.Department||r.department||'').trim(), empName: String(r.Name||r.empName||'').trim(), trainer: String(r.Trainer||r.trainer||'').trim(), trainerType: String(r['Trainer Type']||r.trainerType||'').trim(), course: String(r.Topic||r.course||r.topic||'').trim(), date: String(r.Date||r.date||'').trim(), totalDuration: Number(r['Duration of training']||r.totalDuration||0), start: String(r['Check in']||r.start||'').trim(), end: String(r['Check out']||r.end||'').trim(), partDuration: Number(r['Emp. Duration']||r.partDuration||0), status: String(r.Status||r.status||'').trim(), managerNote: String(r['M.not']||r.managerNote||''), mStatus: String(r['M.status']||r.mStatus||''), seen: String(r.seen||r.seenStatus||'') })).sort((a,b) => new Date(b.date) - new Date(a.date)); 
+        this.records = recData.map(r => ({
+          ...r,
+          db_id: r.db_id||r.id,
+          no: r.id||r.no||'',
+          empId: String(r.Userid||r.empId||r.User_ID||'').trim(),
+          department: String(r.Department||r.department||'').trim(),
+          empName: String(r.Name||r.empName||'').trim(),
+          trainer: String(r.Trainer||r.trainer||'').trim(),
+          trainerType: String(r['Trainer Type']||r.trainerType||'').trim(),
+          course: String(r.Topic||r.course||r.topic||'').trim(),
+          date: String(r.Date||r.date||'').trim(),
+          totalDuration: Number(r['Duration of training']||r.totalDuration||0),
+          start: String(r['Check in']||r.start||'').trim(),
+          end: String(r['Check out']||r.end||'').trim(),
+          partDuration: Number(r['Emp. Duration']||r.partDuration||0),
+          status: String(r.Status||r.status||'').trim(),
+          managerNote: String(r['M.not']||r.managerNote||''),
+          mStatus: String(r['M.status']||r.mStatus||''),
+          seen: String(r.seen||r.seenStatus||'')
+        })).sort((a,b) => new Date(b.date) - new Date(a.date));
 
         this.loadingProgress = 90;
         this.calculateStats();
@@ -1415,210 +1448,65 @@ async init() {
       }
     },
 
-    // ---- New state variables to add in return object ----
-customMasterInput: '',
-customAttendeeInput: '',
-attendanceStats: { master: 0, attendeeRaw: 0, attendeeUnique: 0, present: 0, absent: 0 },
-attendanceResults: { present: '', absent: '' },
-
-// ---- Attendance Tool functions ----
-processCustomAttendance() {
-  const masterNames = this.customMasterInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
-  const uniqueMaster = [...new Set(masterNames)];
-  const rawAttendees = this.customAttendeeInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
-  const uniqueAttendeesMap = new Map();
-  rawAttendees.forEach(name => { const l=name.toLowerCase(); if(!uniqueAttendeesMap.has(l)) uniqueAttendeesMap.set(l, name); });
-  const uniqueAttendeeList = Array.from(uniqueAttendeesMap.values());
-  const attendeeSet = new Set(uniqueAttendeeList.map(n=>n.toLowerCase()));
-  const present=[], absent=[];
-  uniqueMaster.forEach(name => { if(attendeeSet.has(name.toLowerCase())) present.push(name); else absent.push(name); });
-  this.attendanceResults.present = present.join('\n');
-  this.attendanceResults.absent = absent.join('\n');
-  this.attendanceStats = { master: uniqueMaster.length, attendeeRaw: rawAttendees.length, attendeeUnique: uniqueAttendeeList.length, present: present.length, absent: absent.length };
-},
-
-copyCustomList(type) {
-  const text = type==='present' ? this.attendanceResults.present : this.attendanceResults.absent;
-  if(!text) return this.showNotification('List is empty', 'error');
-  navigator.clipboard.writeText(text).then(() => this.showNotification(`Copied ${type==='present' ? 'Attended' : 'Missing'} list`));
-},
-
-transferAttendanceToUpload() {
-  const presentList = this.attendanceResults.present.split('\n').filter(n=>n.trim()!=='');
-  if(presentList.length===0) return this.showNotification('No data to transfer', 'error');
-  this.manualRows = presentList.map(name => ({ name, startTime: this.uploadForm.startTime||'', endTime: this.uploadForm.endTime||'' }));
-  this.currentTab = 'upload';
-  this.uploadMethod = 'manual';
-  this.showNotification(`Transferred ${presentList.length} attendees to Upload tab`);
-},
-
-// ---- Sync Database functions ----
-processSyncFile(syncPreview, $set) {
-  const f = document.getElementById('syncFile');
-  if(!f.files.length) return this.showNotification('Select sync file', 'error');
-  this.startLoading();
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const d = new Uint8Array(e.target.result);
-    const w = XLSX.read(d, {type:'array'});
-    const rows = XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header:1});
-    const uploadedList = [];
-    const cleanId = (val) => String(val||'').trim().replace(/\.0$/,'');
-    rows.forEach((r, i) => {
-      if(i===0) return;
-      const rawId=r[0], rawName=r[1], rawDept=r[8];
-      if(rawName!=null && String(rawName).trim()!=='') {
-        uploadedList.push({ id: rawId!=null ? cleanId(rawId) : '', name: String(rawName).trim(), department: rawDept ? String(rawDept).trim() : '' });
-      }
-    });
-    if(uploadedList.length===0) { this.stopLoading(); return this.showNotification('No valid data found in file', 'error'); }
-    const existingByIdMap = new Map();
-    const existingByNameMap = new Map();
-    this.employees.forEach(e => {
-      if(e.ID && cleanId(e.ID)) existingByIdMap.set(cleanId(e.ID), e);
-      if(e.name) existingByNameMap.set(e.name.trim().toLowerCase(), e);
-    });
-    const newEmps=[], updateEmps=[], matchedIds=new Set(), uploadedIds=new Set();
-    uploadedList.forEach(u => {
-      let found = u.id ? existingByIdMap.get(u.id) : null;
-      if(found) {
-        uploadedIds.add(cleanId(found.ID||''));
-        matchedIds.add(cleanId(found.ID||''));
-        if(found.name.trim().toLowerCase() !== u.name.toLowerCase()) {
-          updateEmps.push({ id:u.id, name:u.name, oldName:found.name, department:u.department||found.department, oldDept:found.department, matchType:'id', selected:true });
-        }
-      } else {
-        const foundByName = existingByNameMap.get(u.name.trim().toLowerCase());
-        if(foundByName) {
-          if(foundByName.ID) { uploadedIds.add(cleanId(foundByName.ID)); matchedIds.add(cleanId(foundByName.ID)); }
-          const deptChanged = u.department && foundByName.department && u.department.toLowerCase()!==foundByName.department.toLowerCase();
-          if(deptChanged) updateEmps.push({ id:foundByName.ID||u.id, name:u.name, oldName:foundByName.name, oldDept:foundByName.department, department:u.department, matchType:'name', selected:true });
-        } else {
-          newEmps.push({ ...u, customId: u.id||'', selected:true });
-        }
-      }
-    });
-    const inactiveEmps = this.employees.filter(e => {
-      if(e.status==='Inactive') return false;
-      const eId = e.ID ? cleanId(e.ID) : '';
-      if(eId && uploadedIds.has(eId)) return false;
-      const foundInUpload = uploadedList.some(u => u.name.trim().toLowerCase()===e.name.trim().toLowerCase());
-      if(foundInUpload) return false;
-      return true;
-    });
-    $set(syncPreview, {newEmps, inactiveEmps, updateEmps});
-    this.stopLoading();
-    this.showNotification(`Analysis: ${newEmps.length} new, ${inactiveEmps.length} to deactivate, ${updateEmps.length} to update`);
-  };
-  reader.readAsArrayBuffer(f.files[0]);
-},
-
-async confirmSyncLocal(syncPreview) {
-  if(!syncPreview) return;
-  const toAdd = syncPreview.newEmps.filter(e=>e.selected);
-  const toUpdate = syncPreview.updateEmps.filter(e=>e.selected);
-  const toInactive = syncPreview.inactiveEmps;
-  this.askConfirm(`Sync: Add ${toAdd.length}, Deactivate ${toInactive.length}, Update ${toUpdate.length}?`, async () => {
-    this.startLoading();
-    try {
-      // Add new employees
-      for(const e of toAdd) {
-        const {error} = await sb.from('Employees').insert({ Name: e.name, Department: e.department, Status: 'Active', ID: e.customId||null });
-        if(error) throw error;
-      }
-      // Mark missing as Inactive
-      for(const e of toInactive) {
-        await sb.from('Employees').update({ Status: 'Inactive' }).eq('db_id', e.db_id);
-      }
-      // Update names/depts
-      for(const e of toUpdate) {
-        if(e.matchType==='id') {
-          await sb.from('Employees').update({ Name: e.name, Department: e.department }).eq('ID', e.id);
-        } else {
-          await sb.from('Employees').update({ Department: e.department }).eq('Name', e.oldName);
-        }
-      }
-      this.showNotification(`Sync complete! Added ${toAdd.length}, deactivated ${toInactive.length}, updated ${toUpdate.length}`);
-      await this.fetchData();
-    } catch(err) {
-      this.stopLoading();
-      this.showNotification('Sync failed: ' + err.message, 'error');
-    }
-  });
-},
-
-// ---- Manager Lock functions ----
-loadLockTrainings(manager, $set) {
-  if(!manager) return;
-  const now = new Date();
-  const result = [];
-  const depts = this.settings.filter(s=>s.Manager===manager || s.manager===manager).map(s=>s.Department||s.department).filter(Boolean);
-  depts.forEach(dept => {
-    const trainingMap = new Map();
-    this.records.forEach(r => {
-      if(r.department !== dept) return;
-      if(!['No','NONE'].includes(r.status)) return;
-      if(r.managerNote && r.managerNote.trim()!=='') return;
-      const key = `${dept}|${r.course}|${r.date}`;
-      if(!trainingMap.has(key)) {
-        const tDate = new Date(r.date + 'T00:00:00');
-        const expiresAt = new Date(tDate.getTime() + 48*60*60*1000);
-        const hoursLeft = (expiresAt - now)/(1000*60*60);
-        trainingMap.set(key, { key, manager, department:dept, course:r.course, date:r.date, hoursLeft:Math.max(0,Math.floor(hoursLeft)), isLocked:hoursLeft<=0 });
-      }
-    });
-    trainingMap.forEach(v=>result.push(v));
-  });
-  $set(result.sort((a,b)=>{ if(a.isLocked!==b.isLocked) return a.isLocked?-1:1; return a.hoursLeft-b.hoursLeft; }));
-},
-
-renewLockLocal(item, hours, lockedTrainings) {
-  this.askConfirm(`Renew ${hours}hr review window for "${item.course}" (${item.date})?`, () => {
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + hours*60*60*1000);
-    const idx = lockedTrainings.findIndex(t=>t.key===item.key);
-    if(idx>-1) {
-      lockedTrainings[idx].hoursLeft = hours;
-      lockedTrainings[idx].isLocked = false;
-    }
-    this.showNotification(`Renewed ${hours}hr window for "${item.course}"`);
-  });
-},
-
-    // ==================== ZKTECO ====================
+    // ==================== ZKTECO — FIXED ====================
+    // FIX: ZKTecoLogs table uses "Timestamp" column, not "date"
+    // We derive dateOnly from Timestamp itself
     async fetchZKTecoData() {
       try {
+        // Build date range from month filters using Timestamp column
         let query = sb.from('ZKTecoLogs').select('*');
+
         if(this.zkFromMonth) {
-          query = query.gte('date', this.zkFromMonth + '-01');
+          query = query.gte('Timestamp', this.zkFromMonth + '-01T00:00:00');
         }
         if(this.zkToMonth) {
           const [y,m] = this.zkToMonth.split('-').map(Number);
           const lastDay = new Date(y, m, 0).getDate();
-          query = query.lte('date', `${this.zkToMonth}-${lastDay}`);
+          query = query.lte('Timestamp', `${this.zkToMonth}-${lastDay}T23:59:59`);
         }
-        query = query.order('Timestamp', {ascending: false}).limit(2000);
+        query = query.order('Timestamp', {ascending: false}).limit(5000);
+
         const {data, error} = await query;
         if(error) throw error;
 
-        // Group by UserID + date → one entry per person per day
+        // Group by UserID + dateOnly + DeviceName
         const grouped = new Map();
         (data||[]).forEach(row => {
-          const dateOnly = row.date || (row.Timestamp ? row.Timestamp.split('T')[0] : '');
-          const key = `${row.UserID}|${dateOnly}|${row.DeviceName}`;
-          if(!grouped.has(key)) {
-            grouped.set(key, {id: key, UserID: row.UserID, DeviceName: row.DeviceName, dateOnly, punches: []});
+          // Derive dateOnly from Timestamp since there's no separate date column
+          let dateOnly = '';
+          if(row.Timestamp) {
+            dateOnly = row.Timestamp.split('T')[0];
+            // Handle case where Timestamp might be "2024-05-10 08:30:00" (space instead of T)
+            if(!dateOnly || dateOnly.length !== 10) {
+              dateOnly = String(row.Timestamp).substring(0, 10);
+            }
           }
-          const timeStr = row.Timestamp ? row.Timestamp.split('T')[1]?.substring(0,5) : '';
+          const key = `${row.UserID}|${dateOnly}|${row.DeviceName||''}`;
+          if(!grouped.has(key)) {
+            grouped.set(key, {
+              id: key,
+              UserID: row.UserID,
+              DeviceName: row.DeviceName || '',
+              dateOnly,
+              punches: []
+            });
+          }
+          // Extract time portion from Timestamp
+          let timeStr = '';
+          if(row.Timestamp) {
+            const ts = String(row.Timestamp);
+            const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
+            if(tPart) timeStr = tPart.substring(0,5);
+          }
           if(timeStr) grouped.get(key).punches.push(timeStr);
         });
 
         this.zktecoData = Array.from(grouped.values()).map(g => {
-          const punches = g.punches.sort();
+          const punches = [...new Set(g.punches)].sort();
           const emp = this.employees.find(e => String(e.ID) === String(g.UserID));
           return {
             ...g,
-            empName: emp ? emp.name : 'Unknown',
+            empName: emp ? emp.name : ('User '+g.UserID),
             department: emp ? emp.department : 'Unknown',
             checkin: punches[0] || '-',
             checkout: punches.length > 1 ? punches[punches.length-1] : '-',
@@ -1629,13 +1517,14 @@ renewLockLocal(item, hours, lockedTrainings) {
         this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
       } catch(e) {
         this.showNotification('ZKTeco fetch error: ' + e.message, 'error');
+        console.error('ZKTeco error:', e);
       }
     },
 
     get filteredZkTecoData() {
       let data = this.zktecoData;
-      const targetGroup = this.zktecoTab === 'floor14' ? 'FL14' : 'FL15';
-      data = data.filter(zk => (zk.DeviceName || '').includes(targetGroup.replace('FL','')));
+      const targetGroup = this.zktecoTab === 'floor14' ? '14' : '15';
+      data = data.filter(zk => String(zk.DeviceName||'').includes(targetGroup));
       if(this.zktecoFilterDate) data = data.filter(zk => zk.dateOnly === this.zktecoFilterDate);
       if(this.zktecoFilterDept) data = data.filter(zk => zk.department === this.zktecoFilterDept);
       if(this.zktecoSearch) {
@@ -1649,7 +1538,7 @@ renewLockLocal(item, hours, lockedTrainings) {
       const zkData = this.filteredZkTecoData;
       if(zkData.length === 0) return this.showNotification('No ZKTeco records found for current filter.', 'error');
       this.manualRows = zkData.map(zk => ({
-        name: zk.empName !== 'Unknown' ? zk.empName : '',
+        name: zk.empName !== ('User '+zk.UserID) ? zk.empName : '',
         startTime: zk.checkin !== '-' ? zk.checkin : '',
         endTime: zk.checkout !== '-' ? zk.checkout : ''
       }));
@@ -1785,7 +1674,6 @@ renewLockLocal(item, hours, lockedTrainings) {
           if(u.end !== undefined) payload['Check out'] = u.end;
           if(u.partDuration !== undefined) payload['Emp. Duration'] = u.partDuration;
           if(u.managerNote !== undefined) payload['M.not'] = u.managerNote;
-          
           await sb.from('TrainingRecord').update(payload).eq('db_id', u.db_id);
         }
         this.pendingUpdates = {};
@@ -1829,7 +1717,6 @@ renewLockLocal(item, hours, lockedTrainings) {
     },
 
     deleteRecordRecords(rec) { this.deleteRecordDash(rec); },
-
     quickEditStatus(r) { this.editingRecord={...r}; },
 
     quickChangeNotAttendStatus(rec, newStatus) {
@@ -1847,14 +1734,27 @@ renewLockLocal(item, hours, lockedTrainings) {
       if(!this.editingRecord) return;
       let pDur = this.timeDiffMins(this.editingRecord.start, this.editingRecord.end);
       this.editingRecord.partDuration = pDur;
-      let allRecs = [...this.selectedTraining.attend, ...this.selectedTraining.notAttend];
-      let target = allRecs.find(r=>r.db_id===this.editingRecord.db_id);
-      if(target) { target.start=this.editingRecord.start; target.end=this.editingRecord.end; target.partDuration=pDur; target.status=this.editingRecord.status; target.managerNote=this.editingRecord.managerNote; }
-      this.selectedTraining.attend = allRecs.filter(r=>r.status!=='No');
-      this.selectedTraining.notAttend = allRecs.filter(r=>r.status==='No');
-      this.pendingUpdates[this.editingRecord.db_id] = {db_id:this.editingRecord.db_id, status:this.editingRecord.status, start:this.editingRecord.start, end:this.editingRecord.end, partDuration:pDur, managerNote:this.editingRecord.managerNote};
-      this.editingRecord = null;
-      this.showNotification("Edited locally. Click 'Save Changes' to update Database.");
+      // Try to update in selectedTraining if we're in dashboard view
+      if(this.selectedTraining) {
+        let allRecs = [...this.selectedTraining.attend, ...this.selectedTraining.notAttend];
+        let target = allRecs.find(r=>r.db_id===this.editingRecord.db_id);
+        if(target) { target.start=this.editingRecord.start; target.end=this.editingRecord.end; target.partDuration=pDur; target.status=this.editingRecord.status; target.managerNote=this.editingRecord.managerNote; }
+        this.selectedTraining.attend = allRecs.filter(r=>r.status!=='No');
+        this.selectedTraining.notAttend = allRecs.filter(r=>r.status==='No');
+        this.pendingUpdates[this.editingRecord.db_id] = {db_id:this.editingRecord.db_id, status:this.editingRecord.status, start:this.editingRecord.start, end:this.editingRecord.end, partDuration:pDur, managerNote:this.editingRecord.managerNote};
+        this.editingRecord = null;
+        this.showNotification("Edited locally. Click 'Save Changes' to update Database.");
+      } else {
+        // Direct save from records tab
+        this.startLoading();
+        const payload = {'Status': this.editingRecord.status, 'Check in': this.editingRecord.start, 'Check out': this.editingRecord.end, 'Emp. Duration': pDur, 'M.not': this.editingRecord.managerNote};
+        sb.from('TrainingRecord').update(payload).eq('db_id', this.editingRecord.db_id).then(({error}) => {
+          if(error) { this.stopLoading(); return this.showNotification('Save failed: '+error.message, 'error'); }
+          this.showNotification('Record updated!');
+          this.editingRecord = null;
+          this.fetchData();
+        });
+      }
     },
 
     editRecord(rec) { this.editingRecord={...rec}; },
@@ -1919,7 +1819,6 @@ renewLockLocal(item, hours, lockedTrainings) {
         newRecords.push({empId:String(acNo||''), department:dept, empName:name||(emp?emp.name:'Unknown'), trainer:t.trainer, trainerType:t.trainerType, course:t.course, date:t.date, totalDuration:courseMins, start:excelStart||'', end:excelEnd||'', partDuration:empMins, status:status});
       });
 
-      // Add absents
       const activeDepts = [...new Set(newRecords.map(r=>r.department))].filter(d=>d!=='Unknown');
       activeDepts.forEach(dept => {
         this.employees.filter(e=>e.department===dept&&e.status==='Active').forEach(emp => {
@@ -1938,24 +1837,16 @@ renewLockLocal(item, hours, lockedTrainings) {
       this.startLoading();
       try {
         const rows = this.previewData.records.map(r => ({
-          Department: r.department,
-          Name: r.empName,
-          Trainer: r.trainer,
-          'Trainer Type': r.trainerType,
-          Topic: r.course,
-          Date: r.date,
-          'Duration of training': r.totalDuration,
-          'Check in': r.start||null,
-          'Check out': r.end||null,
-          'Emp. Duration': r.partDuration,
-          Status: r.status,
-          Userid: r.empId||null
+          Department: r.department, Name: r.empName, Trainer: r.trainer,
+          'Trainer Type': r.trainerType, Topic: r.course, Date: r.date,
+          'Duration of training': r.totalDuration, 'Check in': r.start||null,
+          'Check out': r.end||null, 'Emp. Duration': r.partDuration,
+          Status: r.status, Userid: r.empId||null
         }));
         const {error} = await sb.from('TrainingRecord').insert(rows);
         if(error) throw error;
         this.showNotification(`Saved ${rows.length} records!`);
-        this.previewData=null;
-        this.manualRows=[];
+        this.previewData=null; this.manualRows=[];
         if(document.getElementById('uploadFile')) document.getElementById('uploadFile').value='';
         await this.fetchData();
       } catch(e) {
@@ -1967,11 +1858,9 @@ renewLockLocal(item, hours, lockedTrainings) {
     // ==================== SETTINGS ====================
     async saveDeptSettings(dept) {
       try {
-        // لێرەدا پیتەکانمان گەورە کرد بۆ 'Category' و 'Manager'
         const {error} = await sb.from('Settings')
            .update({ 'Manager': dept.manager, 'Category': dept.category })
            .eq('Department', dept.Department || dept.department);
-           
         if(error) throw error;
         this.showNotification('Settings saved!');
         await this.fetchData();
@@ -1982,17 +1871,216 @@ renewLockLocal(item, hours, lockedTrainings) {
 
     async toggleEmpStatus(emp, newStatus) {
       try {
-        // لێرەدا پیتی S گەورە کرا بۆ 'Status'
         const {error} = await sb.from('Employees')
            .update({ 'Status': newStatus })
            .eq('db_id', emp.db_id);
-           
         if(error) throw error;
         emp.status = newStatus;
         this.showNotification(`${emp.name} → ${newStatus}`);
       } catch(e) {
         this.showNotification('Update failed: '+e.message, 'error');
       }
+    },
+
+    // ==================== SYNC DATABASE ====================
+    processSyncFile(syncPreview, setSyncPreview) {
+      const f = document.getElementById('syncFile');
+      if(!f.files.length) return this.showNotification('Select sync file', 'error');
+      this.startLoading();
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const d = new Uint8Array(e.target.result);
+        const w = XLSX.read(d, {type:'array'});
+        const rows = XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header:1});
+        const uploadedList = [];
+        const cleanId = (val) => String(val||'').trim().replace(/\.0$/,'');
+        rows.forEach((r, i) => {
+          if(i===0) return;
+          const rawId=r[0], rawName=r[1], rawDept=r[8];
+          if(rawName!=null && String(rawName).trim()!=='') {
+            uploadedList.push({ id: rawId!=null ? cleanId(rawId) : '', name: String(rawName).trim(), department: rawDept ? String(rawDept).trim() : '' });
+          }
+        });
+        if(uploadedList.length===0) { this.stopLoading(); return this.showNotification('No valid data found in file', 'error'); }
+
+        const existingByIdMap = new Map();
+        const existingByNameMap = new Map();
+        this.employees.forEach(e => {
+          if(e.ID && cleanId(e.ID)) existingByIdMap.set(cleanId(e.ID), e);
+          if(e.name) existingByNameMap.set(e.name.trim().toLowerCase(), e);
+        });
+        const newEmps=[], updateEmps=[], uploadedIds=new Set();
+        uploadedList.forEach(u => {
+          let found = u.id ? existingByIdMap.get(u.id) : null;
+          if(found) {
+            uploadedIds.add(cleanId(found.ID||''));
+            if(found.name.trim().toLowerCase() !== u.name.toLowerCase()) {
+              updateEmps.push({ id:u.id, name:u.name, oldName:found.name, department:u.department||found.department, oldDept:found.department, matchType:'id', selected:true });
+            }
+          } else {
+            const foundByName = existingByNameMap.get(u.name.trim().toLowerCase());
+            if(foundByName) {
+              if(foundByName.ID) uploadedIds.add(cleanId(foundByName.ID));
+              const deptChanged = u.department && foundByName.department && u.department.toLowerCase()!==foundByName.department.toLowerCase();
+              if(deptChanged) updateEmps.push({ id:foundByName.ID||u.id, name:u.name, oldName:foundByName.name, oldDept:foundByName.department, department:u.department, matchType:'name', selected:true });
+            } else {
+              newEmps.push({ ...u, customId: u.id||'', selected:true });
+            }
+          }
+        });
+        const inactiveEmps = this.employees.filter(e => {
+          if(e.status==='Inactive') return false;
+          const eId = e.ID ? cleanId(e.ID) : '';
+          if(eId && uploadedIds.has(eId)) return false;
+          const foundInUpload = uploadedList.some(u => u.name.trim().toLowerCase()===e.name.trim().toLowerCase());
+          if(foundInUpload) return false;
+          return true;
+        });
+        setSyncPreview({newEmps, inactiveEmps, updateEmps});
+        this.stopLoading();
+        this.showNotification(`Analysis: ${newEmps.length} new, ${inactiveEmps.length} to deactivate, ${updateEmps.length} to update`);
+      };
+      reader.readAsArrayBuffer(f.files[0]);
+    },
+
+    async confirmSyncLocal(syncPreview) {
+      if(!syncPreview) return;
+      const toAdd = syncPreview.newEmps.filter(e=>e.selected);
+      const toUpdate = syncPreview.updateEmps.filter(e=>e.selected);
+      const toInactive = syncPreview.inactiveEmps;
+      this.askConfirm(`Sync: Add ${toAdd.length}, Deactivate ${toInactive.length}, Update ${toUpdate.length}?`, async () => {
+        this.startLoading();
+        try {
+          for(const e of toAdd) {
+            const {error} = await sb.from('Employees').insert({ Name: e.name, Department: e.department, Status: 'Active', ID: e.customId||null });
+            if(error) throw error;
+          }
+          for(const e of toInactive) {
+            await sb.from('Employees').update({ Status: 'Inactive' }).eq('db_id', e.db_id);
+          }
+          for(const e of toUpdate) {
+            if(e.matchType==='id') await sb.from('Employees').update({ Name: e.name, Department: e.department }).eq('ID', e.id);
+            else await sb.from('Employees').update({ Department: e.department }).eq('Name', e.oldName);
+          }
+          this.showNotification(`Sync complete! Added ${toAdd.length}, deactivated ${toInactive.length}, updated ${toUpdate.length}`);
+          await this.fetchData();
+        } catch(err) {
+          this.stopLoading();
+          this.showNotification('Sync failed: ' + err.message, 'error');
+        }
+      });
+    },
+
+    // ==================== MANAGER LOCK — FIXED (pure Supabase) ====================
+    // FIX: No longer uses google.script.run — reads directly from this.records
+    async loadLockTrainingsFromSupabase(manager, lockedTrainingsRef) {
+      if(!manager) return;
+      // Note: lockedTrainingsRef is the Alpine x-data local variable reference
+      // We set it directly since we're in the app() scope via the HTML call
+      // Actually we need to update the x-data local variable from template
+      // Since we pass the reactive array by ref from x-data, we splice/push directly
+      this.startLoading();
+      try {
+        const now = new Date();
+        const result = [];
+
+        // Find departments managed by this manager
+        const depts = this.settings
+          .filter(s => (s.Manager||s.manager) === manager)
+          .map(s => s.Department||s.department)
+          .filter(Boolean);
+
+        if(depts.length === 0) {
+          this.stopLoading();
+          // Clear the array
+          lockedTrainingsRef.splice(0);
+          this.showNotification('No departments found for this manager.');
+          return;
+        }
+
+        // Group records by dept+course+date where there are unreviewed No/NONE
+        const trainingMap = new Map();
+        this.records.forEach(r => {
+          if(!depts.includes(r.department)) return;
+          // Only consider No or NONE status without a manager note = unreviewed
+          const isUnreviewed = (r.status === 'No' || r.status === 'NONE') && (!r.managerNote || r.managerNote.trim() === '');
+          if(!isUnreviewed) return;
+
+          const key = `${r.department}|${r.course}|${r.date}`;
+          if(!trainingMap.has(key)) {
+            const tDate = new Date(r.date + 'T00:00:00');
+            const expiresAt = new Date(tDate.getTime() + 48*60*60*1000);
+            const hoursLeft = (expiresAt - now)/(1000*60*60);
+            trainingMap.set(key, {
+              key,
+              manager,
+              department: r.department,
+              course: r.course,
+              date: r.date,
+              hoursLeft: Math.max(0, Math.floor(hoursLeft)),
+              isLocked: hoursLeft <= 0,
+              unreviewedCount: 0
+            });
+          }
+          trainingMap.get(key).unreviewedCount++;
+        });
+
+        const sorted = Array.from(trainingMap.values()).sort((a,b) => {
+          if(a.isLocked !== b.isLocked) return a.isLocked ? -1 : 1;
+          return a.hoursLeft - b.hoursLeft;
+        });
+
+        // Update the reactive array in place
+        lockedTrainingsRef.splice(0, lockedTrainingsRef.length, ...sorted);
+
+        this.stopLoading();
+        this.showNotification(`Found ${sorted.length} pending training(s) for ${manager}`);
+      } catch(e) {
+        this.stopLoading();
+        this.showNotification('Error loading lock data: ' + e.message, 'error');
+      }
+    },
+
+    renewLockLocal(item, hours, lockedTrainings) {
+      this.askConfirm(`Renew ${hours}hr review window for "${item.course}" (${item.date})?`, () => {
+        const idx = lockedTrainings.findIndex(t=>t.key===item.key);
+        if(idx>-1) {
+          lockedTrainings[idx].hoursLeft = hours;
+          lockedTrainings[idx].isLocked = false;
+        }
+        this.showNotification(`Renewed ${hours}hr window for "${item.course}"`);
+      });
+    },
+
+    // ==================== ATTENDANCE TOOL ====================
+    processCustomAttendance() {
+      const masterNames = this.customMasterInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
+      const uniqueMaster = [...new Set(masterNames)];
+      const rawAttendees = this.customAttendeeInput.split('\n').map(n=>n.trim()).filter(n=>n!=='');
+      const uniqueAttendeesMap = new Map();
+      rawAttendees.forEach(name => { const l=name.toLowerCase(); if(!uniqueAttendeesMap.has(l)) uniqueAttendeesMap.set(l, name); });
+      const uniqueAttendeeList = Array.from(uniqueAttendeesMap.values());
+      const attendeeSet = new Set(uniqueAttendeeList.map(n=>n.toLowerCase()));
+      const present=[], absent=[];
+      uniqueMaster.forEach(name => { if(attendeeSet.has(name.toLowerCase())) present.push(name); else absent.push(name); });
+      this.attendanceResults.present = present.join('\n');
+      this.attendanceResults.absent = absent.join('\n');
+      this.attendanceStats = { master: uniqueMaster.length, attendeeRaw: rawAttendees.length, attendeeUnique: uniqueAttendeeList.length, present: present.length, absent: absent.length };
+    },
+
+    copyCustomList(type) {
+      const text = type==='present' ? this.attendanceResults.present : this.attendanceResults.absent;
+      if(!text) return this.showNotification('List is empty', 'error');
+      navigator.clipboard.writeText(text).then(() => this.showNotification(`Copied ${type==='present' ? 'Attended' : 'Missing'} list`));
+    },
+
+    transferAttendanceToUpload() {
+      const presentList = this.attendanceResults.present.split('\n').filter(n=>n.trim()!=='');
+      if(presentList.length===0) return this.showNotification('No data to transfer', 'error');
+      this.manualRows = presentList.map(name => ({ name, startTime: this.uploadForm.startTime||'', endTime: this.uploadForm.endTime||'' }));
+      this.currentTab = 'upload';
+      this.uploadMethod = 'manual';
+      this.showNotification(`Transferred ${presentList.length} attendees to Upload tab`);
     },
 
     // ==================== COMPUTED ====================
@@ -2055,34 +2143,186 @@ renewLockLocal(item, hours, lockedTrainings) {
     get filteredPunishments() {
       if(!this.punishmentFilterMonth) return [];
       const [year,month] = this.punishmentFilterMonth.split('-').map(Number);
-      
       let filtered = this.records.filter(r => {
         if(!r.date) return false;
-        
-        // سیستەمی زیرەک بۆ پارسکردنی بەروار (بۆ ئەوەی بەرواری ئەکسڵ نەبێتە کێشە)
         let rd = new Date(r.date);
         if(isNaN(rd.getTime()) && r.date.includes('/')) {
-            const parts = r.date.split('/');
-            if(parts.length === 3) rd = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // جۆری DD/MM/YYYY
+          const parts = r.date.split('/');
+          if(parts.length === 3) rd = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
         }
-        
-        if(isNaN(rd.getTime())) return false; // ئەگەر هەر کێشەی تیا بوو با نەیخوێنێتەوە
-        
+        if(isNaN(rd.getTime())) return false;
         return rd.getFullYear() === year && (rd.getMonth() + 1) === month && (r.status === 'No' || r.status === 'Late');
       });
-
       if(this.punishmentSearch){
-         const q = this.punishmentSearch.toLowerCase();
-         filtered = filtered.filter(r => (r.empName||'').toLowerCase().includes(q) || (r.course||'').toLowerCase().includes(q));
+        const q = this.punishmentSearch.toLowerCase();
+        filtered = filtered.filter(r => (r.empName||'').toLowerCase().includes(q) || (r.course||'').toLowerCase().includes(q));
       }
       if(this.punishmentFilterDept) filtered = filtered.filter(r => r.department === this.punishmentFilterDept);
-      
-      return filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+      return filtered.sort((a,b) => {
+        if(a.department !== b.department) return a.department.localeCompare(b.department);
+        return new Date(b.date) - new Date(a.date);
+      });
     },
 
+    // ==================== PUNISHMENT EXCEL — STYLED WITH COLORS ====================
     downloadPunishments() {
-      const data=this.filteredPunishments.map(p=>({Name:p.empName,Department:p.department,Date:p.date,Course:p.course,Trainer:p.trainer,TrainerType:p.trainerType,Duration:this.formatDuration(p.totalDuration),Status:p.status,Note:p.managerNote}));
-      const ws=XLSX.utils.json_to_sheet(data);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Punishments");XLSX.writeFile(wb,`Punishments_${this.punishmentFilterMonth}.xlsx`);
+      const data = this.filteredPunishments;
+      if(!data.length) return this.showNotification('No data to export', 'error');
+
+      const wb = XLSX.utils.book_new();
+      const aoa = [];
+      const merges = [];
+      const rowHeights = [];
+
+      // Color palette
+      const C = {
+        headerBg: '7F1D1D',     // dark red
+        headerFg: 'FFFFFF',
+        titleBg: '991B1B',
+        titleFg: 'FFFFFF',
+        deptBg: 'FEE2E2',       // light red for dept group header
+        deptFg: '7F1D1D',
+        noRowBg: 'FFF1F2',      // very light red for No
+        noRowFg: '9B1C1C',
+        lateRowBg: 'FFFBEB',    // very light yellow for Late
+        lateRowFg: '92400E',
+        altBg: 'FFF5F5',
+        whiteBg: 'FFFFFF',
+        borderColor: 'FECACA',
+        summaryBg: 'F3F4F6',
+        summaryFg: '1F2937'
+      };
+
+      const makeStyle = (fgColor, bgColor, bold=false, sz=10, hAlign='left') => ({
+        font: { bold, sz, color: { rgb: fgColor } },
+        fill: { fgColor: { rgb: bgColor } },
+        alignment: { horizontal: hAlign, vertical: 'center', wrapText: false },
+        border: {
+          top: { style: 'thin', color: { rgb: C.borderColor } },
+          bottom: { style: 'thin', color: { rgb: C.borderColor } },
+          left: { style: 'thin', color: { rgb: C.borderColor } },
+          right: { style: 'thin', color: { rgb: C.borderColor } }
+        }
+      });
+
+      const sc = (v, s) => ({ v: v ?? '', s, t: typeof v === 'number' ? 'n' : 's' });
+      const blank = (s) => sc('', s);
+      const COLS = 9;
+
+      let R = 0;
+
+      // === TITLE ROW ===
+      const titleStyle = makeStyle(C.titleFg, C.titleBg, true, 14, 'center');
+      aoa.push(Array.from({length: COLS}, (_, i) => i===0 ? sc(`Punishment Report — ${this.punishmentFilterMonth}`, titleStyle) : blank(titleStyle)));
+      merges.push({ s:{r:R,c:0}, e:{r:R,c:COLS-1} });
+      rowHeights.push({ hpt: 28 });
+      R++;
+
+      // === SUMMARY ROW ===
+      const totalNo = data.filter(p=>p.status==='No').length;
+      const totalLate = data.filter(p=>p.status==='Late').length;
+      const summaryStyle = makeStyle(C.summaryFg, C.summaryBg, true, 10, 'center');
+      aoa.push([
+        sc(`Total: ${data.length}`, summaryStyle),
+        sc(`Absent (No): ${totalNo}`, summaryStyle),
+        sc(`Late: ${totalLate}`, summaryStyle),
+        ...Array.from({length: COLS-3}, () => blank(summaryStyle))
+      ]);
+      merges.push({ s:{r:R,c:0}, e:{r:R,c:0} });
+      merges.push({ s:{r:R,c:1}, e:{r:R,c:2} });
+      merges.push({ s:{r:R,c:3}, e:{r:R,c:COLS-1} });
+      rowHeights.push({ hpt: 18 });
+      R++;
+
+      // === COLUMN HEADERS ===
+      const hStyle = makeStyle(C.headerFg, C.headerBg, true, 10, 'center');
+      const headers = ['Name','Department','Date','Course','Trainer','Type','Duration','Status','Note'];
+      aoa.push(headers.map(h => sc(h, hStyle)));
+      rowHeights.push({ hpt: 20 });
+      R++;
+
+      // === DATA — grouped by department ===
+      const deptGroups = new Map();
+      data.forEach(p => {
+        if(!deptGroups.has(p.department)) deptGroups.set(p.department, []);
+        deptGroups.get(p.department).push(p);
+      });
+
+      deptGroups.forEach((rows, deptName) => {
+        // Department group header
+        const deptStyle = makeStyle(C.deptFg, C.deptBg, true, 11, 'left');
+        const deptRow = Array.from({length: COLS}, (_, i) => i===0
+          ? sc(`📁  ${deptName}  (${rows.length} record${rows.length>1?'s':''})`, deptStyle)
+          : blank(deptStyle));
+        aoa.push(deptRow);
+        merges.push({ s:{r:R,c:0}, e:{r:R,c:COLS-1} });
+        rowHeights.push({ hpt: 20 });
+        R++;
+
+        rows.forEach((p, idx) => {
+          const isNo = p.status === 'No';
+          const rowBg = isNo ? C.noRowBg : C.lateRowBg;
+          const rowFg = isNo ? C.noRowFg : C.lateRowFg;
+          const altBg = idx % 2 === 1 ? (isNo ? 'FFF8F8' : 'FFFDF0') : rowBg;
+          const rs = makeStyle(rowFg, altBg, false, 10, 'left');
+          const statusStyle = {
+            ...makeStyle(isNo ? 'B91C1C' : '92400E', isNo ? 'FEE2E2' : 'FEF3C7', true, 10, 'center'),
+          };
+          aoa.push([
+            sc(p.empName||'', rs),
+            sc(p.department||'', rs),
+            sc(p.date||'', rs),
+            sc(p.course||'', rs),
+            sc(p.trainer||'', rs),
+            sc(p.trainerType||'-', rs),
+            sc(this.formatDuration(p.totalDuration), { ...rs, alignment: { horizontal: 'center', vertical: 'center' } }),
+            sc(p.status||'', statusStyle),
+            sc(p.managerNote||'-', { ...rs, font: { ...rs.font, italic: true } })
+          ]);
+          rowHeights.push({ hpt: 17 });
+          R++;
+        });
+
+        // Dept subtotal
+        const subtotalStyle = makeStyle('374151', 'F9FAFB', true, 9, 'right');
+        const noCount = rows.filter(r=>r.status==='No').length;
+        const lateCount = rows.filter(r=>r.status==='Late').length;
+        aoa.push([
+          sc(`Subtotal: ${rows.length}  |  Absent: ${noCount}  |  Late: ${lateCount}`, subtotalStyle),
+          ...Array.from({length: COLS-1}, () => blank(subtotalStyle))
+        ]);
+        merges.push({ s:{r:R,c:0}, e:{r:R,c:COLS-1} });
+        rowHeights.push({ hpt: 15 });
+        R++;
+
+        // Spacer
+        const spacerStyle = { fill: { fgColor: { rgb: 'F3F4F6' } } };
+        aoa.push(Array.from({length: COLS}, () => blank(spacerStyle)));
+        rowHeights.push({ hpt: 6 });
+        R++;
+      });
+
+      // === BUILD SHEET ===
+      const ws = XLSX.utils.aoa_to_sheet(aoa.map(row => row.map(cell => ({v: cell.v, t: cell.t||'s'}))));
+
+      // Re-inject styles
+      aoa.forEach((row, ri) => {
+        row.forEach((cell, ci) => {
+          const addr = XLSX.utils.encode_cell({r:ri, c:ci});
+          if(!ws[addr]) ws[addr] = {};
+          ws[addr].v = cell.v ?? '';
+          ws[addr].t = cell.t || 's';
+          if(cell.s) ws[addr].s = cell.s;
+        });
+      });
+
+      ws['!cols'] = [{wch:28},{wch:22},{wch:12},{wch:28},{wch:20},{wch:10},{wch:10},{wch:10},{wch:30}];
+      ws['!rows'] = rowHeights;
+      ws['!merges'] = merges;
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Punishments');
+      XLSX.writeFile(wb, `Punishments_${this.punishmentFilterMonth}.xlsx`);
+      this.showNotification('Punishment report downloaded!');
     },
 
     // ==================== REPORT / COPY ====================
@@ -2115,7 +2355,7 @@ renewLockLocal(item, hours, lockedTrainings) {
       return (h2*60+m2)-(h1*60+m1);
     },
 
-    // ==================== EXCEL DOWNLOAD ====================
+    // ==================== EXCEL DOWNLOAD (Training Attendance) ====================
     downloadTrainingAttendance(training, dept) {
       if(!training) return;
       const wb = XLSX.utils.book_new();

@@ -1452,74 +1452,67 @@ function app() {
     // FIX: ZKTecoLogs table uses "Timestamp" column, not "date"
     // We derive dateOnly from Timestamp itself
     async fetchZKTecoData() {
-      try {
-        // Build date range from month filters using Timestamp column
-        let query = sb.from('ZKTecoLogs').select('*');
+  try {
+    let query = sb.from('ZKTecoLogs').select('*');
 
-        if(this.zkFromMonth) {
-          query = query.gte('Timestamp', this.zkFromMonth + '-01T00:00:00');
-        }
-        if(this.zkToMonth) {
-          const [y,m] = this.zkToMonth.split('-').map(Number);
-          const lastDay = new Date(y, m, 0).getDate();
-          query = query.lte('Timestamp', `${this.zkToMonth}-${lastDay}T23:59:59`);
-        }
-        query = query.order('Timestamp', {ascending: false}).limit(5000);
+    if(this.zkFromMonth) {
+      query = query.gte('Timestamp', this.zkFromMonth + '-01 00:00:00');
+    }
+    if(this.zkToMonth) {
+      const [y,m] = this.zkToMonth.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      query = query.lte('Timestamp', `${this.zkToMonth}-${lastDay} 23:59:59`);
+    }
+    query = query.order('Timestamp', {ascending: false}).limit(5000);
 
-        const {data, error} = await query;
-        if(error) throw error;
+    const {data, error} = await query;
+    if(error) throw error;
 
-        // Group by UserID + dateOnly + DeviceName
-        const grouped = new Map();
-        (data||[]).forEach(row => {
-          // Derive dateOnly from Timestamp since there's no separate date column
-          let dateOnly = '';
-          if(row.Timestamp) {
-            dateOnly = row.Timestamp.split('T')[0];
-            // Handle case where Timestamp might be "2024-05-10 08:30:00" (space instead of T)
-            if(!dateOnly || dateOnly.length !== 10) {
-              dateOnly = String(row.Timestamp).substring(0, 10);
-            }
-          }
-          const key = `${row.UserID}|${dateOnly}|${row.DeviceName||''}`;
-          if(!grouped.has(key)) {
-            grouped.set(key, {
-              id: key,
-              UserID: row.UserID,
-              DeviceName: row.DeviceName || '',
-              dateOnly,
-              punches: []
-            });
-          }
-          // Extract time portion from Timestamp
-          let timeStr = '';
-          if(row.Timestamp) {
-            const ts = String(row.Timestamp);
-            const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
-            if(tPart) timeStr = tPart.substring(0,5);
-          }
-          if(timeStr) grouped.get(key).punches.push(timeStr);
-        });
-
-        this.zktecoData = Array.from(grouped.values()).map(g => {
-          const punches = [...new Set(g.punches)].sort();
-          const emp = this.employees.find(e => String(e.ID) === String(g.UserID));
-          return {
-            ...g,
-            empName: emp ? emp.name : ('User '+g.UserID),
-            department: emp ? emp.department : 'Unknown',
-            checkin: punches[0] || '-',
-            checkout: punches.length > 1 ? punches[punches.length-1] : '-',
-            status: punches.length > 0 ? 'Yes' : 'No'
-          };
-        }).sort((a,b) => b.dateOnly.localeCompare(a.dateOnly));
-
-        this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
-      } catch(e) {
-        this.showNotification('ZKTeco fetch error: ' + e.message, 'error');
-        console.error('ZKTeco error:', e);
+    const grouped = new Map();
+    (data||[]).forEach(row => {
+      let dateOnly = '';
+      if(row.Timestamp) {
+        const ts = String(row.Timestamp);
+        dateOnly = ts.substring(0, 10);
       }
-    },
+      const key = `${row.UserID}|${dateOnly}|${row.DeviceName||''}`;
+      if(!grouped.has(key)) {
+        grouped.set(key, {
+          id: key,
+          UserID: row.UserID,
+          DeviceName: row.DeviceName || '',
+          dateOnly,
+          punches: []
+        });
+      }
+      let timeStr = '';
+      if(row.Timestamp) {
+        const ts = String(row.Timestamp);
+        const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
+        if(tPart) timeStr = tPart.substring(0,5);
+      }
+      if(timeStr) grouped.get(key).punches.push(timeStr);
+    });
+
+    this.zktecoData = Array.from(grouped.values()).map(g => {
+      const punches = [...new Set(g.punches)].sort();
+      const emp = this.employees.find(e => String(e.ID) === String(g.UserID));
+      return {
+        ...g,
+        empName: emp ? emp.name : ('User '+g.UserID),
+        department: emp ? emp.department : 'Unknown',
+        checkin: punches[0] || '-',
+        checkout: punches.length > 1 ? punches[punches.length-1] : '-',
+        status: punches.length > 0 ? 'Yes' : 'No'
+      };
+    }).sort((a,b) => b.dateOnly.localeCompare(a.dateOnly));
+
+    this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
+  } catch(e) {
+    this.showNotification('ZKTeco fetch error: ' + e.message, 'error');
+    console.error('ZKTeco error:', e);
+  }
+},
 
     get filteredZkTecoData() {
       let data = this.zktecoData;

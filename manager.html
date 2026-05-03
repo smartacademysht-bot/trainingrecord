@@ -611,15 +611,6 @@ html[dir="ltr"] .section-line::after { content: ''; flex: 1; height: 1px; backgr
             <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
           </div>
         </div>
-        <div class="flex items-center gap-1.5">
-          <button @click="toggleTheme()" class="theme-toggle-pill text-xs px-2.5 py-1.5" style="font-size:10px">
-            <i :class="theme === 'dark' ? 'fa fa-moon' : 'fa fa-sun'"></i>
-          </button>
-          <div class="pill-toggle" style="padding:3px">
-            <button class="pill-option" style="padding:4px 8px;font-size:10px" :class="lang==='ckb' ? 'active' : ''" @click="setLang('ckb')">KU</button>
-            <button class="pill-option" style="padding:4px 8px;font-size:10px" :class="lang==='en' ? 'active' : ''" @click="setLang('en')">EN</button>
-          </div>
-        </div>
       </div>
 
       <div class="flex items-center gap-3 p-3 rounded-xl" style="background:var(--glass); border:1px solid var(--glass-border)">

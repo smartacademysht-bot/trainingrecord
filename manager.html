@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>پۆرتاڵی بەڕێوەبەر</title>
+  <title>Manager </title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -105,8 +105,9 @@
     [data-theme="light"] .nav-btn.active { background: rgba(9,105,218,0.08); border-color: rgba(9,105,218,0.25); color: var(--accent); }
 
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { padding: 10px 14px; text-align: right; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    .data-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: middle; }
+    
+    .data-table th { padding: 10px 14px; text-align: start; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .data-table td { padding: 12px 14px; font-size: 13px; text-align: start; border-bottom: 1px solid rgba(48,54,61,0.5); vertical-align: middle; }
     [data-theme="light"] .data-table td { border-bottom: 1px solid rgba(208,215,222,0.5); }
     .data-table tr:last-child td { border-bottom: none; }
     .data-table tbody tr { transition: background 0.15s; }
@@ -270,10 +271,12 @@
         <label class="block text-xs font-bold mb-2 uppercase tracking-wider" style="color:var(--text3)" x-text="t('password')"></label>
         <div class="relative">
           <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
-            class="fancy-select pr-10 w-full" :placeholder="t('passwordPlaceholder')" style="padding-right:36px">
-          <i class="fa fa-key absolute top-3 right-3 text-xs" style="color:var(--text3)"></i>
+            class="fancy-select w-full" dir="ltr"
+            style="padding-left: 36px; padding-right: 36px; text-align: left;"
+            :placeholder="t('passwordPlaceholder')">
+          <i class="fa fa-key absolute top-3 left-3 text-xs" style="color:var(--text3)"></i>
           <button type="button" @click="showPassword = !showPassword"
-            class="absolute top-2.5 left-3 text-xs transition-colors" style="color:var(--text3)">
+            class="absolute top-2.5 right-3 text-xs transition-colors" style="color:var(--text3)">
             <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
           </button>
         </div>
@@ -1302,8 +1305,10 @@ function managerApp() {
       try {
         const settingsData = await this.fetchAllRows('Settings');
         this.settings = (settingsData || []).map(s => ({
+          id: s.id,
           department: String(s.Department || s.department || '').trim(),
-          manager: String(s.Manager || s.manager || '').trim()
+          manager: String(s.Manager || s.manager || '').trim(),
+          password: String(s.Password || s.password || '').trim()
         }));
 
         const recData = await this.fetchAllRows('TrainingRecord', 'Date');
@@ -1579,11 +1584,10 @@ function managerApp() {
     }
 
     // Try with 'Status' column name first
-    const { data, error } = await sb
+    const { error } = await sb
       .from('TrainingRecord')
       .update({ 'Status': finalStatus, 'M.not': noteWithAuthor })
-      .eq('db_id', rec.db_id)
-      .select();
+      .eq('db_id', rec.db_id);
 
     if (error) {
       console.error('Update FAILED:', JSON.stringify(error), '| rec:', rec.empName, '| db_id:', rec.db_id);

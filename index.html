@@ -776,10 +776,30 @@
               <input type="text" x-model="punishmentSearch" placeholder="Search name or course..." class="border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-48">
               <i class="fa fa-search absolute left-2.5 top-2.5 text-gray-400"></i>
             </div>
-            <select x-model="punishmentFilterDept" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-40">
+            <!-- <select x-model="punishmentFilterDept" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-40">
               <option value="">All Departments</option>
               <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
-            </select>
+            </select> -->
+            <!-- Multi-dept selector with dropdown -->
+<div class="relative" x-data="{open:false}">
+  <button @click="open=!open" class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white flex items-center gap-2 min-w-[160px] focus:ring-2 focus:ring-red-500">
+    <i class="fa fa-building text-gray-400 text-xs"></i>
+    <span class="flex-1 text-left text-gray-700 truncate" x-text="punishmentFilterDepts.length===0 ? 'All Departments' : punishmentFilterDepts.length + ' dept(s)'"></span>
+    <i class="fa fa-chevron-down text-gray-400 text-xs" :class="open?'rotate-180':''"></i>
+  </button>
+  <div x-show="open" @click.outside="open=false" class="absolute top-full mt-1 left-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl w-64 max-h-64 overflow-auto p-2">
+    <div class="flex justify-between items-center mb-2 px-1">
+      <span class="text-xs font-bold text-gray-500">Select Departments</span>
+      <button @click="punishmentFilterDepts=[]" class="text-xs text-blue-600 hover:underline font-bold">Clear</button>
+    </div>
+    <template x-for="d in uniqueDeptsSettings" :key="d">
+      <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 cursor-pointer text-sm">
+        <input type="checkbox" :value="d" x-model="punishmentFilterDepts" class="rounded">
+        <span x-text="d" class="text-gray-700"></span>
+      </label>
+    </template>
+  </div>
+</div>
             <input type="month" x-model="punishmentFilterMonth" class="border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
             <button @click="downloadPunishments" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center">
               <i class="fa fa-file-excel mr-2"></i> Download
@@ -1282,7 +1302,7 @@ function app() {
     filters: {name:'', dept:'', date:'', course:'', status:''},
     searchEmp: '', empStatusFilter: '', searchSettings: '', isEditingSettings: false,
 
-    punishmentFilterMonth: curMonth, punishmentSearch: '', punishmentFilterDept: '',
+    punishmentFilterMonth: curMonth, punishmentSearch: '', punishmentFilterDept: '', punishmentFilterDepts: [],
 
     editingRecord: null,
 
@@ -2206,7 +2226,8 @@ function app() {
         const q = this.punishmentSearch.toLowerCase();
         filtered = filtered.filter(r => (r.empName||'').toLowerCase().includes(q) || (r.course||'').toLowerCase().includes(q));
       }
-      if(this.punishmentFilterDept) filtered = filtered.filter(r => r.department === this.punishmentFilterDept);
+      if(this.punishmentFilterDepts.length > 0) filtered = filtered.filter(r => this.punishmentFilterDepts.includes(r.department));
+else if(this.punishmentFilterDept) filtered = filtered.filter(r => r.department === this.punishmentFilterDept);
       return filtered.sort((a,b) => {
         if(a.department !== b.department) return a.department.localeCompare(b.department);
         return new Date(b.date) - new Date(a.date);

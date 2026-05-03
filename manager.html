@@ -558,10 +558,7 @@
           </div>
         </div>
 
-        <!-- REPLACE: <div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up"> -->
-<!-- WITH: -->
 <div x-show="selectedAbsent.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; background:var(--surface); padding-bottom:8px; border-bottom:1px solid var(--border);">
-
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
               <i class="fa fa-check-square ml-1"></i>
@@ -688,9 +685,7 @@
           </div>
         </div>
 
-<!-- WITH: -->
 <div x-show="selectedLate.length > 0" class="px-4 pt-3 fade-up" style="position:sticky; top:0; z-index:20; background:var(--surface); padding-bottom:8px; border-bottom:1px solid var(--border);">
-
           <div class="bulk-bar">
             <span class="text-sm font-bold" style="color:var(--accent)">
               <i class="fa fa-check-square ml-1"></i>
@@ -704,9 +699,10 @@
                 <i class="fa fa-bolt"></i> <span x-text="t('apply')"></span>
               </button>
               <button @click="clearLateSelection" class="btn-ghost text-xs px-3 py-2" x-text="t('cancel')"></button>
-            </div>
+           </div>
           </div>
         </div>
+        <!-- end sticky late bulk bar -->
 
         <div class="overflow-x-auto">
           <table class="data-table">
@@ -1218,8 +1214,8 @@ function managerApp() {
 
       this.fetchUsernames();
       this.syncPasswordsFromSheet();
-// Set interval to sync every 5 minutes
-setInterval(() => this.syncPasswordsFromSheet(), 5 * 60 * 1000);
+      setInterval(() => this.syncPasswordsFromSheet(), 5 * 60 * 1000);
+      setInterval(() => { this.nowTimer = Date.now(); }, 1000);
 
       try {
         const saved = localStorage.getItem('managerRemember');
@@ -1592,7 +1588,7 @@ setInterval(() => this.syncPasswordsFromSheet(), 5 * 60 * 1000);
     notify(msg) {
       this.toastMsg = msg; this.showToast = true;
       setTimeout(() => { this.showToast = false; }, 3500);
-    }
+    },
     // ===== GOOGLE SHEET PASSWORD SYNC =====
 async syncPasswordsFromSheet() {
   const SHEET_ID = '10SwsZlPty4tU1H5eDiE16ZXgVDg-VRPtslNMq6NjoKg';

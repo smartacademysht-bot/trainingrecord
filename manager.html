@@ -1549,35 +1549,80 @@ function managerApp() {
     },
 
     async executeSubmit() {
-      this.showConfirmModal = false;
-      this.isLoading = true;
-      this.loadingMessage = this.lang === 'ckb' ? 'ناردن...' : 'Submitting...';
-      let hasError = false;
+  this.showConfirmModal = false;
+  this.isLoading = true;
+  this.loadingMessage = this.lang === 'ckb' ? 'ناردن...' : 'Submitting...';
+  let hasError = false;
+  let errorDetails = '';
 
-      for (const rec of this.localRecords) {
-        if (rec.isAlreadyReviewed) continue;
-        const finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
-        const finalNote = (rec.managerNote || '').trim() || '.';
-        const payload = {
-          'Status': finalStatus,
-          'M.not': finalNote + ` (By: ${this.loggedInManagerName})`
-        };
-        const { error } = await sb.from('TrainingRecord').update(payload).eq('db_id', rec.db_id);
-        if (error) {
-          console.error('Update error for', rec.empName, '| db_id:', rec.db_id, '| error:', JSON.stringify(error));
+  for (const rec of this.localRecords) {
+    if (rec.isAlreadyReviewed) continue;
+
+    const finalStatus = rec.originalStatus === 'Late' ? rec.originalStatus : rec.status;
+    const finalNote = (rec.managerNote || '').trim() || '.';
+    const noteWithAuthor = finalNote + ` (By: ${this.loggedInManagerName})`;
+
+    // Debug: log what we're trying to update
+    console.log('Updating record:', {
+      db_id: rec.db_id,
+      empName: rec.empName,
+      finalStatus,
+      noteWithAuthor
+    });
+
+    // Check if db_id is valid
+    if (!rec.db_id) {
+      console.error('MISSING db_id for:', rec.empName, '| full rec:', rec);
+      hasError = true;
+      errorDetails = 'Missing record ID for: ' + rec.empName;
+      continue;
+    }
+
+    // Try with 'Status' column name first
+    const { data, error } = await sb
+      .from('TrainingRecord')
+      .update({ 'Status': finalStatus, 'M.not': noteWithAuthor })
+      .eq('db_id', rec.db_id)
+      .select();
+
+    if (error) {
+      console.error('Update FAILED:', JSON.stringify(error), '| rec:', rec.empName, '| db_id:', rec.db_id);
+      errorDetails = error.message || error.code || JSON.stringify(error);
+      hasError = true;
+    } else {
+      console.log('Update SUCCESS:', rec.empName, '| rows affected:', data?.length);
+      // If data is empty array, the eq() filter matched nothing
+      if (data && data.length === 0) {
+        console.warn('WARNING: Update succeeded but 0 rows matched for db_id:', rec.db_id);
+        // Try matching by id instead
+        const { data: data2, error: error2 } = await sb
+          .from('TrainingRecord')
+          .update({ 'Status': finalStatus, 'M.not': noteWithAuthor })
+          .eq('id', rec.db_id)
+          .select();
+        if (error2) {
+          console.error('Fallback by id also failed:', JSON.stringify(error2));
           hasError = true;
+          errorDetails = error2.message;
+        } else {
+          console.log('Fallback by id SUCCESS:', data2?.length, 'rows');
         }
-
-      this.isLoading = false;
-      if (hasError) {
-        this.notify(this.lang === 'ckb' ? 'هەندێ تۆمار نەنوێکرایەوە. دووبارە هەوڵبدەرەوە.' : 'Some records failed to update. Please try again.');
-      } else {
-        this.localRecords.forEach(r => { try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {} });
-        this.notify(this.lang === 'ckb' ? 'بەسەرکەوتوویی ناردرا!' : 'Successfully submitted!');
-        this.selectedTraining = '';
-        this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
       }
-    },
+    }
+  }
+
+  this.isLoading = false;
+  if (hasError) {
+    this.notify(`❌ ${this.lang === 'ckb' ? 'هەڵە:' : 'Error:'} ${errorDetails}`);
+  } else {
+    this.localRecords.forEach(r => {
+      try { localStorage.removeItem(`autosave_${this.selectedTraining}_${r.empId}`); } catch(e) {}
+    });
+    this.notify(this.lang === 'ckb' ? 'بەسەرکەوتوویی ناردرا!' : 'Successfully submitted!');
+    this.selectedTraining = '';
+    this.fetchData(() => { if (this.selectedDept) this.updateMonths(); });
+  }
+},
 
     formatDuration(mins) {
       if (!mins || mins <= 0) return '0m';

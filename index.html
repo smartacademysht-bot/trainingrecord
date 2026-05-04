@@ -712,7 +712,11 @@
                     <td class="p-3" x-text="t.date"></td>
                     <td class="p-3" x-text="t.trainer"></td>
                     <td class="p-3 text-sm text-gray-500 max-w-xs truncate" x-text="t.departments" :title="t.departments"></td>
-                    <td class="p-3"><button @click="selectedMasterTraining=t" class="text-blue-600 hover:underline">View Details</button></td>
+                   <td class="p-3 flex gap-2 items-center">
+  <button @click="selectedMasterTraining=t" class="text-blue-600 hover:underline text-sm font-bold">View</button>
+  <button @click="deleteFullTraining(t)" class="text-red-500 hover:text-red-700 text-xs font-bold border border-red-200 px-2 py-1 rounded hover:bg-red-50 transition"><i class="fa fa-trash mr-1"></i>Delete</button>
+  <button @click="copyMedicalAttended(t)" class="text-purple-600 hover:text-purple-800 text-xs font-bold border border-purple-200 px-2 py-1 rounded hover:bg-purple-50 transition"><i class="fa fa-copy mr-1"></i>Copy Medical</button>
+</td>
                   </tr>
                 </template>
               </tbody>
@@ -934,96 +938,95 @@
                 <button @click="selectedDeptCard=null" class="text-gray-400 hover:text-gray-700"><i class="fa fa-times text-2xl"></i></button>
               </div>
               <div class="p-6 space-y-4 overflow-auto flex-1">
-                <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Manager</label>
-                  <input list="empListGlobal" x-model="selectedDeptCard.manager" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'" placeholder="Search employee...">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Category</label>
-                  <select x-model="selectedDeptCard.category" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'">
-                    <option value="medical">Medical</option>
-                    <option value="non medical">Non Medical</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                <div x-show="isEditingSettings" class="flex gap-2 pt-2">
-                  <button @click="saveDeptSettings(selectedDeptCard)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition">Save Changes</button>
-                </div>
-                <div class="border rounded overflow-hidden mt-4">
-                  <div class="bg-green-50 p-2 font-bold text-green-800 text-sm border-b">Active Employees</div>
-                  <div class="max-h-48 overflow-auto">
-                    <table class="w-full text-sm">
-                      <tbody class="divide-y">
-                        <template x-for="emp in employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
-                          <tr class="hover:bg-gray-50">
-                            <td class="p-3 font-medium" x-text="emp.name"></td>
-                            <td class="p-3">
-                              <button @click="if(isEditingSettings){toggleEmpStatus(emp,'Inactive')}" :disabled="!isEditingSettings" class="px-3 py-1 rounded-full text-xs font-bold border" :class="isEditingSettings ? 'bg-green-50 text-green-700 border-green-200 hover:bg-red-50 hover:text-red-700 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'">Active</button>
-                            </td>
-                          </tr>
-                        </template>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <datalist id="empListGlobal">
-            <template x-for="e in employees.filter(emp=>emp.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
-              <option :value="e.name"></option>
-            </template>
-          </datalist>
-        </div>
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Manager</label>
+      <input list="empListGlobal" x-model="selectedDeptCard.manager" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'" placeholder="Search employee...">
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Category</label>
+      <select x-model="selectedDeptCard.category" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" :disabled="!isEditingSettings" :class="!isEditingSettings ? 'bg-gray-100 text-gray-500' : 'bg-white'">
+        <option value="medical">Medical</option>
+        <option value="non medical">Non Medical</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+  </div>
+  <div x-show="isEditingSettings" class="flex gap-2">
+    <button @click="saveDeptSettings(selectedDeptCard)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-bold shadow transition">Save Changes</button>
+  </div>
 
-        <!-- EMPLOYEES VIEW -->
-        <div x-show="settingsView==='employees'" class="flex-1 flex flex-col">
-          <div class="flex justify-between mb-4">
-            <div class="flex gap-2">
-              <div class="relative">
-                <input type="text" x-model="searchEmp" placeholder="Search employees..." class="border p-2 rounded w-64 text-sm pl-8">
-                <i class="fa fa-search absolute left-2.5 top-2.5 text-gray-400 text-xs"></i>
-              </div>
-              <select x-model="empStatusFilter" class="border p-2 rounded text-sm">
-                <option value="">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </div>
-            <button @click="isEditingSettings=!isEditingSettings" class="px-4 py-1 rounded text-sm font-bold" :class="isEditingSettings ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'">
-              <i class="fa" :class="isEditingSettings ? 'fa-lock-open' : 'fa-lock'"></i>
-              <span x-text="isEditingSettings ? 'Lock' : 'Enable Editing'"></span>
-            </button>
-          </div>
-          <div class="flex-1 overflow-auto border rounded-lg shadow-sm">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-              <thead class="bg-gray-50 sticky top-0">
-                <tr>
-                  <th class="p-3 text-left font-semibold text-gray-600">ID</th>
-                  <th class="p-3 text-left font-semibold text-gray-600">Name</th>
-                  <th class="p-3 text-left font-semibold text-gray-600">Department</th>
-                  <th class="p-3 text-left font-semibold text-gray-600">Status</th>
-                  <th class="p-3 text-center font-semibold text-gray-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 bg-white">
-                <template x-for="emp in filteredEmployees">
-                  <tr class="hover:bg-gray-50">
-                    <td class="p-3 font-mono text-gray-500" x-text="emp.ID || '-'"></td>
-                    <td class="p-3 font-medium text-gray-800" x-text="emp.name"></td>
-                    <td class="p-3 text-gray-600" x-text="emp.department"></td>
-                    <td class="p-3">
-                      <span :class="emp.status==='Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="px-2 py-1 rounded-full text-xs font-bold" x-text="emp.status"></span>
-                    </td>
-                    <td class="p-3 text-center">
-                      <button x-show="isEditingSettings" @click="toggleEmpStatus(emp, emp.status==='Active' ? 'Inactive' : 'Active')" class="text-blue-600 hover:underline text-xs font-bold" x-text="emp.status==='Active' ? 'Deactivate' : 'Activate'"></button>
-                    </td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-          </div>
-        </div>
+  <!-- Active Employees -->
+  <div class="border rounded overflow-hidden">
+    <div class="bg-green-50 p-2 font-bold text-green-800 text-sm border-b flex justify-between items-center">
+      <span><i class="fa fa-user-check mr-1"></i> Active Employees (<span x-text="employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Active').length"></span>)</span>
+    </div>
+    <div class="max-h-52 overflow-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 sticky top-0">
+          <tr>
+            <th class="p-2 text-left font-semibold text-gray-600">Name</th>
+            <th class="p-2 text-left font-semibold text-gray-600 w-44">Department</th>
+            <th class="p-2 text-center font-semibold text-gray-600 w-24">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          <template x-for="emp in employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Active').sort((a,b)=>a.name.localeCompare(b.name))">
+            <tr class="hover:bg-gray-50">
+              <td class="p-2 font-medium" x-text="emp.name"></td>
+              <td class="p-2">
+                <select x-model="emp.department" @change="isEditingSettings && changeDeptDirectly(emp, emp.department)"
+                  class="w-full border rounded p-1 text-xs focus:ring-1 focus:ring-blue-500"
+                  :disabled="!isEditingSettings"
+                  :class="!isEditingSettings ? 'bg-gray-100 text-gray-400' : 'bg-white border-blue-300'">
+                  <template x-for="d in uniqueDeptsSettings" :key="d">
+                    <option :value="d" x-text="d"></option>
+                  </template>
+                </select>
+              </td>
+              <td class="p-2 text-center">
+                <button @click="if(isEditingSettings){toggleEmpStatus(emp,'Inactive')}" :disabled="!isEditingSettings" class="px-3 py-1 rounded-full text-xs font-bold border" :class="isEditingSettings ? 'bg-green-50 text-green-700 border-green-200 hover:bg-red-50 hover:text-red-700 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'">Active</button>
+              </td>
+            </tr>
+          </template>
+          <tr x-show="employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Active').length===0">
+            <td colspan="3" class="p-4 text-center text-gray-400 text-xs">No active employees</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Inactive Employees -->
+  <div class="border rounded overflow-hidden">
+    <div class="bg-red-50 p-2 font-bold text-red-800 text-sm border-b flex justify-between items-center">
+      <span><i class="fa fa-user-slash mr-1"></i> Inactive Employees (<span x-text="employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Inactive').length"></span>)</span>
+    </div>
+    <div class="max-h-40 overflow-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 sticky top-0">
+          <tr>
+            <th class="p-2 text-left font-semibold text-gray-600">Name</th>
+            <th class="p-2 text-center font-semibold text-gray-600 w-24">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          <template x-for="emp in employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Inactive').sort((a,b)=>a.name.localeCompare(b.name))">
+            <tr class="hover:bg-red-50">
+              <td class="p-2 text-gray-500 line-through text-sm" x-text="emp.name"></td>
+              <td class="p-2 text-center">
+                <button @click="if(isEditingSettings){toggleEmpStatus(emp,'Active')}" :disabled="!isEditingSettings" class="px-3 py-1 rounded-full text-xs font-bold border" :class="isEditingSettings ? 'bg-red-50 text-red-700 border-red-200 hover:bg-green-50 hover:text-green-700 cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'">Inactive</button>
+              </td>
+            </tr>
+          </template>
+          <tr x-show="employees.filter(e=>e.department===selectedDeptCard?.department&&e.status==='Inactive').length===0">
+            <td colspan="2" class="p-4 text-center text-gray-400 text-xs">No inactive employees</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
         <!-- SYNC DATABASE VIEW -->
         <div x-show="settingsView === 'sync'" class="flex-1 flex flex-col space-y-4">
@@ -1698,17 +1701,20 @@ async markTrainingReviewed(training) {
     },
 
     transferZKToUpload() {
-      const zkData = this.filteredZkTecoData;
-      if(zkData.length === 0) return this.showNotification('No ZKTeco records found for current filter.', 'error');
-      this.manualRows = zkData.map(zk => ({
-        name: zk.empName !== ('User '+zk.UserID) ? zk.empName : '',
-        startTime: zk.checkin !== '-' ? zk.checkin : '',
-        endTime: zk.checkout !== '-' ? zk.checkout : ''
-      }));
-      this.uploadMethod = 'manual';
-      this.currentTab = 'upload';
-      this.showNotification(`Transferred ${this.manualRows.length} records to Upload tab`);
-    },
+  const zkData = this.filteredZkTecoData;
+  if(zkData.length === 0) return this.showNotification('No ZKTeco records found for current filter.', 'error');
+  this.manualRows = zkData.map(zk => ({
+    name: zk.empName !== ('User '+zk.UserID) ? zk.empName : '',
+    startTime: zk.checkin !== '-' ? zk.checkin : '',
+    endTime: zk.checkout !== '-' ? zk.checkout : ''
+  }));
+  if(this.zkTrainingStart) this.uploadForm.startTime = this.zkTrainingStart;
+  if(this.zkTrainingEnd) this.uploadForm.endTime = this.zkTrainingEnd;
+  if(this.zkTrainerType) this.uploadForm.trainerType = this.zkTrainerType;
+  this.uploadMethod = 'manual';
+  this.currentTab = 'upload';
+  this.showNotification(`Transferred ${this.manualRows.length} records to Upload tab`);
+},
 
     // ==================== STATS ====================
     calculateStats() {
@@ -2204,16 +2210,37 @@ async markTrainingReviewed(training) {
       }
     },
 
-    renewLockLocal(item, hours, lockedTrainings) {
-      this.askConfirm(`Renew ${hours}hr review window for "${item.course}" (${item.date})?`, () => {
-        const idx = lockedTrainings.findIndex(t=>t.key===item.key);
-        if(idx>-1) {
-          lockedTrainings[idx].hoursLeft = hours;
-          lockedTrainings[idx].isLocked = false;
-        }
-        this.showNotification(`Renewed ${hours}hr window for "${item.course}"`);
-      });
-    },
+    async renewLockLocal(item, hours, lockedTrainings) {
+  this.askConfirm(`Renew ${hours}hr review window for "${item.course}" (${item.date})?`, async () => {
+    this.startLoading();
+    try {
+      const newExpiry = new Date(Date.now() + hours*60*60*1000).toISOString();
+      // Upsert into a ManagerLock table keyed by dept+course+date
+      const {error} = await sb.from('ManagerLock').upsert({
+        department: item.department,
+        course: item.course,
+        date: item.date,
+        manager: item.manager,
+        expires_at: newExpiry
+      }, { onConflict: 'department,course,date' });
+      if(error) throw error;
+
+      const idx = lockedTrainings.findIndex(t=>t.key===item.key);
+      if(idx>-1) {
+        lockedTrainings[idx].hoursLeft = hours;
+        lockedTrainings[idx].isLocked = false;
+      }
+      this.stopLoading();
+      this.showNotification(`Renewed ${hours}hr window for "${item.course}"`);
+    } catch(e) {
+      this.stopLoading();
+      // Fallback: update locally if table doesn't exist yet
+      const idx = lockedTrainings.findIndex(t=>t.key===item.key);
+      if(idx>-1) { lockedTrainings[idx].hoursLeft = hours; lockedTrainings[idx].isLocked = false; }
+      this.showNotification(`Renewed locally (DB table missing: ${e.message})`, 'error');
+    }
+  });
+},
 
     // ==================== ATTENDANCE TOOL ====================
     processCustomAttendance() {
@@ -2689,6 +2716,47 @@ else if(this.punishmentFilterDept) filtered = filtered.filter(r => r.department 
   this.showNotification('Excel downloaded!');
 },};
 }
+
+  async deleteFullTraining(training) {
+  const allRecs = [...training.attend, ...training.notAttend];
+  if(allRecs.length === 0) return this.showNotification('No records found for this training.', 'error');
+  this.askConfirm(`Delete all ${allRecs.length} records for "${training.course}" on ${training.date}?`, async () => {
+    this.startLoading();
+    try {
+      const ids = allRecs.map(r=>r.db_id).filter(Boolean);
+      if(ids.length > 0) await sb.from('TrainingRecord').delete().in('db_id', ids);
+      this.showNotification(`Deleted "${training.course}"`);
+      await this.fetchData();
+    } catch(e) {
+      this.stopLoading();
+      this.showNotification('Delete failed: '+e.message, 'error');
+    }
+  });
+},
+
+copyMedicalAttended(training) {
+  const medicalDepts = this.settings
+    .filter(s => (s.category||'').toLowerCase() === 'medical')
+    .map(s => s.Department||s.department);
+  const attended = training.attend
+    .filter(r => medicalDepts.includes(r.department) && (r.status==='Yes' || r.status==='Late' || r.status==='NONE'))
+    .map(r => r.empName);
+  if(attended.length === 0) return this.showNotification('No medical department attendees found.', 'error');
+  navigator.clipboard.writeText(attended.join('\n')).then(() =>
+    this.showNotification(`Copied ${attended.length} medical attended names`)
+  );
+},
+  async changeDeptDirectly(emp, newDept) {
+  try {
+    const {error} = await sb.from('Employees').update({'Department': newDept}).eq('db_id', emp.db_id);
+    if(error) throw error;
+    emp.department = newDept;
+    this.showNotification(`${emp.name} moved to ${newDept}`);
+    await this.fetchData();
+  } catch(e) {
+    this.showNotification('Update failed: '+e.message, 'error');
+  }
+},
 </script>
 </body>
 </html>

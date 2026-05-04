@@ -251,20 +251,28 @@
                   <i class="fa text-gray-400" :class="open ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 </button>
                 <div x-show="open" class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white border-t border-gray-200">
-                  <template x-for="t in group.trainings">
-                    <div @click="goToTraining(t)" class="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-5 cursor-pointer transition flex flex-col justify-between h-32 relative group">
-                      <template x-if="t.unreviewedProblemCount > 0">
-                        <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white z-10 animate-pulse">
-                          <i class="fa fa-bell mr-1"></i>Not Reviewed
-                        </div>
-                      </template>
-                      <div>
-                        <h4 class="font-bold text-lg text-blue-900" x-text="t.course"></h4>
-                      </div>
-                      <div class="flex justify-between items-end">
-                        <span class="text-xs bg-white px-2 py-1 rounded border text-gray-600" x-text="t.trainer"></span>
-                        <span class="text-xs font-bold text-blue-600">View <i class="fa fa-arrow-right ml-1"></i></span>
-                      </div>
+                  <template x-if="t.unreviewedProblemCount > 0">
+  <div class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white z-10 animate-pulse">
+    <i class="fa fa-bell mr-1"></i>Not Reviewed
+  </div>
+</template>
+<div @click="goToTraining(t)" class="cursor-pointer flex-1">
+  <h4 class="font-bold text-lg text-blue-900 group-hover:text-blue-700" x-text="t.course"></h4>
+  <span class="text-xs bg-white px-2 py-1 rounded border text-gray-600 mt-1 inline-block" x-text="t.trainer"></span>
+</div>
+<div class="flex justify-between items-center mt-2 pt-2 border-t border-blue-200">
+  <button @click.stop="markTrainingReviewed(t)" class="text-[10px] bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 px-2 py-1 rounded font-bold transition flex items-center gap-1">
+    <i class="fa fa-check-double"></i> Mark Reviewed
+  </button>
+  <div class="flex gap-1">
+    <button @click.stop="goToTraining(t)" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 px-2 py-1 rounded font-bold transition">
+      View <i class="fa fa-arrow-right ml-1"></i>
+    </button>
+    <button @click.stop="deleteTrainingFromDept(t)" class="text-[10px] bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 px-2 py-1 rounded font-bold transition">
+      <i class="fa fa-trash"></i>
+    </button>
+  </div>
+</div>
                     </div>
                   </template>
                 </div>
@@ -467,6 +475,12 @@
                     <input type="time" x-model="uploadForm.endTime" class="w-full text-sm border rounded p-2 focus:ring-2 focus:ring-blue-500 border-blue-300">
                   </div>
                 </div>
+                <div class="pt-1">
+  <a href="https://docs.google.com/spreadsheets/d/12BdrHnE5hXmJEimGrlBw58vNJOZG7GEKzm_h6Em-gIU/edit" target="_blank"
+     class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-2 rounded-lg shadow transition w-full justify-center">
+    <i class="fa fa-external-link-alt"></i> Update Schedule on Google Sheet
+  </a>
+</div>
                 <div>
                   <label class="text-xs font-bold text-blue-600">Trainer Type</label>
                   <select x-model="uploadForm.trainerType" class="w-full text-sm border rounded p-2 focus:ring-2 focus:ring-blue-500 border-blue-300">
@@ -579,33 +593,62 @@
           </div>
         </div>
         <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
-          <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
-            <div class="relative">
-              <input type="text" x-model="zktecoSearch" placeholder="Search name or ID..." class="border border-gray-300 rounded-lg pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-48">
-              <i class="fa fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-            </div>
-            <select x-model="zktecoFilterDept" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-36">
-              <option value="">All Departments</option>
-              <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
-            </select>
-            <select x-model="zkSelectedTrainingId" @change="syncZkWithSchedule" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
-              <option value="">-- Select Training (Up to Today) --</option>
-              <template x-for="t in filteredZkScheduleOptions" :key="t.id">
-                <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
-              </template>
-            </select>
-            <input type="date" x-model="zktecoFilterDate" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-            <div class="flex items-center gap-1 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
-              <input type="month" x-model="zkFromMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
-              <span class="text-xs text-gray-400">to</span>
-              <input type="month" x-model="zkToMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
-              <button @click="fetchZKTecoData()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-bold shadow transition flex items-center"><i class="fa fa-sync-alt"></i></button>
-            </div>
-          </div>
-          <button @click="transferZKToUpload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center">
-            <i class="fa fa-upload mr-2"></i> Data to Upload
-          </button>
+  <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+    <div class="relative">
+      <input type="text" x-model="zktecoSearch" placeholder="Search name or ID..." class="border border-gray-300 rounded-lg pl-10 pr-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-48">
+      <i class="fa fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+    </div>
+    <select x-model="zktecoFilterDept" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-36">
+      <option value="">All Departments</option>
+      <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
+    </select>
+    <select x-model="zkSelectedTrainingId" @change="syncZkWithSchedule" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64">
+      <option value="">-- Select Training (Up to Today) --</option>
+      <template x-for="t in filteredZkScheduleOptions" :key="t.id">
+        <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
+      </template>
+    </select>
+    <input type="date" x-model="zktecoFilterDate" class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+
+    <!-- TR. START / TR. END time inputs (like the photo) -->
+    <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5">
+      <div class="flex flex-col items-center">
+        <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">TR. START</span>
+        <div class="flex items-center gap-1">
+          <input type="time" x-model="zkTrainingStart" class="border border-blue-300 rounded px-1 py-0.5 text-xs font-bold text-blue-800 w-24 focus:ring-1 focus:ring-blue-500">
         </div>
+      </div>
+      <div class="w-px h-8 bg-blue-200"></div>
+      <div class="flex flex-col items-center">
+        <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">TR. END</span>
+        <div class="flex items-center gap-1">
+          <input type="time" x-model="zkTrainingEnd" class="border border-blue-300 rounded px-1 py-0.5 text-xs font-bold text-blue-800 w-24 focus:ring-1 focus:ring-blue-500">
+        </div>
+      </div>
+      <div class="w-px h-8 bg-blue-200"></div>
+      <div class="flex flex-col items-center">
+        <span class="text-[9px] font-bold text-purple-500 uppercase tracking-wider">TRAINER TYPE</span>
+        <select x-model="zkTrainerType" class="border border-purple-300 rounded px-1 py-0.5 text-xs font-bold text-purple-800 focus:ring-1 focus:ring-purple-500">
+          <option value="Internal">Internal</option>
+          <option value="External">External</option>
+        </select>
+      </div>
+      <button @click="applyZkTimes()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 rounded text-xs font-bold shadow transition flex items-center gap-1">
+        <i class="fa fa-sync-alt"></i> Update Times
+      </button>
+    </div>
+
+    <div class="flex items-center gap-1 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
+      <input type="month" x-model="zkFromMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
+      <span class="text-xs text-gray-400">to</span>
+      <input type="month" x-model="zkToMonth" class="border border-gray-300 rounded px-1 py-1 text-xs w-28">
+      <button @click="fetchZKTecoData()" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs font-bold shadow transition flex items-center"><i class="fa fa-sync-alt"></i></button>
+    </div>
+  </div>
+  <button @click="transferZKToUpload()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center">
+    <i class="fa fa-upload mr-2"></i> Data to Upload
+  </button>
+</div>
         <div class="overflow-auto border rounded-lg flex-1 shadow-sm">
           <table class="min-w-full divide-y divide-gray-200 text-sm text-left">
             <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
@@ -1296,6 +1339,14 @@ function app() {
 
     zktecoTab: 'floor14', zktecoSearch: '', zktecoFilterDept: '',
     zktecoFilterDate: '', zkFromMonth: prevMonth, zkToMonth: curMonth,
+    zkTrainingStart: '', zkTrainingEnd: '', zkTrainerType: 'Internal',
+
+    applyZkTimes() {
+  if(this.zkTrainingStart) this.uploadForm.startTime = this.zkTrainingStart;
+  if(this.zkTrainingEnd) this.uploadForm.endTime = this.zkTrainingEnd;
+  if(this.zkTrainerType) this.uploadForm.trainerType = this.zkTrainerType;
+  this.showNotification(`Times updated: ${this.zkTrainingStart} → ${this.zkTrainingEnd}`);
+},
 
     searchTrainingList: '',
     currentPage: 1, pageSize: 50,
@@ -1366,13 +1417,18 @@ function app() {
     },
 
     syncZkWithSchedule() {
-      if(!this.zkSelectedTrainingId) return;
-      const selected = this.trainingSchedule.find(t => String(t.id) === String(this.zkSelectedTrainingId));
-      if(selected) {
-        this.zktecoFilterDate = selected.date;
-        this.showNotification(`Linked with: ${selected.course}`);
-      }
-    },
+  if(!this.zkSelectedTrainingId) return;
+  const selected = this.trainingSchedule.find(t => String(t.id) === String(this.zkSelectedTrainingId));
+  if(selected) {
+    this.zktecoFilterDate = selected.date;
+    if(selected.start) this.zkTrainingStart = selected.start;
+    if(selected.end) this.zkTrainingEnd = selected.end;
+    this.uploadForm.course = selected.course || this.uploadForm.course;
+    this.uploadForm.trainer = selected.trainer || this.uploadForm.trainer;
+    this.uploadForm.date = selected.date || this.uploadForm.date;
+    this.showNotification(`Linked with: ${selected.course}`);
+  }
+},
 
     fillUploadFromSchedule(id) {
       if(!id) return;
@@ -1387,6 +1443,44 @@ function app() {
       }
     },
 
+    async deleteTrainingFromDept(training) {
+  const count = training.attend.length + training.notAttend.length;
+  this.askConfirm(`Delete all ${count} records for "${training.course}" on ${training.date}?`, async () => {
+    this.startLoading();
+    try {
+      const ids = [...training.attend, ...training.notAttend].map(r=>r.db_id).filter(Boolean);
+      if(ids.length > 0) await sb.from('TrainingRecord').delete().in('db_id', ids);
+      this.showNotification(`Deleted training "${training.course}"`);
+      await this.fetchData();
+      this.dashView = 'dept';
+    } catch(e) {
+      this.stopLoading();
+      this.showNotification('Delete failed: '+e.message, 'error');
+    }
+  });
+},
+
+async markTrainingReviewed(training) {
+  const unreviewed = [...training.attend, ...training.notAttend]
+    .filter(r => (r.status==='No'||r.status==='Late') && (!r.managerNote||r.managerNote.trim()===''));
+  if(unreviewed.length === 0) return this.showNotification('No unreviewed records found.');
+  this.askConfirm(`Mark ${unreviewed.length} records as reviewed (add note "Reviewed")?`, async () => {
+    this.startLoading();
+    try {
+      for(const r of unreviewed) {
+        await sb.from('TrainingRecord').update({'M.not':'Reviewed'}).eq('db_id', r.db_id);
+        r.managerNote = 'Reviewed';
+      }
+      training.unreviewedProblemCount = 0;
+      this.showNotification(`Marked ${unreviewed.length} records as reviewed!`);
+      await this.fetchData();
+    } catch(e) {
+      this.stopLoading();
+      this.showNotification('Failed: '+e.message, 'error');
+    }
+  });
+},
+    
     // ==================== LOADING ====================
     startLoading(p=5) { this.isLoading=true; this.loadingProgress=p; },
     stopLoading() { this.loadingProgress=100; setTimeout(()=>{ this.isLoading=false; this.loadingProgress=0; }, 400); },

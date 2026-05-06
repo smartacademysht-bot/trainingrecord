@@ -3014,13 +3014,15 @@
                   clientId: this.gdriveClientId,
                   discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                   scope: this.gdriveScope,
-                  plugin_name: 'trainingrecord'
+                  plugin_name: 'trainingrecord',
+                  cookie_policy: 'single_host_origin'
                 });
                 if (!gapi.auth2) {
                   await gapi.auth2.init({
                     client_id: this.gdriveClientId,
                     scope: this.gdriveScope,
-                    plugin_name: 'trainingrecord'
+                    plugin_name: 'trainingrecord',
+                    cookie_policy: 'single_host_origin'
                   });
                 }
                 const auth = gapi.auth2.getAuthInstance();

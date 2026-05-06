@@ -19,7 +19,7 @@
             --navy: #1e2749;
             --navy-light: #2d3a6b;
             --navy-dark: #141b38;
-            --bg: #f8fafc;
+            --bg: #0b0f1e;
             --bg2: #111827;
             --surface: rgba(30, 39, 73, 0.55);
             --surface-solid: #1a2340;
@@ -45,7 +45,7 @@
 
         [data-theme="light"] {
             --bg: #eef1f8;
-            --bg2: #dde3f0;
+            --bg2: #f8fafc;
             --surface: rgba(255, 255, 255, 0.65);
             --surface-solid: #ffffff;
             --surface2: rgba(230, 235, 255, 0.7);
@@ -2234,7 +2234,7 @@
                             else localStorage.removeItem('managerRemember');
                             this.fetchData();
                         } else {
-                            this.loginError = this.lang === 'ckb' ? 'وشەی نهێنی بپشکنەرەوە.' : 'Invalid credentials. Please check your password.';
+                            this.loginError = this.lang === 'ckb' ? 'دەستوور نییە. وشەی نهێنی بپشکنەرەوە.' : 'Invalid credentials. Please check your password.';
                         }
                     } catch (e) {
                         this.isLoggingIn = false;

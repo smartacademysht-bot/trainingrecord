@@ -235,28 +235,54 @@
           class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-black py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-slate-900/20">
           <i class="fa fa-sign-out-alt"></i> LOGOUT
         </button>
-        <div class="flex items-center justify-between bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700">
-          <div class="flex items-center gap-2 min-w-0">
-            <i class="fa-solid fa-database text-blue-400 text-xs shrink-0"></i>
-            <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider truncate">Supabase</span>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700">
+            <div class="flex items-center gap-2 min-w-0">
+              <i class="fa-solid fa-database text-blue-400 text-xs shrink-0"></i>
+              <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider truncate">Supabase</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 ml-1">
+              <template x-if="dbStatus === 'checking'">
+                <i class="fa-solid fa-circle-notch fa-spin text-yellow-400 text-xs"></i>
+              </template>
+              <template x-if="dbStatus === 'online'">
+                <span class="flex items-center gap-1">
+                  <span
+                    class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse"></span>
+                  <span class="text-[9px] text-green-400 font-black uppercase">Online</span>
+                </span>
+              </template>
+              <template x-if="dbStatus === 'offline'">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                  <span class="text-[9px] text-red-400 font-black uppercase">Error</span>
+                </span>
+              </template>
+            </div>
           </div>
-          <div class="flex items-center gap-1 shrink-0 ml-1">
-            <template x-if="dbStatus === 'checking'">
-              <i class="fa-solid fa-circle-notch fa-spin text-yellow-400 text-xs"></i>
-            </template>
-            <template x-if="dbStatus === 'online'">
-              <span class="flex items-center gap-1">
-                <span
-                  class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse"></span>
-                <span class="text-[9px] text-green-400 font-black uppercase">Online</span>
-              </span>
-            </template>
-            <template x-if="dbStatus === 'offline'">
-              <span class="flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-red-400"></span>
-                <span class="text-[9px] text-red-400 font-black uppercase">Error</span>
-              </span>
-            </template>
+          <div class="flex items-center justify-between bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700">
+            <div class="flex items-center gap-2 min-w-0">
+              <i class="fa-brands fa-google-drive text-emerald-400 text-xs shrink-0"></i>
+              <span class="text-[10px] text-slate-300 font-bold uppercase tracking-wider truncate">Drive</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0 ml-1">
+              <template x-if="driveLoading">
+                <i class="fa-solid fa-circle-notch fa-spin text-yellow-400 text-xs"></i>
+              </template>
+              <template x-if="!driveLoading && isDriveSignedIn">
+                <span class="flex items-center gap-1">
+                  <span
+                    class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse"></span>
+                  <span class="text-[9px] text-green-400 font-black uppercase">Connected</span>
+                </span>
+              </template>
+              <template x-if="!driveLoading && !isDriveSignedIn">
+                <span class="flex items-center gap-1">
+                  <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                  <span class="text-[9px] text-slate-400 font-black uppercase">Offline</span>
+                </span>
+              </template>
+            </div>
           </div>
         </div>
         <div class="text-[10px] text-slate-500 px-2 font-medium flex justify-between">
@@ -1487,6 +1513,11 @@
               class="pb-2 font-bold px-4 flex items-center gap-1">
               <i class="fa fa-lock text-xs"></i> Manager Lock
             </button>
+            <button @click="settingsView='supabase_manager'; loadSupaDbTable()"
+              :class="settingsView==='supabase_manager' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500'"
+              class="pb-2 font-bold px-4 flex items-center gap-1">
+              <i class="fa fa-database text-xs"></i> Database Manager
+            </button>
           </div>
 
           <!-- DEPT MANAGEMENT -->
@@ -1905,6 +1936,8 @@
                   <button @click="saveBackupSchedule()"
                     class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save
                     Backup Schedule</button>
+                  <button @click="runGoogleDriveBackupNow()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold transition">Backup Now</button>
                   <button
                     @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg font-semibold transition">Reset</button>
@@ -2083,6 +2116,74 @@
             </div>
           </div>
 
+          <!-- SUPABASE MANAGER VIEW -->
+          <div x-show="settingsView === 'supabase_manager'" class="flex-1 flex flex-col space-y-4 fade-in overflow-hidden">
+            <div class="flex items-center justify-between bg-purple-50 p-4 rounded-lg border border-purple-200 shrink-0">
+              <div class="flex items-center gap-4">
+                <i class="fa fa-database text-purple-600 text-2xl"></i>
+                <div>
+                  <h4 class="font-bold text-purple-900 text-lg">Supabase Table Editor</h4>
+                  <p class="text-xs text-purple-700">Directly view and edit raw database records.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <select x-model="supaDbTable" @change="loadSupaDbTable()" class="border border-purple-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold text-purple-900 bg-white">
+                  <option value="Employees">Employees</option>
+                  <option value="TrainingRecord">TrainingRecord</option>
+                  <option value="Settings">Settings</option>
+                  <option value="ZKTecoLogs">ZKTecoLogs</option>
+                </select>
+                <button @click="loadSupaDbTable()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                  <i class="fa fa-sync-alt" :class="supaDbLoading ? 'fa-spin' : ''"></i> Refresh
+                </button>
+                <div class="h-8 w-px bg-purple-200 mx-1"></div>
+                <button @click="downloadSupaTableExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                  <i class="fa fa-file-excel"></i> Export
+                </button>
+                <button @click="$refs.supaExcelInput.click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                  <i class="fa fa-file-import"></i> Import
+                </button>
+                <button x-show="isSupaDbPreview" @click="commitSupaDbUpload()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2 animate-pulse" x-cloak>
+                  <i class="fa fa-cloud-upload-alt"></i> Save to Supabase
+                </button>
+                <input type="file" x-ref="supaExcelInput" @change="uploadSupaTableExcel($event)" accept=".xlsx, .xls, .csv" class="hidden" />
+              </div>
+            </div>
+            
+            <div class="flex-1 border border-gray-200 rounded-lg bg-white overflow-auto relative">
+              <div x-show="supaDbLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+                <i class="fa fa-circle-notch fa-spin text-purple-500 text-3xl"></i>
+              </div>
+              <table class="min-w-full text-xs text-left whitespace-nowrap">
+                <thead class="bg-gray-100 sticky top-0 shadow-sm z-0">
+                  <tr>
+                    <th class="px-3 py-2 font-bold text-gray-700 w-16 text-center">Action</th>
+                    <template x-for="col in supaDbColumns" :key="col">
+                      <th class="px-3 py-2 font-bold text-gray-700 uppercase tracking-wider" x-text="col"></th>
+                    </template>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <template x-for="(row, idx) in supaDbData" :key="idx">
+                    <tr class="hover:bg-purple-50 group">
+                      <td class="px-3 py-2 text-center">
+                        <button @click="saveSupaDbRow(row)" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">SAVE</button>
+                      </td>
+                      <template x-for="col in supaDbColumns" :key="col">
+                        <td class="px-3 py-2 border-l border-gray-100">
+                          <input type="text" x-model="row[col]" class="w-full bg-transparent border-none focus:ring-1 focus:ring-purple-400 p-1 text-xs hover:bg-white rounded transition-colors" />
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                  <tr x-show="!supaDbLoading && supaDbData.length === 0">
+                    <td :colspan="supaDbColumns.length + 1" class="px-6 py-10 text-center text-gray-500 font-medium">No records found in this table.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div><!-- end settings -->
 
       </main>
@@ -2245,6 +2346,12 @@
         customAttendeeInput: '',
         attendanceStats: { master: 0, attendeeRaw: 0, attendeeUnique: 0, present: 0, absent: 0 },
         attendanceResults: { present: '', absent: '' },
+
+        supaDbTable: 'Employees',
+        supaDbData: [],
+        supaDbColumns: [],
+        supaDbLoading: false,
+        isSupaDbPreview: false,
 
         isAdminAuthenticated: localStorage.getItem('kasAdminAuthenticated') === 'true',
         adminEmail: localStorage.getItem('kasAdminRememberEmail') || '',
@@ -3210,6 +3317,173 @@
             if (next <= now) next.setDate(next.getDate() + 1);
           }
           return next.toLocaleString();
+        },
+
+        async runGoogleDriveBackupNow() {
+          this.driveLoading = true;
+          try {
+            const token = await this.ensureGoogleDriveAuth(true);
+
+            // Step 1: Ensure 'KAS Training Backups' folder exists
+            let folderId = this.driveFolderId;
+            if (!folderId) {
+              const folderResponse = await gapi.client.drive.files.list({
+                q: "name = 'KAS Training Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+                fields: 'files(id, name)',
+                spaces: 'drive'
+              });
+              const folders = folderResponse.result.files;
+              if (!folders || folders.length === 0) {
+                const createResponse = await gapi.client.drive.files.create({
+                  resource: {
+                    name: 'KAS Training Backups',
+                    mimeType: 'application/vnd.google-apps.folder'
+                  },
+                  fields: 'id'
+                });
+                folderId = createResponse.result.id;
+              } else {
+                folderId = folders[0].id;
+              }
+              this.driveFolderId = folderId;
+            }
+
+            // Step 2: Create Excel file with the records
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(this.records);
+            XLSX.utils.book_append_sheet(wb, ws, "TrainingRecord");
+            
+            // Convert to array buffer
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // Step 3: Upload to Google Drive using multipart upload
+            const metadata = {
+              name: `KAS_Backup_${new Date().toISOString().split('T')[0]}.xlsx`,
+              parents: [folderId]
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
+            const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`
+              },
+              body: form
+            });
+
+            if (!uploadRes.ok) throw new Error('Failed to upload file');
+            
+            this.showNotification('Backup uploaded successfully!', 'success');
+            this.loadDriveFiles();
+          } catch(e) {
+            console.error('Backup upload error', e);
+            const message = e?.error_description || e?.error || e?.message || JSON.stringify(e);
+            this.showNotification('Backup failed: ' + message, 'error');
+          } finally {
+            this.driveLoading = false;
+          }
+        },
+
+        async loadSupaDbTable() {
+          this.supaDbLoading = true;
+          this.supaDbData = [];
+          this.supaDbColumns = [];
+          this.isSupaDbPreview = false;
+          try {
+            const { data, error } = await sb.from(this.supaDbTable).select('*').limit(1000);
+            if (error) throw error;
+            this.supaDbData = data || [];
+            if (this.supaDbData.length > 0) {
+              this.supaDbColumns = Object.keys(this.supaDbData[0]);
+            }
+          } catch(e) {
+            this.showNotification('Error loading table: ' + e.message, 'error');
+          } finally {
+            this.supaDbLoading = false;
+          }
+        },
+
+        async saveSupaDbRow(row) {
+          const pk = row.db_id ? 'db_id' : (row.id ? 'id' : (row.department ? 'department' : null));
+          if (!pk) return this.showNotification('Cannot identify primary key for this row', 'error');
+          try {
+            const { error } = await sb.from(this.supaDbTable).update(row).eq(pk, row[pk]);
+            if (error) throw error;
+            this.showNotification('Row updated successfully!', 'success');
+          } catch(e) {
+            this.showNotification('Update failed: ' + e.message, 'error');
+          }
+        },
+
+        async downloadSupaTableExcel() {
+          if (!this.supaDbData.length) return this.showNotification('No data to export', 'error');
+          try {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(this.supaDbData);
+            XLSX.utils.book_append_sheet(wb, ws, this.supaDbTable);
+            XLSX.writeFile(wb, `${this.supaDbTable}_Export.xlsx`);
+            this.showNotification('Excel file downloaded successfully!');
+          } catch (e) {
+            this.showNotification('Download failed: ' + e.message, 'error');
+          }
+        },
+
+        async uploadSupaTableExcel(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          this.supaDbLoading = true;
+          try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            
+            if (!rows.length) throw new Error('Excel file is empty');
+            
+            this.supaDbData = rows;
+            this.supaDbColumns = Object.keys(rows[0]);
+            this.isSupaDbPreview = true;
+            this.showNotification(`Previewing ${rows.length} rows from Excel. Click "Save to Supabase" to apply changes.`);
+          } catch (e) {
+            this.showNotification('Failed to read Excel file: ' + e.message, 'error');
+          } finally {
+            this.supaDbLoading = false;
+            event.target.value = ''; // reset file input
+          }
+        },
+
+        async commitSupaDbUpload() {
+          if (!this.supaDbData.length) return;
+          this.askConfirm(`⚠️ ئاگاداری: ئەمە هەموو داتا کۆنەکانی تەیبڵی "${this.supaDbTable}" دەسڕێتەوە و ئەم داتا نوێیانە لە شوێنی دادەنێت. دڵنیای؟`, async () => {
+            this.supaDbLoading = true;
+            try {
+              const firstRow = this.supaDbData[0];
+              const pk = firstRow.db_id ? 'db_id' : (firstRow.id ? 'id' : (firstRow.department ? 'department' : null));
+              
+              if (!pk) throw new Error('Primary key not found for this table.');
+
+              // 1. Delete all existing records
+              const { error: deleteError } = await sb.from(this.supaDbTable).delete().not(pk, 'is', null);
+              if (deleteError) throw deleteError;
+
+              // 2. Insert new records
+              const { error: insertError } = await sb.from(this.supaDbTable).insert(this.supaDbData);
+              if (insertError) throw insertError;
+
+              this.showNotification(`Successfully replaced all data in ${this.supaDbTable}!`, 'success');
+              this.isSupaDbPreview = false;
+              this.loadSupaDbTable();
+            } catch (e) {
+              console.error('Full replace error:', e);
+              this.showNotification('Replace failed: ' + e.message, 'error');
+            } finally {
+              this.supaDbLoading = false;
+            }
+          });
         },
 
         async toggleEmpStatus(emp, newStatus) {

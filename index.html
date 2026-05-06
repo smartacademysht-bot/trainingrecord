@@ -114,13 +114,19 @@
         flex-direction: column !important;
         align-items: stretch !important;
       }
+
       .mobile-hide {
         display: none !important;
       }
+
       .mobile-text-xs {
         font-size: 10px !important;
       }
-      .fancy-select, .border, input, select {
+
+      .fancy-select,
+      .border,
+      input,
+      select {
         font-size: 12px !important;
       }
     }
@@ -129,11 +135,13 @@
 
 <body class="bg-gray-100 text-gray-800" x-data="app()" x-init="init()" x-cloak>
 
-  <div x-show="!isAdminAuthenticated" class="fixed inset-0 z-[200] bg-slate-900/90 flex items-center justify-center p-4">
+  <div x-show="!isAdminAuthenticated"
+    class="fixed inset-0 z-[200] bg-slate-900/90 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
       <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
-        <p class="text-sm text-slate-500">Enter one of the allowed emails and verify the 4-digit code to access the dashboard.</p>
+        <p class="text-sm text-slate-500">Enter one of the allowed emails and verify the 4-digit code to access the
+          dashboard.</p>
         <p class="text-xs text-slate-400 mt-2">Allowed emails: smart.academy.sht@gmail.com, kurdishapps0@gmail.com</p>
       </div>
       <div class="space-y-4">
@@ -145,7 +153,8 @@
         </div>
         <div class="flex flex-col sm:flex-row items-stretch gap-2">
           <button @click="sendLoginCode()"
-            class="whitespace-nowrap bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-semibold hover:bg-blue-700 transition">Send Code</button>
+            class="whitespace-nowrap bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-semibold hover:bg-blue-700 transition">Send
+            Code</button>
         </div>
         <div x-show="loginStep === 2" class="flex flex-col sm:flex-row items-stretch gap-2" x-cloak>
           <div class="flex-1">
@@ -163,15 +172,18 @@
         <div x-show="loginStatusMsg" class="text-sm text-slate-700 font-medium" x-text="loginStatusMsg"></div>
         <div x-show="loginError" class="text-sm text-red-600 font-semibold" x-text="loginError"></div>
         <button x-show="loginStep === 2" x-cloak @click="verifyLoginCode()"
-          class="w-full bg-slate-800 text-white rounded-xl py-3 font-semibold shadow hover:bg-slate-900 transition">Verify and Sign in</button>
-        <p class="text-xs text-slate-500 text-center">A 4-digit code will be sent to your email when you click Send Code. Then enter it above and verify.</p>
+          class="w-full bg-slate-800 text-white rounded-xl py-3 font-semibold shadow hover:bg-slate-900 transition">Verify
+          and Sign in</button>
+        <p class="text-xs text-slate-500 text-center">A 4-digit code will be sent to your email when you click Send
+          Code. Then enter it above and verify.</p>
       </div>
     </div>
   </div>
 
   <div x-show="isAdminAuthenticated" class="flex h-screen overflow-hidden">
     <!-- MOBILE TOP BAR -->
-    <div class="md:hidden flex items-center justify-between bg-slate-800 text-white px-4 h-16 fixed top-0 left-0 right-0 z-[100] shadow-md">
+    <div
+      class="md:hidden flex items-center justify-between bg-slate-800 text-white px-4 h-16 fixed top-0 left-0 right-0 z-[100] shadow-md">
       <div class="flex items-center gap-3">
         <button @click="mobileMenuOpen = true" class="p-2 hover:bg-slate-700 rounded-lg">
           <i class="fa-solid fa-bars text-xl"></i>
@@ -179,18 +191,19 @@
         <div class="font-bold text-sm tracking-tight">KAS RECORD</div>
       </div>
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-black ring-2 ring-slate-700">K</div>
+        <div
+          class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-black ring-2 ring-slate-700">
+          K</div>
       </div>
     </div>
 
     <!-- MOBILE OVERLAY -->
-    <div x-show="mobileMenuOpen" x-transition.opacity
-      @click="mobileMenuOpen = false"
+    <div x-show="mobileMenuOpen" x-transition.opacity @click="mobileMenuOpen = false"
       class="fixed inset-0 bg-black bg-opacity-60 z-[110] md:hidden">
     </div>
 
     <!-- SIDEBAR -->
-    <div 
+    <div
       class="fixed inset-y-0 left-0 z-[120] w-64 bg-slate-800 text-white flex flex-col shadow-2xl transition-transform duration-300 md:relative md:translate-x-0 md:z-0"
       :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
       <div class="h-16 flex items-center justify-between px-6 font-bold text-base border-b border-slate-700">
@@ -233,7 +246,8 @@
             </template>
             <template x-if="dbStatus === 'online'">
               <span class="flex items-center gap-1">
-                <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse"></span>
+                <span
+                  class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)] animate-pulse"></span>
                 <span class="text-[9px] text-green-400 font-black uppercase">Online</span>
               </span>
             </template>
@@ -254,9 +268,11 @@
 
     <!-- MAIN -->
     <div class="flex-1 flex flex-col overflow-hidden relative">
-      <header class="h-16 bg-white shadow-sm border-b flex items-center justify-between px-4 md:px-8 z-10 flex-shrink-0 mt-16 md:mt-0">
+      <header
+        class="h-16 bg-white shadow-sm border-b flex items-center justify-between px-4 md:px-8 z-10 flex-shrink-0 mt-16 md:mt-0">
         <div class="flex items-center">
-          <h2 class="text-lg md:text-xl font-black text-slate-800 tracking-tight" x-text="menuItems.find(i=>i.id===currentTab)?.label || ''"></h2>
+          <h2 class="text-lg md:text-xl font-black text-slate-800 tracking-tight"
+            x-text="menuItems.find(i=>i.id===currentTab)?.label || ''"></h2>
         </div>
         <div x-show="isLoading" class="flex items-center gap-3 fade-in">
           <div class="hidden md:block w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -426,8 +442,7 @@
                           <h4 class="font-bold text-gray-800 text-lg group-hover:text-blue-700 transition-colors"
                             x-text="dept.department"></h4>
                           <div class="mt-3 text-sm text-gray-500">
-                            <p class="flex items-center"><span
-                                x-text="dept.manager || 'No Manager'"></span></p>
+                            <p class="flex items-center"><span x-text="dept.manager || 'No Manager'"></span></p>
                           </div>
                         </div>
                         <div class="flex flex-col items-end gap-2">
@@ -995,19 +1010,24 @@
                     <option :value="t.id" x-text="t.course + ' (' + t.date + ')'"></option>
                   </template>
                 </select>
-                <div class="flex items-center justify-between gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-xs text-gray-700">
+                <div
+                  class="flex items-center justify-between gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-xs text-gray-700">
                   <div class="flex items-center gap-2">
-                    <span x-text="zkSelectedTrainingTimes.start || '--:--'"></span> <i class="fa fa-clock text-gray-400 text-[10px]"></i>
+                    <span x-text="zkSelectedTrainingTimes.start || '--:--'"></span> <i
+                      class="fa fa-clock text-gray-400 text-[10px]"></i>
                   </div>
                   <span>-</span>
                   <div class="flex items-center gap-2">
-                    <span x-text="zkSelectedTrainingTimes.end || '--:--'"></span> <i class="fa fa-clock text-gray-400 text-[10px]"></i>
+                    <span x-text="zkSelectedTrainingTimes.end || '--:--'"></span> <i
+                      class="fa fa-clock text-gray-400 text-[10px]"></i>
                   </div>
                 </div>
                 <div class="flex items-center gap-1 border border-gray-300 rounded-lg p-0.5 bg-white">
-                  <input type="month" x-model="zkFromMonth" class="border-none bg-transparent px-1 py-1.5 text-xs flex-1 focus:ring-0">
+                  <input type="month" x-model="zkFromMonth"
+                    class="border-none bg-transparent px-1 py-1.5 text-xs flex-1 focus:ring-0">
                   <span class="text-[10px] text-gray-400 font-bold px-1">TO</span>
-                  <input type="month" x-model="zkToMonth" class="border-none bg-transparent px-1 py-1.5 text-xs flex-1 focus:ring-0">
+                  <input type="month" x-model="zkToMonth"
+                    class="border-none bg-transparent px-1 py-1.5 text-xs flex-1 focus:ring-0">
                   <button @click="fetchZKTecoData()"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center">
                     <i class="fa fa-sync-alt"></i>
@@ -1015,46 +1035,56 @@
                 </div>
               </div>
               <div class="flex grid grid-cols-3 md:flex items-center gap-2">
-                <button class="border border-gray-300 text-blue-600 bg-white hover:bg-blue-50 p-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center">
+                <button
+                  class="border border-gray-300 text-blue-600 bg-white hover:bg-blue-50 p-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center">
                   <i class="fa fa-plus"></i>
                 </button>
                 <button @click="transferZKToUpload()"
                   class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-[10px] font-black shadow transition flex items-center justify-center gap-1 uppercase">
                   <i class="fa fa-upload"></i> To Upload
                 </button>
-                <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-[10px] font-black shadow transition flex items-center justify-center gap-1 uppercase">
+                <button
+                  class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-[10px] font-black shadow transition flex items-center justify-center gap-1 uppercase">
                   <i class="fa fa-save"></i> Save Direct
                 </button>
               </div>
             </div>>
 
             <!-- Row 2: Update Times Inline Form -->
-            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-gray-50 border border-gray-200 p-3 rounded-xl">
+            <div
+              class="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-gray-50 border border-gray-200 p-3 rounded-xl">
               <div class="grid grid-cols-2 md:flex items-center gap-3">
                 <div class="flex items-center gap-2">
                   <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest shrink-0">Start</span>
-                  <input type="time" x-model="zkSelectedTrainingTimes.start" class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-24 bg-white">
+                  <input type="time" x-model="zkSelectedTrainingTimes.start"
+                    class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-24 bg-white">
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest shrink-0">End</span>
-                  <input type="time" x-model="zkSelectedTrainingTimes.end" class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-24 bg-white">
+                  <input type="time" x-model="zkSelectedTrainingTimes.end"
+                    class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-24 bg-white">
                 </div>
               </div>
               <div class="grid grid-cols-2 md:flex items-center gap-3">
                 <div class="flex items-center gap-2">
                   <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest shrink-0">Type</span>
-                  <select class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-28 bg-white">
+                  <select
+                    class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500 w-full md:w-28 bg-white">
                     <option value="Internal">Internal</option>
                     <option value="External">External</option>
                   </select>
                 </div>
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center gap-1">
+                <button
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center gap-1">
                   <i class="fa fa-sync"></i> Update
                 </button>
               </div>
-              <label class="flex items-center gap-3 md:ml-4 cursor-pointer bg-white/50 p-2 rounded-lg md:bg-transparent md:p-0">
-                <input type="checkbox" x-model="isMultiGroup" class="rounded-md text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                <span class="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-tight">Multi-Group Training? (Skip auto-'No')</span>
+              <label
+                class="flex items-center gap-3 md:ml-4 cursor-pointer bg-white/50 p-2 rounded-lg md:bg-transparent md:p-0">
+                <input type="checkbox" x-model="isMultiGroup"
+                  class="rounded-md text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                <span class="text-[10px] md:text-[11px] font-bold text-gray-600 uppercase tracking-tight">Multi-Group
+                  Training? (Skip auto-'No')</span>
               </label>
             </div>
           </div>
@@ -1091,11 +1121,17 @@
                       x-text="(zk.checkout || '-').split(':').slice(0,2).join(':')"></td>
                     <td class="px-2 py-2 font-mono text-gray-600" x-text="zkSelectedTrainingTimes.start || '-'"></td>
                     <td class="px-2 py-2 font-mono text-gray-600" x-text="zkSelectedTrainingTimes.end || '-'"></td>
-                    
-                    <td class="px-2 py-2 font-bold font-mono text-blue-600" x-text="formatDuration(timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end))"></td>
-                    <td class="px-2 py-2 font-bold font-mono text-red-500" x-text="zkSelectedTrainingTimes.start ? formatDuration((timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) * 0.25) + 5) : '-'"></td>
-                    <td class="px-2 py-2 font-bold font-mono text-orange-500" x-text="zkSelectedTrainingTimes.start ? formatDuration(Math.max(0, timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) - timeDiffMins(zk.checkin, zk.checkout))) : '-'"></td>
-                    
+
+                    <td class="px-2 py-2 font-bold font-mono text-blue-600"
+                      x-text="formatDuration(timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end))">
+                    </td>
+                    <td class="px-2 py-2 font-bold font-mono text-red-500"
+                      x-text="zkSelectedTrainingTimes.start ? formatDuration((timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) * 0.25) + 5) : '-'">
+                    </td>
+                    <td class="px-2 py-2 font-bold font-mono text-orange-500"
+                      x-text="zkSelectedTrainingTimes.start ? formatDuration(Math.max(0, timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) - timeDiffMins(zk.checkin, zk.checkout))) : '-'">
+                    </td>
+
                     <td class="px-2 py-2">
                       <span
                         :class="{'bg-green-100 text-green-700 border border-green-200':zk.status==='Yes','bg-red-100 text-red-700 border border-red-200':zk.status==='No','bg-yellow-100 text-yellow-700 border border-yellow-200':zk.status==='Late','bg-gray-100 text-gray-600':!zk.status}"
@@ -1149,8 +1185,8 @@
                       <td class="p-3 text-sm text-gray-500 max-w-xs truncate" x-text="t.departments"
                         :title="t.departments"></td>
                       <td class="p-3 flex gap-2 items-center">
-                        <button @click.stop="removeTrainingFromList(t)" class="text-red-600 hover:text-red-800 font-bold"
-                          title="Remove Training">
+                        <button @click.stop="removeTrainingFromList(t)"
+                          class="text-red-600 hover:text-red-800 font-bold" title="Remove Training">
                           <i class="fa fa-trash"></i>
                         </button>
                       </td>
@@ -1819,7 +1855,8 @@
               <h4 class="font-bold text-emerald-900 text-lg mb-2 flex items-center gap-2">
                 <i class="fa fa-calendar-days text-emerald-600"></i> Google Drive Backup Schedule
               </h4>
-              <p class="text-sm text-emerald-700">Manage automatic backup scheduling for the backup data file to Google Drive.</p>
+              <p class="text-sm text-emerald-700">Manage automatic backup scheduling for the backup data file to Google
+                Drive.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1844,7 +1881,8 @@
                   <label class="block text-xs font-bold text-gray-700">Backup day</label>
                   <select x-model="backupScheduleDay"
                     class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <template x-for="day in ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']" :key="day">
+                    <template x-for="day in ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']"
+                      :key="day">
                       <option :value="day" x-text="day"></option>
                     </template>
                   </select>
@@ -1865,8 +1903,10 @@
 
                 <div class="flex flex-wrap gap-3">
                   <button @click="saveBackupSchedule()"
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save Backup Schedule</button>
-                  <button @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save
+                    Backup Schedule</button>
+                  <button
+                    @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg font-semibold transition">Reset</button>
                 </div>
               </div>
@@ -1875,7 +1915,8 @@
                 <div class="text-sm font-semibold text-gray-600 mb-3">Next scheduled backup</div>
                 <div class="text-lg font-bold text-emerald-800" x-text="backupNextRunLabel()"></div>
                 <div class="text-sm text-gray-500 mt-4">
-                  This schedule is stored locally in your browser and controls when the backup data file should be synced to Google Drive.
+                  This schedule is stored locally in your browser and controls when the backup data file should be
+                  synced to Google Drive.
                 </div>
               </div>
             </div>
@@ -1887,12 +1928,9 @@
                   <div class="text-xs text-slate-500">View and restore backup files stored in your Drive.</div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button @click="loadDriveFiles()" x-show="isDriveSignedIn"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Refresh Files</button>
-                  <button x-show="!isDriveSignedIn" @click="signInGoogleDrive()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">Sign in to Drive</button>
-                  <button x-show="isDriveSignedIn" @click="signOutGoogleDrive()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition">Sign out</button>
+                  <button @click="loadDriveFiles()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Refresh
+                    Backup Files</button>
                 </div>
               </div>
               <div class="text-xs mb-4">
@@ -2187,13 +2225,14 @@
         editingRecord: null,
         backupScheduleEnabled: false,
         backupScheduleType: 'weekly',
-        backupScheduleDay: 'Monday',
+        backupScheduleDay: 'Saturday',
         backupScheduleDate: '',
-        backupScheduleTime: '02:00',
+        backupScheduleTime: '08:00',
         driveFolderId: '',
         driveBackupFiles: [],
         driveLoading: false,
-        gdriveClientId: 'AIzaSyDVWSVkpE8ts3rYtUKNCghr8Zgl229WTrw',
+        gdriveApiKey: 'AIzaSyDVWSVkpE8ts3rYtUKNCghr8Zgl229WTrw',
+        gdriveClientId: '808266435472-1h765shn5i5pa96qe7dnjpkeljloal33.apps.googleusercontent.com',
         gdriveScope: 'https://www.googleapis.com/auth/drive.readonly',
         driveAuthInitialized: false,
         isDriveSignedIn: false,
@@ -2229,6 +2268,7 @@
           await this.fetchZKTecoData();
           await this.fetchExternalGoogleSheet();
           this.loadBackupSchedule();
+          this.initGoogleDriveClient(); // Silently sign in if already authorized
         },
 
         async sendLoginCode() {
@@ -2970,6 +3010,7 @@
             const finalizeInit = async () => {
               try {
                 await gapi.client.init({
+                  apiKey: this.gdriveApiKey,
                   clientId: this.gdriveClientId,
                   discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                   scope: this.gdriveScope,
@@ -2988,8 +3029,8 @@
                 if (this.isDriveSignedIn) {
                   this.loadDriveFiles();
                 }
-                auth.isSignedIn.listen(value => { 
-                  this.isDriveSignedIn = value; 
+                auth.isSignedIn.listen(value => {
+                  this.isDriveSignedIn = value;
                   if (value) this.loadDriveFiles();
                 });
                 this.driveAuthInitialized = true;
@@ -3063,13 +3104,13 @@
           this.driveBackupFiles = [];
           try {
             await this.ensureGoogleDriveAuth(true);
-            
+
             const folderResponse = await gapi.client.drive.files.list({
               q: "name = 'KAS Training Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
               fields: 'files(id, name)',
               spaces: 'drive'
             });
-            
+
             const folders = folderResponse.result.files;
             if (!folders || folders.length === 0) {
               this.showNotification('Folder "KAS Training Backups" not found in Drive.', 'error');
@@ -3811,7 +3852,7 @@
               for (const id of unreviewedIds) {
                 await sb.from('TrainingRecord').update({ 'M.status': renewUntil.toISOString() }).eq('db_id', id);
               }
-              
+
               // Also sync to ManagerLocks table for maximum compatibility with portal
               try {
                 await sb.from('ManagerLocks').upsert({
@@ -3841,8 +3882,8 @@
             let allUnreviewed = [];
             for (const dept of depts) {
               const unreviewedInDept = this.records.filter(r =>
-                r.department === dept && 
-                (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') && 
+                r.department === dept &&
+                (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') &&
                 (!r.managerNote || r.managerNote.trim() === '')
               );
               allUnreviewed.push(...unreviewedInDept);
@@ -3856,14 +3897,14 @@
               const g = grouped.get(key);
               g.unreviewedCount++;
               g.unreviewedRecs.push(r);
-              
+
               const mStatusStr = String(r.mStatus || '').trim();
               let mStatusTime = 0;
               if (mStatusStr && mStatusStr !== 'null' && mStatusStr !== 'undefined') {
                 const d = new Date(mStatusStr);
                 if (!isNaN(d.getTime())) mStatusTime = d.getTime();
               }
-              
+
               const recordLockTime = mStatusTime ? mStatusTime : now.getTime();
               if (recordLockTime > (g.maxLockTime || 0)) {
                 g.maxLockTime = recordLockTime;

@@ -2044,6 +2044,7 @@
                 },
 
                 managerUsernames: [],
+                managerCredentials: [],
                 isLoggedIn: false,
                 loginUser: '',
                 loginPass: '',
@@ -2220,16 +2221,15 @@
                     if (!this.loginUser || !this.loginPass) { this.loginError = this.t('login') + '...'; return; }
                     this.isLoggingIn = true; this.loginError = '';
                     try {
-                        const data = await this.fetchAllRows('Settings');
-                        const matched = (data || []).filter(r =>
-                            String(r.Manager || r.manager || '').trim() === this.loginUser &&
-                            String(r.Password || r.password || '').trim() === this.loginPass
+                        if (!this.managerCredentials.length) await this.syncPasswordsFromSheet();
+                        const matched = (this.managerCredentials || []).filter(c =>
+                            String(c.managerName || '').trim() === this.loginUser &&
+                            String(c.password || '').trim() === this.loginPass
                         );
                         this.isLoggingIn = false;
                         if (matched.length > 0) {
                             this.isLoggedIn = true;
                             this.loggedInManagerName = this.loginUser;
-                            this.loggedInManagerDepts = [...new Set(matched.map(r => String(r.Department || r.department || '').trim()))].filter(Boolean);
                             if (this.rememberMe) localStorage.setItem('managerRemember', JSON.stringify({ user: this.loginUser, pass: this.loginPass }));
                             else localStorage.removeItem('managerRemember');
                             this.fetchData();
@@ -2260,6 +2260,13 @@
                             manager: String(s.Manager || s.manager || '').trim(),
                             password: String(s.Password || s.password || '').trim()
                         }));
+
+                        if (this.loggedInManagerName) {
+                            this.loggedInManagerDepts = [...new Set(this.settings
+                                .filter(s => String(s.manager).trim() === this.loggedInManagerName)
+                                .map(s => String(s.department).trim())
+                                .filter(Boolean))].sort();
+                        }
 
                         const recData = await this.fetchAllRows('TrainingRecord', 'Date');
                         this.records = (recData || []).map((r, i) => ({
@@ -2512,21 +2519,25 @@
 
                 async syncPasswordsFromSheet() {
                     const SHEET_ID = '10SwsZlPty4tU1H5eDiE16ZXgVDg-VRPtslNMq6NjoKg';
-                    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+                    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Users&range=A2:B`;
                     try {
                         const res = await fetch(url);
+                        if (!res.ok) throw new Error('Unable to fetch manager sheet');
                         const csv = await res.text();
                         const lines = csv.split(/\r?\n/).filter(l => l.trim());
-                        let updated = 0;
-                        for (let i = 1; i < lines.length; i++) {
+                        const credentials = [];
+                        for (let i = 0; i < lines.length; i++) {
                             const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
                             const managerName = cols[0];
-                            const newPassword = cols[1];
-                            if (!managerName || !newPassword) continue;
-                            const { error } = await sb.from('Settings').update({ Password: newPassword }).eq('Manager', managerName);
-                            if (!error) updated++;
+                            const password = cols[1];
+                            if (!managerName || !password) continue;
+                            credentials.push({ managerName, password });
                         }
-                    } catch (e) { /* silent */ }
+                        this.managerCredentials = credentials;
+                        this.managerUsernames = [...new Set(credentials.map(c => c.managerName.trim()).filter(Boolean))].sort();
+                    } catch (e) {
+                        console.error('syncPasswordsFromSheet error:', e);
+                    }
                 },
             };
         }

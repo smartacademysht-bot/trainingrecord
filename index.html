@@ -9,6 +9,8 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <style>
@@ -48,6 +50,10 @@
 
     .fade-in {
       animation: fadeIn 0.3s ease-in-out;
+    }
+
+    [x-cloak] {
+      display: none !important;
     }
 
     @keyframes fadeIn {
@@ -121,9 +127,49 @@
   </style>
 </head>
 
-<body class="bg-gray-100 text-gray-800" x-data="app()">
+<body class="bg-gray-100 text-gray-800" x-data="app()" x-init="init()" x-cloak>
 
-  <div class="flex h-screen overflow-hidden">
+  <div x-show="!isAdminAuthenticated" class="fixed inset-0 z-[200] bg-slate-900/90 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
+      <div class="mb-6 text-center">
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
+        <p class="text-sm text-slate-500">Enter one of the allowed emails and verify the 4-digit code to access the dashboard.</p>
+        <p class="text-xs text-slate-400 mt-2">Allowed emails: smart.academy.sht@gmail.com, kurdishapps0@gmail.com</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Email</label>
+          <input x-model="adminEmail" type="email"
+            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            placeholder="name@example.com" />
+        </div>
+        <div class="flex flex-col sm:flex-row items-stretch gap-2">
+          <button @click="sendLoginCode()"
+            class="whitespace-nowrap bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-semibold hover:bg-blue-700 transition">Send Code</button>
+        </div>
+        <div x-show="loginStep === 2" class="flex flex-col sm:flex-row items-stretch gap-2" x-cloak>
+          <div class="flex-1">
+            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Verification Code</label>
+            <input x-model="adminCodeInput" type="text" maxlength="4"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="1234" />
+          </div>
+        </div>
+        <label class="inline-flex items-center gap-2 text-sm text-slate-600">
+          <input type="checkbox" x-model="rememberMe"
+            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          Remember me
+        </label>
+        <div x-show="loginStatusMsg" class="text-sm text-slate-700 font-medium" x-text="loginStatusMsg"></div>
+        <div x-show="loginError" class="text-sm text-red-600 font-semibold" x-text="loginError"></div>
+        <button x-show="loginStep === 2" x-cloak @click="verifyLoginCode()"
+          class="w-full bg-slate-800 text-white rounded-xl py-3 font-semibold shadow hover:bg-slate-900 transition">Verify and Sign in</button>
+        <p class="text-xs text-slate-500 text-center">A 4-digit code will be sent to your email when you click Send Code. Then enter it above and verify.</p>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="isAdminAuthenticated" class="flex h-screen overflow-hidden">
     <!-- MOBILE TOP BAR -->
     <div class="md:hidden flex items-center justify-between bg-slate-800 text-white px-4 h-16 fixed top-0 left-0 right-0 z-[100] shadow-md">
       <div class="flex items-center gap-3">
@@ -153,6 +199,10 @@
           <i class="fa-solid fa-times"></i>
         </button>
       </div>
+      <div class="px-4 py-3 border-b border-slate-700 text-sm text-slate-300">
+        <div class="font-semibold text-slate-100 truncate">Logged in as</div>
+        <div class="truncate" x-text="adminEmail || 'Unknown user'"></div>
+      </div>
       <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto custom-scrollbar">
         <template x-for="item in menuItems">
           <button @click="currentTab = item.id; resetDash(); mobileMenuOpen = false;"
@@ -168,6 +218,10 @@
           class="w-full bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-black py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/40">
           <i class="fa-solid fa-building-user"></i> MANAGER PORTAL
         </a>
+        <button @click="logout()"
+          class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-black py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm shadow-slate-900/20">
+          <i class="fa fa-sign-out-alt"></i> LOGOUT
+        </button>
         <div class="flex items-center justify-between bg-slate-800/80 rounded-xl px-3 py-2 border border-slate-700">
           <div class="flex items-center gap-2 min-w-0">
             <i class="fa-solid fa-database text-blue-400 text-xs shrink-0"></i>
@@ -1389,6 +1443,9 @@
             <button @click="settingsView='sync'"
               :class="settingsView==='sync' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'"
               class="pb-2 font-bold px-4">Sync Database</button>
+            <button @click="settingsView='backup_schedule'"
+              :class="settingsView==='backup_schedule' ? 'border-b-2 border-green-600 text-green-600' : 'text-gray-500'"
+              class="pb-2 font-bold px-4">Backup Schedule</button>
             <button @click="settingsView='manager_lock'"
               :class="settingsView==='manager_lock' ? 'border-b-2 border-orange-500 text-orange-600' : 'text-gray-500'"
               class="pb-2 font-bold px-4 flex items-center gap-1">
@@ -1756,6 +1813,128 @@
             </div>
           </div>
 
+          <!-- BACKUP SCHEDULE VIEW -->
+          <div x-show="settingsView === 'backup_schedule'" class="flex-1 flex flex-col space-y-4 fade-in">
+            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
+              <h4 class="font-bold text-emerald-900 text-lg mb-2 flex items-center gap-2">
+                <i class="fa fa-calendar-days text-emerald-600"></i> Google Drive Backup Schedule
+              </h4>
+              <p class="text-sm text-emerald-700">Manage automatic backup scheduling for the backup data file to Google Drive.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div class="space-y-4">
+                <label class="inline-flex items-center gap-3 text-sm font-semibold text-gray-700">
+                  <input type="checkbox" x-model="backupScheduleEnabled"
+                    class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                  Enable automatic backup
+                </label>
+
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 mb-1">Backup frequency</label>
+                  <select x-model="backupScheduleType"
+                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+
+                <div x-show="backupScheduleType==='weekly'" class="space-y-2">
+                  <label class="block text-xs font-bold text-gray-700">Backup day</label>
+                  <select x-model="backupScheduleDay"
+                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <template x-for="day in ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']" :key="day">
+                      <option :value="day" x-text="day"></option>
+                    </template>
+                  </select>
+                </div>
+
+                <div x-show="backupScheduleType==='monthly'" class="space-y-2">
+                  <label class="block text-xs font-bold text-gray-700">Backup date</label>
+                  <input type="number" min="1" max="31" x-model="backupScheduleDate"
+                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="Day of month (1-31)" />
+                </div>
+
+                <div class="space-y-2">
+                  <label class="block text-xs font-bold text-gray-700">Backup time</label>
+                  <input type="time" x-model="backupScheduleTime"
+                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                  <button @click="saveBackupSchedule()"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save Backup Schedule</button>
+                  <button @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg font-semibold transition">Reset</button>
+                </div>
+              </div>
+
+              <div class="border border-emerald-100 rounded-xl p-5 bg-white shadow-sm">
+                <div class="text-sm font-semibold text-gray-600 mb-3">Next scheduled backup</div>
+                <div class="text-lg font-bold text-emerald-800" x-text="backupNextRunLabel()"></div>
+                <div class="text-sm text-gray-500 mt-4">
+                  This schedule is stored locally in your browser and controls when the backup data file should be synced to Google Drive.
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <div class="text-base font-semibold text-slate-800">KAS Training Backups</div>
+                  <div class="text-xs text-slate-500">View and restore backup files stored in your Drive.</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button @click="loadDriveFiles()" x-show="isDriveSignedIn"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white text-sm hover:bg-slate-900 transition">Refresh Files</button>
+                  <button x-show="!isDriveSignedIn" @click="signInGoogleDrive()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition">Sign in to Drive</button>
+                  <button x-show="isDriveSignedIn" @click="signOutGoogleDrive()"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition">Sign out</button>
+                </div>
+              </div>
+              <div class="text-xs mb-4">
+                <span x-show="isDriveSignedIn" class="text-emerald-600 font-semibold">Signed in to Google Drive.</span>
+                <span x-show="!isDriveSignedIn" class="text-slate-500">Google Drive is not signed in yet.</span>
+              </div>
+
+              <div class="space-y-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="text-sm font-semibold text-slate-700">Drive backup files</div>
+                  <div class="text-xs text-slate-500" x-text="driveBackupFiles.length + ' files found'"></div>
+                </div>
+                <div class="overflow-auto max-h-64 border border-slate-200 rounded-lg bg-white">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-slate-100 text-slate-600">
+                      <tr>
+                        <th class="px-3 py-2 text-left">Name</th>
+                        <th class="px-3 py-2 text-left">Modified</th>
+                        <th class="px-3 py-2 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <template x-for="file in driveBackupFiles" :key="file.id">
+                        <tr class="border-t border-slate-100 hover:bg-slate-50">
+                          <td class="px-3 py-2 truncate" :title="file.name" x-text="file.name"></td>
+                          <td class="px-3 py-2 text-slate-500" x-text="file.modifiedTime || 'Unknown'"></td>
+                          <td class="px-3 py-2 text-center">
+                            <button @click="restoreDriveBackup(file)"
+                              class="text-emerald-600 hover:text-emerald-800 text-xs font-semibold">Restore</button>
+                          </td>
+                        </tr>
+                      </template>
+                      <tr x-show="driveBackupFiles.length === 0">
+                        <td colspan="3" class="px-3 py-6 text-center text-slate-500">No Drive backup files loaded.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- MANAGER LOCK VIEW -->
           <div x-show="settingsView === 'manager_lock'" class="flex-1 flex flex-col space-y-4 fade-in">
             <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg">
@@ -2006,6 +2185,18 @@
         showDeptModal: false, selectedSettingsDept: null,
 
         editingRecord: null,
+        backupScheduleEnabled: false,
+        backupScheduleType: 'weekly',
+        backupScheduleDay: 'Monday',
+        backupScheduleDate: '',
+        backupScheduleTime: '02:00',
+        driveFolderId: '',
+        driveBackupFiles: [],
+        driveLoading: false,
+        gdriveClientId: '808266435472-1h765shn5i5pa96qe7dnjpkeljloal33.apps.googleusercontent.com',
+        gdriveScope: 'https://www.googleapis.com/auth/drive.readonly',
+        driveAuthInitialized: false,
+        isDriveSignedIn: false,
 
         showToast: false, toastMsg: '', toastType: 'success',
         confirmOpen: false, confirmMsg: '', confirmAction: () => { },
@@ -2016,11 +2207,109 @@
         attendanceStats: { master: 0, attendeeRaw: 0, attendeeUnique: 0, present: 0, absent: 0 },
         attendanceResults: { present: '', absent: '' },
 
+        isAdminAuthenticated: localStorage.getItem('kasAdminAuthenticated') === 'true',
+        adminEmail: localStorage.getItem('kasAdminRememberEmail') || '',
+        adminCodeInput: '',
+        generatedCode: null,
+        loginStep: 1,
+        loginError: '',
+        loginStatusMsg: '',
+        rememberMe: localStorage.getItem('kasAdminRememberMe') === 'true',
+        emailService: {
+          allowedRecipients: ['smart.academy.sht@gmail.com', 'kurdishapps0@gmail.com'],
+          fromAddress: 'smart.academy.sht@gmail.com',
+          emailjsUserId: 'DGqoUdKqNpjihD6xC',
+          emailjsServiceId: 'service_q1pysaa',
+          emailjsTemplateId: 'template_url8f8o'
+        },
+
         // ==================== INIT ====================
         async init() {
           await this.fetchData();
           await this.fetchZKTecoData();
           await this.fetchExternalGoogleSheet();
+          this.loadBackupSchedule();
+        },
+
+        async sendLoginCode() {
+          this.loginError = '';
+          this.loginStatusMsg = '';
+          if (!this.adminEmail || !this.adminEmail.includes('@')) {
+            this.loginError = 'Please enter a valid email address.';
+            return;
+          }
+          if (!this.emailService.allowedRecipients.includes(this.adminEmail.trim().toLowerCase())) {
+            this.loginError = 'This email is not allowed to access the system.';
+            return;
+          }
+
+          const canUseEmailJS = window.emailjs && this.emailService.emailjsUserId && this.emailService.emailjsUserId !== 'YOUR_EMAILJS_USER_ID' && this.emailService.emailjsServiceId && this.emailService.emailjsServiceId !== 'YOUR_EMAILJS_SERVICE_ID' && this.emailService.emailjsTemplateId && this.emailService.emailjsTemplateId !== 'YOUR_EMAILJS_TEMPLATE_ID';
+          if (!canUseEmailJS) {
+            this.loginError = 'Email service is not configured. Please add your EmailJS credentials.';
+            return;
+          }
+
+          const code = String(Math.floor(1000 + Math.random() * 9000));
+          this.generatedCode = code;
+          this.loginStep = 2;
+          const subject = 'KAS Training Dashboard Login Code';
+
+          try {
+            emailjs.init(this.emailService.emailjsUserId);
+            await emailjs.send(this.emailService.emailjsServiceId, this.emailService.emailjsTemplateId, {
+              email: this.adminEmail,
+              to_email: this.adminEmail,
+              passcode: code,
+              time: new Date().toLocaleString(),
+              from_email: this.emailService.fromAddress,
+              subject,
+            });
+            this.loginStatusMsg = `Verification code sent to ${this.adminEmail}.`;
+          } catch (err) {
+            console.error('EmailJS send error:', err);
+            this.loginError = 'Unable to send email. Please check configuration.';
+          }
+        },
+
+        verifyLoginCode() {
+          if (this.adminCodeInput !== String(this.generatedCode)) {
+            this.loginError = 'Invalid verification code';
+            this.loginStatusMsg = '';
+            return;
+          }
+
+          this.isAdminAuthenticated = true;
+          localStorage.setItem('kasAdminAuthenticated', 'true');
+          if (this.rememberMe) {
+            localStorage.setItem('kasAdminRememberEmail', this.adminEmail);
+            localStorage.setItem('kasAdminRememberMe', 'true');
+          } else {
+            localStorage.removeItem('kasAdminRememberMe');
+            localStorage.removeItem('kasAdminRememberEmail');
+          }
+
+          this.adminCodeInput = '';
+          this.loginStep = 1;
+          this.loginError = '';
+          this.loginStatusMsg = '';
+          this.generatedCode = null;
+          this.showNotification('Admin login successful.');
+          this.init();
+        },
+
+        logout() {
+          this.isAdminAuthenticated = false;
+          localStorage.removeItem('kasAdminAuthenticated');
+          if (!this.rememberMe) {
+            localStorage.removeItem('kasAdminRememberEmail');
+            localStorage.removeItem('kasAdminRememberMe');
+            this.adminEmail = '';
+          }
+          this.adminCodeInput = '';
+          this.generatedCode = null;
+          this.loginStatusMsg = '';
+          this.loginError = '';
+          this.showNotification('Logged out successfully.');
         },
 
         // ==================== EXTERNAL SCHEDULE ====================
@@ -2643,6 +2932,241 @@
           } catch (e) {
             this.showNotification('Save failed: ' + e.message, 'error');
           }
+        },
+
+        loadBackupSchedule() {
+          try {
+            const raw = localStorage.getItem('kasBackupSchedule');
+            if (!raw) return;
+            const config = JSON.parse(raw);
+            this.backupScheduleEnabled = config.enabled === true;
+            this.backupScheduleType = config.type || 'weekly';
+            this.backupScheduleDay = config.day || 'Monday';
+            this.backupScheduleDate = config.date || '';
+            this.backupScheduleTime = config.time || '02:00';
+            this.driveFolderId = config.driveFolderId || '';
+          } catch (e) {
+            console.error('Failed to load backup schedule:', e);
+          }
+        },
+
+        saveBackupSchedule() {
+          const config = {
+            enabled: this.backupScheduleEnabled,
+            type: this.backupScheduleType,
+            day: this.backupScheduleDay,
+            date: this.backupScheduleDate,
+            time: this.backupScheduleTime,
+            driveFolderId: this.driveFolderId
+          };
+          localStorage.setItem('kasBackupSchedule', JSON.stringify(config));
+          this.showNotification('Backup schedule saved!');
+        },
+
+        async initGoogleDriveClient() {
+          if (this.driveAuthInitialized) return;
+          if (!this.gdriveClientId) throw new Error('Google Drive client ID is not configured.');
+          await new Promise((resolve, reject) => {
+            const finalizeInit = async () => {
+              try {
+                await gapi.client.init({
+                  clientId: this.gdriveClientId,
+                  discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                  scope: this.gdriveScope,
+                  plugin_name: 'trainingrecord'
+                });
+                if (!gapi.auth2) {
+                  await gapi.auth2.init({
+                    client_id: this.gdriveClientId,
+                    scope: this.gdriveScope,
+                    plugin_name: 'trainingrecord'
+                  });
+                }
+                const auth = gapi.auth2.getAuthInstance();
+                if (!auth) return reject(new Error('Google auth instance not available.'));
+                this.isDriveSignedIn = auth.isSignedIn.get();
+                if (this.isDriveSignedIn) {
+                  this.loadDriveFiles();
+                }
+                auth.isSignedIn.listen(value => { 
+                  this.isDriveSignedIn = value; 
+                  if (value) this.loadDriveFiles();
+                });
+                this.driveAuthInitialized = true;
+                resolve();
+              } catch (error) {
+                reject(error);
+              }
+            };
+
+            const loadClient = () => {
+              gapi.load('client:auth2', {
+                callback: finalizeInit,
+                onerror: () => reject(new Error('Google API client load failed')),
+                timeout: 5000,
+                ontimeout: () => reject(new Error('Google API init timed out'))
+              });
+            };
+
+            if (window.gapi && typeof gapi.load === 'function') {
+              loadClient();
+            } else {
+              const script = document.createElement('script');
+              script.src = 'https://apis.google.com/js/api.js';
+              script.onload = loadClient;
+              script.onerror = () => reject(new Error('Failed to load Google API script'));
+              document.head.appendChild(script);
+            }
+          });
+        },
+
+        async ensureGoogleDriveAuth(interactive = true) {
+          await this.initGoogleDriveClient();
+          const auth = gapi.auth2.getAuthInstance();
+          if (!auth) throw new Error('Google authentication is not available.');
+          if (!auth.isSignedIn.get()) {
+            if (!interactive) throw new Error('Drive authorization required.');
+            await auth.signIn();
+            this.isDriveSignedIn = true;
+          }
+          const authResp = auth.currentUser.get().getAuthResponse(true);
+          if (!authResp || !authResp.access_token) throw new Error('Unable to obtain Drive access token.');
+          return authResp.access_token;
+        },
+
+        async signInGoogleDrive() {
+          this.driveLoading = true;
+          try {
+            await this.ensureGoogleDriveAuth(true);
+            this.showNotification('Signed in to Google Drive.');
+            this.loadDriveFiles();
+          } catch (e) {
+            console.error('Drive sign-in error:', e);
+            const message = e?.error_description || e?.error || e?.message || JSON.stringify(e);
+            this.showNotification('Drive sign-in failed: ' + message, 'error');
+          } finally {
+            this.driveLoading = false;
+          }
+        },
+
+        async signOutGoogleDrive() {
+          if (window.gapi && gapi.auth2) {
+            const auth = gapi.auth2.getAuthInstance();
+            if (auth && auth.isSignedIn.get()) await auth.signOut();
+          }
+          this.isDriveSignedIn = false;
+          this.showNotification('Signed out of Google Drive.', 'success');
+        },
+
+        async loadDriveFiles() {
+          this.driveLoading = true;
+          this.driveBackupFiles = [];
+          try {
+            await this.ensureGoogleDriveAuth(true);
+            
+            const folderResponse = await gapi.client.drive.files.list({
+              q: "name = 'KAS Training Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+              fields: 'files(id, name)',
+              spaces: 'drive'
+            });
+            
+            const folders = folderResponse.result.files;
+            if (!folders || folders.length === 0) {
+              this.showNotification('Folder "KAS Training Backups" not found in Drive.', 'error');
+              return;
+            }
+            this.driveFolderId = folders[0].id;
+
+            const response = await gapi.client.drive.files.list({
+              q: `'${this.driveFolderId}' in parents and trashed=false`,
+              fields: 'files(id,name,modifiedTime,mimeType)',
+              orderBy: 'modifiedTime desc',
+              pageSize: 100
+            });
+            this.driveBackupFiles = response.result?.files || [];
+            if (!this.driveBackupFiles.length) {
+              this.showNotification('No backup files found in KAS Training Backups.', 'info');
+            } else {
+              this.showNotification(`Loaded ${this.driveBackupFiles.length} Drive backup files.`);
+            }
+          } catch (e) {
+            console.error('Failed to load Google Drive files:', e);
+            const message = e?.error_description || e?.error || e?.message || JSON.stringify(e);
+            this.showNotification('Unable to load Drive files: ' + message, 'error');
+          } finally {
+            this.driveLoading = false;
+          }
+        },
+
+        async restoreDriveBackup(file) {
+          if (!file) return;
+          this.askConfirm(`Download "${file.name}" from Drive and restore it into TrainingRecord?`, async () => {
+            this.driveLoading = true;
+            try {
+              const token = await this.ensureGoogleDriveAuth(true);
+              const response = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (!response.ok) throw new Error(`Download failed (${response.status})`);
+              const buffer = await response.arrayBuffer();
+              const workbook = XLSX.read(buffer, { type: 'array' });
+              if (!workbook.SheetNames.length) throw new Error('Backup file contains no sheets.');
+              const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
+              if (!rows.length) throw new Error('Backup sheet contains no rows.');
+              const normalized = rows.map(r => {
+                const mapped = {};
+                for (const key in r) {
+                  const value = r[key];
+                  const normalizedKey = String(key).trim();
+                  const keyLower = normalizedKey.toLowerCase();
+                  if (['db_id', 'id', 'rowid'].includes(keyLower)) {
+                    mapped.db_id = String(value).trim();
+                  } else if (['userid', 'user_id', 'empid'].includes(keyLower)) {
+                    mapped.Userid = String(value).trim();
+                  } else {
+                    mapped[normalizedKey] = value;
+                  }
+                }
+                if (!mapped.db_id && mapped.id) mapped.db_id = String(mapped.id);
+                return mapped;
+              }).filter(r => r.db_id);
+              if (!normalized.length) throw new Error('No rows with db_id or id available for restore.');
+              const { error } = await sb.from('TrainingRecord').upsert(normalized, { onConflict: ['db_id'] });
+              if (error) throw error;
+              this.showNotification(`Restored ${normalized.length} backup rows to TrainingRecord.`);
+              await this.fetchData();
+            } catch (e) {
+              console.error('Restore error:', e);
+              const message = e?.error_description || e?.error || e?.message || JSON.stringify(e);
+              this.showNotification('Restore failed: ' + message, 'error');
+            } finally {
+              this.driveLoading = false;
+            }
+          });
+        },
+
+        backupNextRunLabel() {
+          if (!this.backupScheduleEnabled) return 'Automatic backup is disabled';
+          const now = new Date();
+          const [hour, minute] = (this.backupScheduleTime || '02:00').split(':').map(Number);
+          let next = new Date(now);
+          next.setHours(hour, minute, 0, 0);
+          if (this.backupScheduleType === 'weekly') {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const targetDay = days.indexOf(this.backupScheduleDay || 'Monday');
+            const currentDay = next.getDay();
+            const diff = ((targetDay - currentDay) + 7) % 7 || 7;
+            next.setDate(next.getDate() + diff);
+          } else if (this.backupScheduleType === 'monthly') {
+            const dayNum = Math.max(1, Math.min(31, parseInt(this.backupScheduleDate, 10) || 1));
+            next.setDate(dayNum);
+            if (next <= now) next.setMonth(next.getMonth() + 1);
+            const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+            if (next.getDate() !== Math.min(dayNum, lastDay)) next.setDate(lastDay);
+          } else {
+            if (next <= now) next.setDate(next.getDate() + 1);
+          }
+          return next.toLocaleString();
         },
 
         async toggleEmpStatus(emp, newStatus) {

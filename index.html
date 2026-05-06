@@ -3438,9 +3438,9 @@
           this.supaDbLoading = true;
           try {
             const data = await file.arrayBuffer();
-            const workbook = XLSX.read(data);
+            const workbook = XLSX.read(data, { cellDates: true, cellNF: true, cellText: true });
             const sheetName = workbook.SheetNames[0];
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, dateNF: 'YYYY-MM-DD' });
             
             if (!rows.length) throw new Error('Excel file is empty');
             
@@ -3466,12 +3466,19 @@
               
               if (!pk) throw new Error('Primary key not found for this table.');
 
-              // 1. Delete all existing records
+              // 1. Deduplicate the data in JavaScript to avoid Supabase/Postgres errors
+              const uniqueMap = new Map();
+              this.supaDbData.forEach(row => {
+                if (row[pk]) uniqueMap.set(row[pk], row);
+              });
+              const uniqueData = Array.from(uniqueMap.values());
+
+              // 2. Delete all existing records
               const { error: deleteError } = await sb.from(this.supaDbTable).delete().not(pk, 'is', null);
               if (deleteError) throw deleteError;
 
-              // 2. Insert new records
-              const { error: insertError } = await sb.from(this.supaDbTable).insert(this.supaDbData);
+              // 3. Insert the cleaned unique records
+              const { error: insertError } = await sb.from(this.supaDbTable).insert(uniqueData);
               if (insertError) throw insertError;
 
               this.showNotification(`Successfully replaced all data in ${this.supaDbTable}!`, 'success');

@@ -1045,7 +1045,8 @@
                   <div class="w-px h-3 bg-purple-200"></div>
                   <div class="flex items-center gap-1 font-bold text-blue-700">
                     <i class="fa fa-clock text-blue-600 opacity-70"></i>
-                    <span x-text="'Sync Window (±15m): ' + (zkSelectedTrainingTimes.start || '--:--') + ' - ' + (zkSelectedTrainingTimes.end || '--:--')"></span>
+                    <span
+                      x-text="'Sync Window (±15m): ' + (zkSelectedTrainingTimes.start || '--:--') + ' - ' + (zkSelectedTrainingTimes.end || '--:--')"></span>
                   </div>
                 </div>
                 <div class="flex items-center gap-1 border border-gray-300 rounded-lg p-0.5 bg-white">
@@ -1122,55 +1123,48 @@
           <div class="table-container border rounded-xl flex-1 shadow-sm mt-2">
             <table class="min-w-full divide-y divide-gray-200 text-[11px] text-left">
               <thead class="bg-gray-50 sticky top-0 shadow-sm z-10">
-                <tr>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Date</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">User ID</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Name</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Dept</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Check In</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Check Out</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Tr. Start</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Tr. End</th>
-                  <th class="px-2 py-2.5 font-bold text-blue-600">Tr. Dur</th>
-                  <th class="px-2 py-2.5 font-bold text-red-600">All. Late</th>
-                  <th class="px-2 py-2.5 font-bold text-orange-600">Late By</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600">Status</th>
-                  <th class="px-2 py-2.5 font-bold text-gray-600 text-center">Actions</th>
+                <tr class="border-b border-gray-200">
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Date</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">User ID</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Name</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Dept</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Check In</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Check Out</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Tr. Start</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter">Tr. End</th>
+                  <th class="px-2 py-2.5 font-black text-blue-600 uppercase tracking-tighter">Tr. Dur</th>
+                  <th class="px-2 py-2.5 font-black text-red-600 uppercase tracking-tighter">All. Late</th>
+                  <th class="px-2 py-2.5 font-black text-orange-600 uppercase tracking-tighter">Late By</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter text-center">Status</th>
+                  <th class="px-2 py-2.5 font-black text-gray-500 uppercase tracking-tighter text-center">Actions</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100 bg-white">
-                <template x-for="zk in filteredZKTecoData" :key="zk.userid + zk.timestamp">
-                  <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-2 py-2 text-gray-600 whitespace-nowrap" x-text="zk.dateOnly"></td>
-                    <td class="px-2 py-2 font-mono text-gray-500" x-text="zk.UserID"></td>
-                    <td class="px-2 py-2 font-bold text-gray-800" x-text="zk.empName || zk.UserID"></td>
-                    <td class="px-2 py-2 text-gray-500 truncate max-w-[100px]" x-text="zk.department"></td>
-                    <td class="px-2 py-2 font-bold font-mono text-gray-700"
-                      x-text="(zk.checkin || '-').split(':').slice(0,2).join(':')"></td>
-                    <td class="px-2 py-2 font-bold font-mono text-gray-700"
-                      x-text="(zk.checkout || '-').split(':').slice(0,2).join(':')"></td>
-                    <td class="px-2 py-2 font-mono text-gray-600" x-text="zkSelectedTrainingTimes.start || '-'"></td>
-                    <td class="px-2 py-2 font-mono text-gray-600" x-text="zkSelectedTrainingTimes.end || '-'"></td>
-
-                    <td class="px-2 py-2 font-bold font-mono text-blue-600"
-                      x-text="formatDuration(timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end))">
-                    </td>
-                    <td class="px-2 py-2 font-bold font-mono text-red-500"
-                      x-text="zkSelectedTrainingTimes.start ? formatDuration((timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) * 0.25) + 5) : '-'">
-                    </td>
-                    <td class="px-2 py-2 font-bold font-mono text-orange-500"
-                      x-text="zkSelectedTrainingTimes.start ? formatDuration(Math.max(0, timeDiffMins(zkSelectedTrainingTimes.start, zkSelectedTrainingTimes.end) - timeDiffMins(zk.checkin, zk.checkout))) : '-'">
-                    </td>
-
+                <template x-for="zk in filteredZKTecoData" :key="zk.userid + (zk.checkin||'')">
+                  <tr class="hover:bg-gray-50 transition-colors border-b border-gray-50">
+                    <td class="px-2 py-2 text-gray-500 whitespace-nowrap" x-text="zk.dateOnly"></td>
+                    <td class="px-2 py-2 font-mono text-gray-400" x-text="zk.userid"></td>
+                    <td class="px-2 py-2 font-bold text-gray-800" x-text="zk.empName"></td>
+                    <td class="px-2 py-2 text-gray-500" x-text="zk.department"></td>
+                    <td class="px-2 py-2 font-bold font-mono text-gray-700" x-text="zk.checkin"></td>
+                    <td class="px-2 py-2 font-bold font-mono text-gray-700" x-text="zk.checkout"></td>
+                    <td class="px-2 py-2 font-mono text-gray-400" x-text="zk.trStart"></td>
+                    <td class="px-2 py-2 font-mono text-gray-400" x-text="zk.trEnd"></td>
+                    <td class="px-2 py-2 font-black font-mono text-blue-600" x-text="zk.duration"></td>
                     <td class="px-2 py-2">
-                      <span
-                        :class="{'bg-green-100 text-green-700 border border-green-200':zk.status==='Yes','bg-red-100 text-red-700 border border-red-200':zk.status==='No','bg-yellow-100 text-yellow-700 border border-yellow-200':zk.status==='Late','bg-gray-100 text-gray-600':!zk.status}"
-                        class="px-2 py-0.5 rounded-full text-[10px] font-bold" x-text="zk.status||'NONE'"></span>
+                      <span x-show="zk.lateStr !== '-'" class="px-1 py-0.5 rounded bg-red-50 text-red-600 font-black text-[9px]" x-text="zk.lateStr"></span>
+                      <span x-show="zk.lateStr === '-'" class="text-gray-300">-</span>
+                    </td>
+                    <td class="px-2 py-2 font-bold font-mono text-orange-600" x-text="zk.lateBy"></td>
+                    <td class="px-2 py-2 text-center">
+                      <span x-show="zk.status === 'Yes'" class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase ring-1 ring-green-600/20">YES</span>
+                      <span x-show="zk.status === 'Late'" class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[9px] font-black uppercase ring-1 ring-yellow-600/20">LATE</span>
+                      <span x-show="zk.status !== 'Yes' && zk.status !== 'Late'" class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[9px] font-black uppercase ring-1 ring-gray-600/10">NONE</span>
                     </td>
                     <td class="px-2 py-2 text-center">
-                      <div class="flex justify-center gap-1.5 text-xs">
-                        <button class="text-blue-500 hover:text-blue-700"><i class="fa fa-pencil-alt"></i></button>
-                        <button class="text-red-500 hover:text-red-700"><i class="fa fa-trash"></i></button>
+                      <div class="flex items-center justify-center gap-1.5 text-xs">
+                        <button class="text-blue-400 hover:text-blue-600 transition-colors"><i class="fa fa-pen text-[10px]"></i></button>
+                        <button class="text-red-300 hover:text-red-500 transition-colors"><i class="fa fa-trash text-[10px]"></i></button>
                       </div>
                     </td>
                   </tr>
@@ -1941,7 +1935,8 @@
                     class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save
                     Backup Schedule</button>
                   <button @click="runGoogleDriveBackupNow()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold transition">Backup Now</button>
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold transition">Backup
+                    Now</button>
                   <button
                     @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg font-semibold transition">Reset</button>
@@ -2121,8 +2116,10 @@
           </div>
 
           <!-- SUPABASE MANAGER VIEW -->
-          <div x-show="settingsView === 'supabase_manager'" class="flex-1 flex flex-col space-y-4 fade-in overflow-hidden">
-            <div class="flex items-center justify-between bg-purple-50 p-4 rounded-lg border border-purple-200 shrink-0">
+          <div x-show="settingsView === 'supabase_manager'"
+            class="flex-1 flex flex-col space-y-4 fade-in overflow-hidden">
+            <div
+              class="flex items-center justify-between bg-purple-50 p-4 rounded-lg border border-purple-200 shrink-0">
               <div class="flex items-center gap-4">
                 <i class="fa fa-database text-purple-600 text-2xl"></i>
                 <div>
@@ -2131,29 +2128,36 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <select x-model="supaDbTable" @change="loadSupaDbTable()" class="border border-purple-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold text-purple-900 bg-white">
+                <select x-model="supaDbTable" @change="loadSupaDbTable()"
+                  class="border border-purple-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold text-purple-900 bg-white">
                   <option value="Employees">Employees</option>
                   <option value="TrainingRecord">TrainingRecord</option>
                   <option value="Settings">Settings</option>
                   <option value="ZKTecoLogs">ZKTecoLogs</option>
                 </select>
-                <button @click="loadSupaDbTable()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                <button @click="loadSupaDbTable()"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                   <i class="fa fa-sync-alt" :class="supaDbLoading ? 'fa-spin' : ''"></i> Refresh
                 </button>
                 <div class="h-8 w-px bg-purple-200 mx-1"></div>
-                <button @click="downloadSupaTableExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                <button @click="downloadSupaTableExcel()"
+                  class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                   <i class="fa fa-file-excel"></i> Export
                 </button>
-                <button @click="$refs.supaExcelInput.click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                <button @click="$refs.supaExcelInput.click()"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
                   <i class="fa fa-file-import"></i> Import
                 </button>
-                <button x-show="isSupaDbPreview" @click="commitSupaDbUpload()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2 animate-pulse" x-cloak>
+                <button x-show="isSupaDbPreview" @click="commitSupaDbUpload()"
+                  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2 animate-pulse"
+                  x-cloak>
                   <i class="fa fa-cloud-upload-alt"></i> Save to Supabase
                 </button>
-                <input type="file" x-ref="supaExcelInput" @change="uploadSupaTableExcel($event)" accept=".xlsx, .xls, .csv" class="hidden" />
+                <input type="file" x-ref="supaExcelInput" @change="uploadSupaTableExcel($event)"
+                  accept=".xlsx, .xls, .csv" class="hidden" />
               </div>
             </div>
-            
+
             <div class="flex-1 border border-gray-200 rounded-lg bg-white overflow-auto relative">
               <div x-show="supaDbLoading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
                 <i class="fa fa-circle-notch fa-spin text-purple-500 text-3xl"></i>
@@ -2171,17 +2175,20 @@
                   <template x-for="(row, idx) in supaDbData" :key="idx">
                     <tr class="hover:bg-purple-50 group">
                       <td class="px-3 py-2 text-center">
-                        <button @click="saveSupaDbRow(row)" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">SAVE</button>
+                        <button @click="saveSupaDbRow(row)"
+                          class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">SAVE</button>
                       </td>
                       <template x-for="col in supaDbColumns" :key="col">
                         <td class="px-3 py-2 border-l border-gray-100">
-                          <input type="text" x-model="row[col]" class="w-full bg-transparent border-none focus:ring-1 focus:ring-purple-400 p-1 text-xs hover:bg-white rounded transition-colors" />
+                          <input type="text" x-model="row[col]"
+                            class="w-full bg-transparent border-none focus:ring-1 focus:ring-purple-400 p-1 text-xs hover:bg-white rounded transition-colors" />
                         </td>
                       </template>
                     </tr>
                   </template>
                   <tr x-show="!supaDbLoading && supaDbData.length === 0">
-                    <td :colspan="supaDbColumns.length + 1" class="px-6 py-10 text-center text-gray-500 font-medium">No records found in this table.</td>
+                    <td :colspan="supaDbColumns.length + 1" class="px-6 py-10 text-center text-gray-500 font-medium">No
+                      records found in this table.</td>
                   </tr>
                 </tbody>
               </table>
@@ -2529,37 +2536,112 @@
           const selected = this.trainingSchedule.find(t => String(t.id) === String(this.zkSelectedTrainingId));
           if (selected) {
             this.zktecoFilterDate = selected.date;
-            
+
             // 1. Raw times for the update form (original schedule)
             this.zkSelectedTrainingRawTimes = { start: selected.start || '', end: selected.end || '' };
-            
+
             // 2. Buffered times for the Top Box and Table Filtering (±15m)
-            this.zkSelectedTrainingTimes = { 
-              start: this.adjustTime(selected.start, -15), 
-              end: this.adjustTime(selected.end, 15) 
+            this.zkSelectedTrainingTimes = {
+              start: this.adjustTime(selected.start, -15),
+              end: this.adjustTime(selected.end, 15)
             };
-            
+
             this.zkSelectedTrainingDept = selected.dept || '---';
             this.zkSelectedTrainingFloor = selected.floor || '---';
             this.showNotification(`Training Selected: ${selected.course}`);
+            this.fetchZKTecoData(); 
           }
         },
 
         get filteredZKTecoData() {
           if (!this.zktecoData.length) return [];
-          // Filter by selected training date and time window
-          return this.zktecoData.filter(row => {
-            // Match Date
-            const rowDate = row.timestamp.split(' ')[0];
-            if (this.zktecoFilterDate && rowDate !== this.zktecoFilterDate) return false;
+          if (!this.zkSelectedTrainingId) return this.zktecoData; // Show raw if no training selected
+
+          // 1. Initial filter by date
+          const dayLogs = this.zktecoData.filter(row => row.dateOnly === this.zktecoFilterDate);
+          
+          // 2. Group by UserID
+          const groups = {};
+          dayLogs.forEach(row => {
+            const uid = row.userid;
+            if (!groups[uid]) {
+              groups[uid] = {
+                userid: uid,
+                name: row.empName,
+                dept: row.department,
+                punches: []
+              };
+            }
+            groups[uid].punches.push(row.checkin);
+          });
+
+          // 3. Process each group relative to training times
+          const tStart = this.zkSelectedTrainingRawTimes.start;
+          const tEnd = this.zkSelectedTrainingRawTimes.end;
+          const courseMins = this.getTimeDiffMinutes(tStart, tEnd) || 0;
+          const allowedLateMins = courseMins > 0 ? Math.round(courseMins * 0.25 + 5) : 0;
+          const trDurStr = courseMins > 0 ? this.minutesToHm(courseMins) : '-';
+          const allLateStr = allowedLateMins > 0 ? this.minutesToHm(allowedLateMins) : '-';
+
+          return Object.values(groups).map(g => {
+            const sorted = g.punches.sort();
+            const cin = sorted[0];
+            const cout = sorted.length > 1 ? sorted[sorted.length - 1] : '-';
             
-            // Match Time Window (±15m)
+            let duration = '-', lateBy = '-', status = 'NONE';
+            let empMins = 0;
+
+            if (cin !== '-' && cout !== '-' && cout !== cin) {
+              empMins = this.getTimeDiffMinutes(cin, cout);
+              status = 'Yes';
+            }
+
+            if (courseMins > 0) {
+              const missedMins = courseMins - empMins;
+              if (missedMins > 0) {
+                lateBy = this.minutesToHm(missedMins);
+              }
+              // If they have both punches but missed too much time, mark as Late
+              if (status === 'Yes' && missedMins > allowedLateMins) {
+                status = 'Late';
+              }
+            }
+
+            return {
+              userid: g.userid,
+              empName: g.name,
+              department: g.dept,
+              dateOnly: this.zktecoFilterDate,
+              checkin: cin,
+              checkout: cout,
+              trStart: tStart || '-',
+              trEnd: tEnd || '-',
+              duration: trDurStr,
+              lateStr: allLateStr,
+              lateBy: lateBy,
+              status: status
+            };
+          }).filter(row => {
+            // Final check: only show if checkin is within window
             if (this.zkSelectedTrainingTimes.start && this.zkSelectedTrainingTimes.end) {
-              const rowTime = row.timestamp.split(' ')[1].slice(0, 5);
-              return rowTime >= this.zkSelectedTrainingTimes.start && rowTime <= this.zkSelectedTrainingTimes.end;
+              return row.checkin >= this.zkSelectedTrainingTimes.start && row.checkin <= this.zkSelectedTrainingTimes.end;
             }
             return true;
           });
+        },
+
+        getTimeDiffMinutes(t1, t2) {
+          if (!t1 || !t2 || t1 === '-' || t2 === '-') return 0;
+          const [h1, m1] = t1.split(':').map(Number);
+          const [h2, m2] = t2.split(':').map(Number);
+          return (h2 * 60 + m2) - (h1 * 60 + m1);
+        },
+
+        minutesToHm(mins) {
+          if (mins <= 0) return '-';
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          return `${h}:${String(m).padStart(2, '0')}`;
         },
 
         fillUploadFromSchedule(id) {
@@ -2661,124 +2743,7 @@
         // ==================== ZKTECO — FIXED ====================
         // FIX: ZKTecoLogs table uses "Timestamp" column, not "date"
         // We derive dateOnly from Timestamp itself
-        async fetchZKTecoData() {
-          try {
-            const { data: sampleData, error: sampleError } = await sb.from('ZKTecoLogs').select('*').limit(3);
-            if (sampleError) throw sampleError;
-            if (!sampleData || sampleData.length === 0) {
-              this.showNotification('ZKTeco table is empty', 'error');
-              return;
-            }
 
-            const firstRow = sampleData[0];
-            const allKeys = Object.keys(firstRow);
-            console.log('ZKTecoLogs ALL columns:', allKeys);
-            console.log('Sample rows:', sampleData);
-
-            // Detect timestamp column
-            const tsCol = allKeys.find(k =>
-              ['timestamp', 'datetime', 'date', 'time', 'punch_time', 'checktime', 'created_at'].includes(k.toLowerCase())
-            ) || allKeys.find(k => {
-              const v = String(firstRow[k] || '');
-              return v.match(/^\d{4}-\d{2}-\d{2}/);
-            });
-
-            // Detect user/employee ID column — NOT the row primary key
-            // Look for columns that contain numeric-like values (employee IDs are usually numbers)
-            const userCol = allKeys.find(k => {
-              const kl = k.toLowerCase();
-              if (['id', 'created_at'].includes(kl)) return false; // skip row ID and timestamps
-              if (['userid', 'user_id', 'employeeid', 'employee_id', 'empid', 'pin', 'badgenumber', 'enrollnumber'].includes(kl)) return true;
-              // Check if values look like employee IDs (short numbers, not UUIDs)
-              const val = String(firstRow[k] || '');
-              return val.match(/^\d+$/) && val.length < 10;
-            });
-
-            // Detect device column
-            const deviceCol = allKeys.find(k =>
-              ['devicename', 'device_name', 'device', 'sn', 'machinename', 'terminal'].includes(k.toLowerCase())
-            );
-
-            console.log(`Detected — timestamp: "${tsCol}", userID: "${userCol}", device: "${deviceCol}"`);
-            console.log('Sample user value:', firstRow[userCol]);
-
-            if (!tsCol) {
-              this.showNotification('Cannot detect timestamp column in ZKTecoLogs', 'error');
-              return;
-            }
-            if (!userCol) {
-              this.showNotification('Cannot detect UserID column in ZKTecoLogs', 'error');
-              return;
-            }
-
-            // Fetch with date range
-            let query = sb.from('ZKTecoLogs').select('*');
-            if (this.zkFromMonth) {
-              query = query.gte(tsCol, this.zkFromMonth + '-01 00:00:00');
-            }
-            if (this.zkToMonth) {
-              const [y, m] = this.zkToMonth.split('-').map(Number);
-              const lastDay = new Date(y, m, 0).getDate();
-              query = query.lte(tsCol, `${this.zkToMonth}-${lastDay} 23:59:59`);
-            }
-            query = query.order(tsCol, { ascending: false }).limit(5000);
-
-            const { data, error } = await query;
-            if (error) throw error;
-
-            const grouped = new Map();
-            (data || []).forEach(row => {
-              const tsValue = row[tsCol];
-              let dateOnly = '';
-              let timeStr = '';
-
-              if (tsValue) {
-                const ts = String(tsValue);
-                dateOnly = ts.substring(0, 10);
-                const tPart = ts.includes('T') ? ts.split('T')[1] : ts.split(' ')[1];
-                if (tPart) timeStr = tPart.substring(0, 5);
-              }
-
-              const userId = String(row[userCol] || '').trim();
-              const deviceName = deviceCol ? String(row[deviceCol] || '') : '';
-
-              const key = `${userId}|${dateOnly}|${deviceName}`;
-              if (!grouped.has(key)) {
-                grouped.set(key, {
-                  id: key,
-                  UserID: userId,
-                  DeviceName: deviceName,
-                  dateOnly,
-                  punches: []
-                });
-              }
-              if (timeStr) grouped.get(key).punches.push(timeStr);
-            });
-
-            this.zktecoData = Array.from(grouped.values()).map(g => {
-              const punches = [...new Set(g.punches)].sort();
-              // Match employee: try numeric ID first, then string match
-              const emp = this.employees.find(e => {
-                const eId = String(e.ID || '').trim();
-                const gId = String(g.UserID || '').trim();
-                return eId && gId && eId === gId;
-              });
-              return {
-                ...g,
-                empName: emp ? emp.name : ('User ' + g.UserID),
-                department: emp ? emp.department : 'Unknown',
-                checkin: punches[0] || '-',
-                checkout: punches.length > 1 ? punches[punches.length - 1] : '-',
-                status: punches.length > 0 ? 'Yes' : 'No'
-              };
-            }).sort((a, b) => b.dateOnly.localeCompare(a.dateOnly));
-
-            this.showNotification(`ZKTeco: ${this.zktecoData.length} records loaded`);
-          } catch (e) {
-            this.showNotification('ZKTeco fetch error: ' + e.message, 'error');
-            console.error('ZKTeco error:', e);
-          }
-        },
 
         get filteredZkTecoData() {
           let data = this.zktecoData;
@@ -2794,10 +2759,10 @@
         },
 
         transferZKToUpload() {
-          const zkData = this.filteredZkTecoData;
+          const zkData = this.filteredZKTecoData;
           if (zkData.length === 0) return this.showNotification('No ZKTeco records found for current filter.', 'error');
           this.manualRows = zkData.map(zk => ({
-            name: zk.empName !== ('User ' + zk.UserID) ? zk.empName : '',
+            name: zk.empName || '',
             startTime: zk.checkin !== '-' ? zk.checkin : '',
             endTime: zk.checkout !== '-' ? zk.checkout : ''
           }));
@@ -3095,7 +3060,13 @@
           if (!this.previewData) return;
           this.startLoading();
           try {
-            const rows = this.previewData.records.map(r => ({
+            // Find max db_id to avoid primary key sequence violations
+            let maxId = 0;
+            if (this.records && this.records.length > 0) {
+              maxId = Math.max(...this.records.map(r => parseInt(r.db_id || 0) || 0));
+            }
+            const rows = this.previewData.records.map((r, idx) => ({
+              db_id: maxId + idx + 1,
               Department: r.department, Name: r.empName, Trainer: r.trainer,
               'Trainer Type': r.trainerType, Topic: r.course, Date: r.date,
               'Duration of training': r.totalDuration, 'Check in': r.start || null,
@@ -3399,7 +3370,7 @@
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(this.records);
             XLSX.utils.book_append_sheet(wb, ws, "TrainingRecord");
-            
+
             // Convert to array buffer
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
             const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -3423,10 +3394,10 @@
             });
 
             if (!uploadRes.ok) throw new Error('Failed to upload file');
-            
+
             this.showNotification('Backup uploaded successfully!', 'success');
             this.loadDriveFiles();
-          } catch(e) {
+          } catch (e) {
             console.error('Backup upload error', e);
             const message = e?.error_description || e?.error || e?.message || JSON.stringify(e);
             this.showNotification('Backup failed: ' + message, 'error');
@@ -3447,7 +3418,7 @@
             if (this.supaDbData.length > 0) {
               this.supaDbColumns = Object.keys(this.supaDbData[0]);
             }
-          } catch(e) {
+          } catch (e) {
             this.showNotification('Error loading table: ' + e.message, 'error');
           } finally {
             this.supaDbLoading = false;
@@ -3457,20 +3428,79 @@
         async fetchZKTecoData() {
           this.isLoading = true;
           try {
+            // Step 1: Fetch Employees from Supabase to get fresh name/department
+            // We MUST use fetchAllRows because Supabase limits .select('*') to 1000 rows!
+            const empData = await this.fetchAllRows('Employees');
+            
+            // Build a lookup map: employee id (as string) => {name, department}
+            const empMap = {};
+            (empData || []).forEach(e => {
+              let nameVal = '', deptVal = '';
+              // First find name and department
+              for (let k of Object.keys(e)) {
+                const lowerK = k.toLowerCase();
+                if (['name', 'empname', 'employee_name'].includes(lowerK) && !nameVal) nameVal = e[k];
+                if (['department', 'dept', 'section'].includes(lowerK) && !deptVal) deptVal = e[k];
+              }
+              const empInfo = {
+                name: String(nameVal || e.Name || e.name || '').trim(),
+                department: String(deptVal || e.Department || e.department || '').trim()
+              };
+
+              // Map this employee under ALL its ID-like columns
+              for (let k of Object.keys(e)) {
+                const lowerK = k.toLowerCase();
+                if (['id', 'userid', 'user_id', 'empid', 'employeeid'].includes(lowerK)) {
+                  const rawId = String(e[k] || '').split('.')[0].trim();
+                  if (rawId) {
+                    empMap[rawId] = empInfo;
+                    // Also strip leading zeroes just in case
+                    const noZeroes = rawId.replace(/^0+/, '');
+                    if (noZeroes && noZeroes !== rawId) {
+                      empMap[noZeroes] = empInfo;
+                    }
+                  }
+                }
+              }
+            });
+
+            // Step 2: Fetch ZKTeco logs
             const { data, error } = await sb.from('ZKTecoLogs')
               .select('*')
               .gte('timestamp', this.zkFromMonth + '-01')
               .lte('timestamp', this.zkToMonth + '-31')
               .order('timestamp', { ascending: false });
             if (error) throw error;
-            // Map database columns to UI names
-            this.zktecoData = (data || []).map(row => ({
-              ...row,
-              dateOnly: row.timestamp.split(' ')[0],
-              checkin: row.timestamp.split(' ')[1],
-              UserID: row.userid,
-              empName: this.employees.find(e => String(e.id) === String(row.userid))?.name || row.userid
-            }));
+
+            // Step 3: Map and resolve employee info
+            this.zktecoData = (data || []).map(row => {
+              const ts = String(row.timestamp || '');
+              let datePart = ts, timePart = '';
+              if (ts.includes('T')) {
+                [datePart, timePart] = ts.split('T');
+              } else if (ts.includes(' ')) {
+                [datePart, timePart] = ts.split(' ');
+              }
+              const dateOnly = datePart.trim();
+              const timeOnly = (timePart || '').slice(0, 5);
+
+              // Clean userid for matching
+              let zid = String(row.userid || '').split('.')[0].trim();
+              let emp = empMap[zid];
+              if (!emp) {
+                const zidNoZero = zid.replace(/^0+/, '');
+                if (zidNoZero) emp = empMap[zidNoZero];
+              }
+
+              return {
+                ...row,
+                dateOnly: dateOnly,
+                checkin: timeOnly,
+                UserID: row.userid,
+                empName: emp ? emp.name : zid,
+                department: emp ? emp.department : 'Unknown'
+              };
+            });
           } catch (e) {
             this.showNotification('Fetch failed: ' + e.message, 'error');
           } finally {
@@ -3488,7 +3518,7 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({}) // Bridge now syncs all devices automatically
             });
-            
+
             const result = await response.json();
             if (result.success) {
               this.showNotification(`Successfully fetched ${result.count} logs from machine!`, 'success');
@@ -3511,7 +3541,7 @@
             const { error } = await sb.from(this.supaDbTable).update(row).eq(pk, row[pk]);
             if (error) throw error;
             this.showNotification('Row updated successfully!', 'success');
-          } catch(e) {
+          } catch (e) {
             this.showNotification('Update failed: ' + e.message, 'error');
           }
         },
@@ -3538,9 +3568,9 @@
             const workbook = XLSX.read(data, { cellDates: true, cellNF: true, cellText: true });
             const sheetName = workbook.SheetNames[0];
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: false, dateNF: 'YYYY-MM-DD' });
-            
+
             if (!rows.length) throw new Error('Excel file is empty');
-            
+
             this.supaDbData = rows;
             this.supaDbColumns = Object.keys(rows[0]);
             this.isSupaDbPreview = true;
@@ -3560,7 +3590,7 @@
             try {
               const firstRow = this.supaDbData[0];
               const pk = firstRow.db_id ? 'db_id' : (firstRow.id ? 'id' : (firstRow.department ? 'department' : null));
-              
+
               if (!pk) throw new Error('Primary key not found for this table.');
 
               // 1. Deduplicate the data in JavaScript to avoid Supabase/Postgres errors

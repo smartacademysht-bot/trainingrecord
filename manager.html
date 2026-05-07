@@ -438,11 +438,19 @@
             font-weight: 600;
             outline: none;
             transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
         }
 
         .glass-input:focus {
             border-color: var(--border2);
             background: var(--surface2);
+        }
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input[type="password"]::-ms-text-reveal,
+        input[type="password"]::-webkit-textfield-decoration-container {
+            display: none !important;
         }
 
         .glass-input::placeholder {
@@ -1111,9 +1119,9 @@
                             stroke-linecap="round" />
                     </svg>
                 </div>
-                <h1 class="text-3xl font-black tracking-tight mb-1" style="color:var(--text)" x-text="t('portalTitle')">
+                <!-- <h1 class="text-3xl font-black tracking-tight mb-1" style="color:var(--text)" x-text="t('portalTitle')"> -->
                 </h1>
-                <p class="text-sm font-medium" style="color:var(--text3)" x-text="t('portalSubtitle')"></p>
+                <p class="text-base font-medium text-center mb-4" style="color:var(--text)" x-text="t('portalSubtitle')"></p>
             </div>
 
             <!-- Error -->
@@ -1131,27 +1139,27 @@
                     <label class="block text-xs font-black mb-2.5 uppercase tracking-widest" style="color:var(--text3)"
                         x-text="t('username')"></label>
                     <div class="custom-dropdown" x-data="{ open: false }">
-                        <div class="dropdown-input" :class="open ? 'open' : ''"
-                            @click="open = !open; $event.stopPropagation()">
-                            <span :style="loginUser ? 'color:var(--text)' : 'color:var(--text3)'"
-                                x-text="loginUser || t('selectUser')"></span>
+                        <div class="dropdown-input" :class="open ? 'open' : ''" @click="open = true">
+                            <input type="text" x-model="loginUserQuery" @focus="open = true"
+                                @input="loginUser = loginUserQuery; open = true"
+                                :placeholder="t('selectUser')"
+                                class="glass-input" style="background:transparent; border:none; padding:0; width:100%; color:var(--text);" />
                             <i class="fa fa-chevron-down text-xs transition-transform"
                                 :style="open ? 'transform:rotate(180deg)' : ''" style="color:var(--text3)"></i>
                         </div>
                         <div class="dropdown-menu" x-show="open" @click.outside="open = false" style="display:none">
-                            <template x-for="u in managerUsernames" :key="u">
+                            <template x-for="u in filteredUsernames" :key="u">
                                 <div class="dropdown-item" :class="loginUser === u ? 'selected' : ''"
-                                    @click="loginUser = u; open = false">
+                                    @click="loginUser = u; loginUserQuery = u; open = false">
                                     <i class="fa fa-user text-xs flex-shrink-0" style="color:var(--text3)"></i>
                                     <span x-text="u"></span>
                                     <i x-show="loginUser === u" class="fa fa-check text-xs mr-auto"
                                         style="color:var(--accent)"></i>
                                 </div>
                             </template>
-                            <div x-show="managerUsernames.length === 0" class="dropdown-item"
+                            <div x-show="filteredUsernames.length === 0" class="dropdown-item"
                                 style="justify-content:center">
-                                <i class="fa fa-circle-notch fa-spin text-xs"></i>
-                                <span x-text="t('loadingList')"></span>
+                                <span x-text="t('noUsersFound')"></span>
                             </div>
                         </div>
                     </div>
@@ -1163,14 +1171,13 @@
                         x-text="t('password')"></label>
                     <div class="relative">
                         <input :type="showPassword ? 'text' : 'password'" x-model="loginPass" @keyup.enter="doLogin"
-                            dir="ltr" class="glass-input" style="padding-left:48px; padding-right:48px; text-align:left"
+                            dir="ltr" class="glass-input" style="padding-right:48px; text-align:left"
                             :placeholder="t('passwordPlaceholder')">
-                        <i class="fa fa-lock absolute top-1/2 -translate-y-1/2 left-4 text-sm"
-                            style="color:var(--text3)"></i>
                         <button type="button" @click="showPassword = !showPassword"
+                            x-show="loginPass"
                             class="absolute top-1/2 -translate-y-1/2 right-4 transition-colors p-1 rounded-lg"
-                            style="color:var(--text3)">
-                            <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                            style="color:var(--text3); background:transparent; border:none;">
+                            <i :class="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" style="color:inherit"></i>
                         </button>
                     </div>
                 </div>
@@ -1217,7 +1224,7 @@
                 <i class="fa fa-bars"></i>
             </button>
             <div class="text-center">
-                <div class="text-sm font-black" x-text="t('portalTitle')"></div>
+                <!-- <div class="text-sm font-black" x-text="t('portalTitle')"></div> -->
                 <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
             </div>
         </div>
@@ -1256,17 +1263,17 @@
                             </svg>
                         </div>
                         <div>
-                            <div class="font-black text-sm" x-text="t('portalTitle')"></div>
-                            <div class="text-xs" style="color:var(--accent)" x-text="t('attendanceSystem')"></div>
+                            <!-- <div class="font-black text-sm" x-text="t('portalTitle')"></div> -->
+                            <div class="text-sm" style="color:var(--accent); font-family:'Vazirmatn',sans-serif; font-weight:700;" x-text="t('attendanceSystem')"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3 p-3 rounded-xl"
                     style="background:var(--glass); border:1px solid var(--glass-border)">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                    <!-- <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
                         style="background:var(--navy); color:#fff; box-shadow:0 4px 12px rgba(30,39,73,0.4)"
-                        x-text="loggedInManagerName.charAt(0)"></div>
+                        x-text="loggedInManagerName.charAt(0)"></div> -->
                     <div class="overflow-hidden">
                         <div class="font-bold text-sm truncate" x-text="loggedInManagerName"></div>
                         <div class="text-xs" style="color:var(--text3)" x-text="t('manager')"></div>
@@ -1307,15 +1314,6 @@
                             x-text="t('programs')"></span>
                     </div>
 
-                    <div class="relative mb-3">
-                        <select x-model="selectedMonth" class="fancy-select text-xs" style="padding-right:10px">
-                            <option value="" x-text="t('allMonths')"></option>
-                            <template x-for="m in availableMonths">
-                                <option :value="m.value" x-text="m.label"></option>
-                            </template>
-                        </select>
-                    </div>
-
                     <div class="space-y-1.5">
                         <template x-for="tr in filteredTrainings" :key="tr.key">
                             <button @click="selectTrainingCard(tr); mobileMenuOpen = false;"
@@ -1351,6 +1349,24 @@
 
             <!-- Bottom -->
             <div class="p-3 shrink-0" style="border-top:1px solid var(--glass-border)">
+                <div x-show="selectedDept" class="flex flex-col gap-2 mb-3">
+                    <div class="relative">
+                        <select x-model="selectedMonth" class="fancy-select text-xs" style="padding-right:10px">
+                            <option value="" x-text="t('allMonths')"></option>
+                            <template x-for="m in availableMonths">
+                                <option :value="m.value" x-text="m.label"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-semibold" style="color:var(--text3)"
+                            x-text="showReviewedTrainings ? t('hideReviewed') : t('showReviewed')"></span>
+                        <button @click="showReviewedTrainings = !showReviewedTrainings" class="btn-ghost text-xs px-3 py-2"
+                            style="border-radius:12px">
+                            <i :class="showReviewedTrainings ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                        </button>
+                    </div>
+                </div>
                 <!-- Lang + Theme row -->
                 <div class="flex items-center gap-1.5 mb-2">
                     <button @click="toggleTheme()" class="theme-toggle-pill flex-1 justify-center"
@@ -1384,6 +1400,10 @@
                         <i class="fa fa-sign-out-alt text-sm"></i>
                         <span x-text="t('logout')"></span>
                     </button>
+                </div>
+                <div class="flex items-center justify-center" style="padding:14px 0 4px; font-size:small; color:var(--text3); font-family:'Vazirmatn',sans-serif; font-weight:600; letter-spacing:0.02em;">
+                    <span style="font-family:'Vazirmatn',sans-serif; font-weight:700;" x-text="lang === 'ckb' ? ' دروستکراوە لەلایەن' : 'Developed By'"></span><a class="ml-1" href="https://kurd-apps.github.io/rv/" target="_blank" rel="noopener noreferrer"
+                        style="color:var(--amber); font-family:'Vazirmatn',sans-serif; font-weight:700;">Rivan</a>
                 </div>
             </div>
         </aside>
@@ -1860,14 +1880,14 @@
 
         const STRINGS = {
             ckb: {
-                portalTitle: 'پۆرتاڵی بەڕێوەبەر',
-                attendanceSystem: 'سیستەمی ئامادەبوون',
+               
+                attendanceSystem: 'سیستەمی ئامادەبوونی کارمەندان لە خول و ڕاهێنانەکان',
                 portalSubtitle: 'سیستەمی پێداچوونەوەی نەهاتنی کارمەندان بۆ خول و ڕاهێنانەکان',
                 username: 'ناوی بەکارهێنەر',
                 selectUser: '-- هەڵبژێرە --',
                 loadingList: 'لیستەکە ئامادە دەکرێت...',
                 password: 'وشەی نهێنی',
-                passwordPlaceholder: '••••••••',
+                passwordPlaceholder: 'وشەی نهێنی بنووسە...',
                 rememberMe: 'خۆکارانە بچمەژوورەوە',
                 login: 'چوونەژوورەوە',
                 loggingIn: 'چاوەڕوانبە...',
@@ -1904,6 +1924,9 @@
                 statusPerm: 'مۆڵەتە',
                 statusDuty: 'لە دەوامدایە',
                 statusYes: 'ئامادەبووە',
+                showReviewed: 'پیشاندانی ڕاهێنانە پاشکەوتکراوەکان',
+                hideReviewed: 'شاردنەوەی ڕاهێنانە پاشکەوتکراوەکان',
+                noUsersFound: 'هیچ بەکارهێنەرێک نەدۆزرایەوە',
                 apply: 'جێبەجێکردن',
                 cancel: 'هەڵوەشاندنەوە',
                 empName: 'ناوی کارمەند',
@@ -1941,14 +1964,14 @@
 
             },
             en: {
-                portalTitle: 'Manager Portal',
+                
                 attendanceSystem: 'Attendance Review System',
                 portalSubtitle: 'Attendance Review System',
                 username: 'Username',
                 selectUser: '-- Select --',
                 loadingList: 'Loading list...',
                 password: 'Password',
-                passwordPlaceholder: '••••••••',
+                passwordPlaceholder: 'Enter your password...',
                 rememberMe: 'Remember me on this device',
                 login: 'Sign In',
                 loggingIn: 'Please wait...',
@@ -1985,6 +2008,9 @@
                 statusPerm: 'Permission',
                 statusDuty: 'On Duty',
                 statusYes: 'Present',
+                showReviewed: 'Show reviewed trainings',
+                hideReviewed: 'Hide reviewed trainings',
+                noUsersFound: 'No users found',
                 apply: 'Apply',
                 cancel: 'Cancel',
                 empName: 'Employee Name',
@@ -2061,11 +2087,13 @@
                 settings: [],
                 resetTimes: {},
 
+                loginUserQuery: '',
                 selectedDept: '',
                 selectedTraining: '',
                 localRecords: [],
                 selectedMonth: '',
                 availableMonths: [],
+                showReviewedTrainings: true,
                 mobileMenuOpen: false,
 
                 showToast: false,
@@ -2141,9 +2169,16 @@
                     if (!this.selectedDept || !this.selectedTraining) return null;
                     return this.getTrainingsNeedingReview(this.selectedDept).find(t => t.key === this.selectedTraining) || null;
                 },
+                get filteredUsernames() {
+                    const query = String(this.loginUserQuery || '').trim().toLowerCase();
+                    return query
+                        ? this.managerUsernames.filter(u => u.toLowerCase().includes(query))
+                        : this.managerUsernames;
+                },
                 get filteredTrainings() {
                     if (!this.selectedDept) return [];
                     let trs = this.getTrainingsNeedingReview(this.selectedDept);
+                    if (!this.showReviewedTrainings) trs = trs.filter(t => !t.isFullyReviewed);
                     if (this.selectedMonth) trs = trs.filter(t => t.date.startsWith(this.selectedMonth));
                     return trs;
                 },
@@ -2151,7 +2186,7 @@
                     if (!this.loggedInManagerDepts || !this.loggedInManagerDepts.length) return [];
                     return this.loggedInManagerDepts.map(deptName => ({
                         name: deptName,
-                        pendingCount: this.getTrainingsNeedingReview(deptName).filter(t => !t.isFullyReviewed).length,
+                        pendingCount: this.getTrainingsNeedingReview(deptName).filter(t => !t.isFullyReviewed && !t.isLocked).length,
                     }));
                 },
 
@@ -2174,7 +2209,13 @@
                         const saved = localStorage.getItem('managerRemember');
                         if (saved) {
                             const d = JSON.parse(saved);
-                            if (d.user && d.pass) { this.loginUser = d.user; this.loginPass = d.pass; this.rememberMe = true; }
+                            if (d.user && d.pass) {
+                                this.loginUser = d.user;
+                                this.loginUserQuery = d.user;
+                                this.loginPass = d.pass;
+                                this.rememberMe = true;
+                                this.doLogin();
+                            }
                         }
                     } catch (e) { }
 
@@ -2234,7 +2275,7 @@
                             else localStorage.removeItem('managerRemember');
                             this.fetchData();
                         } else {
-                            this.loginError = this.lang === 'ckb' ? 'دەستوور نییە. وشەی نهێنی بپشکنەرەوە.' : 'Invalid credentials. Please check your password.';
+                            this.loginError = this.lang === 'ckb' ? 'وشەی نهێنی بپشکنەرەوە.' : 'Invalid credentials. Please check your password.';
                         }
                     } catch (e) {
                         this.isLoggingIn = false;
@@ -2337,12 +2378,13 @@
                     this.records.forEach(r => {
                         if (String(r.department).toLowerCase() !== String(dept).toLowerCase()) return;
                         const stat = String(r.status).toLowerCase();
-                        if (!['no', 'late'].includes(stat)) return;
+                        const note = String(r.managerNote || '').trim().toLowerCase();
+                        const hasReviewNote = note !== '' && !['null', 'nan', 'undefined'].includes(note);
+                        if (!['no', 'late', 'none'].includes(stat) && !hasReviewNote) return;
                         const key = `${r.course}|${r.date}`;
                         if (!trainingMap.has(key)) trainingMap.set(key, { key, course: r.course, date: r.date, trainer: r.trainer, totalPending: 0, totalReviewed: 0, totalDuration: r.totalDuration || 0, maxMStatus: 0 });
                         const g = trainingMap.get(key);
-                        const note = String(r.managerNote || '').trim().toLowerCase();
-                        const isReviewed = note !== '' && note !== 'null' && note !== 'nan' && note !== 'undefined';
+                        const isReviewed = hasReviewNote;
                         if (isReviewed) g.totalReviewed++; else g.totalPending++;
 
                         const mStatusStr = String(r.mStatus || '').trim();

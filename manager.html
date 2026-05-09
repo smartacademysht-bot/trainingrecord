@@ -1459,6 +1459,8 @@
                             <div class="flex items-center gap-2 mb-2 flex-wrap">
                                 <span class="badge status-no border" x-show="absentRecords.length > 0"
                                     x-text="absentRecords.length + ' ' + t('absent')"></span>
+                                <span class="badge border" style="background:rgba(100,120,200,0.1); color:var(--text2)" x-show="noneRecords.length > 0"
+                                    x-text="noneRecords.length + ' ' + t('noData')"></span>
                                 <span class="badge status-late border" x-show="lateRecords.length > 0"
                                     x-text="lateRecords.length + ' ' + t('late')"></span>
                             </div>
@@ -1634,6 +1636,145 @@
                           fontWeight: '700'
                         }">
                                                     <option value="" disabled x-text="t('selectOne')"></option>
+                                                    <option value="No" x-text="t('statusNo')"></option>
+                                                    <option value="Permission" x-text="t('statusPerm')"></option>
+                                                    <option value="At Duty" x-text="t('statusDuty')"></option>
+                                                    <option value="Yes" x-text="t('statusYes')"></option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <textarea x-model="rec.managerNote" rows="2" dir="auto"
+                                                :placeholder="t('reasonPlaceholder')"
+                                                :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                                                @input="saveAutoSave(rec)" class="fancy-textarea text-xs"
+                                                style="min-height:36px"></textarea>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- NONE (MISSING DATA) SECTION -->
+                <div x-show="noneRecords.length > 0" class="card fade-up" id="help-none">
+                    <div class="p-4 flex items-center justify-between flex-wrap gap-3"
+                        style="border-bottom:1px solid var(--glass-border)">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full"
+                                style="background:var(--text3); box-shadow:0 0 8px rgba(100,120,200,0.5)"></div>
+                            <h3 class="font-black text-sm" x-text="t('missingDataEmployees')"></h3>
+                            <span class="badge text-xs"
+                                style="background:rgba(100,120,200,0.1); color:var(--text2); border:1px solid var(--border)"
+                                x-text="noneRecords.length"></span>
+                        </div>
+                        <div x-show="!activeTrainingObj?.isLocked && !activeTrainingObj?.isFullyReviewed">
+                            <button @click="toggleSelectAll('none')" class="btn-ghost text-xs px-3 py-2"
+                                style="border-radius:10px">
+                                <div class="custom-check w-4 h-4" :class="isAllNoneSelected ? 'checked' : ''">
+                                    <i x-show="isAllNoneSelected" class="fa fa-check text-white"
+                                        style="font-size:9px"></i>
+                                </div>
+                                <span x-text="t('selectAll')"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div x-show="selectedNone.length > 0" class="px-4 pt-3 fade-up"
+                        style="position:sticky; top:0; z-index:20; padding-bottom:8px; border-bottom:1px solid var(--glass-border); background:var(--surface-solid); backdrop-filter:blur(20px)">
+                        <div class="bulk-bar">
+                            <span class="text-sm font-bold" style="color:var(--accent)">
+                                <i class="fa fa-check-square mr-1"></i>
+                                <span x-text="selectedNone.length"></span> <span
+                                    x-text="t('employeeSelected')"></span>
+                            </span>
+                            <div class="flex items-center gap-2 flex-wrap mr-auto">
+                                <span class="text-xs font-bold" style="color:var(--text3)"
+                                    x-text="t('status') + ':'"></span>
+                                <select x-model="bulkStatusNone" class="fancy-select text-xs"
+                                    style="width:auto; min-width:130px">
+                                    <option value="" x-text="t('selectOne')"></option>
+                                    <option value="No" x-text="t('statusNo')"></option>
+                                    <option value="Permission" x-text="t('statusPerm')"></option>
+                                    <option value="At Duty" x-text="t('statusDuty')"></option>
+                                    <option value="Yes" x-text="t('statusYes')"></option>
+                                </select>
+                                <span class="text-xs font-bold ml-2" style="color:var(--text3)"
+                                    x-text="t('sameNote') + ':'"></span>
+                                <input x-model="bulkNoteNone" type="text" :placeholder="t('writeNote')" dir="auto"
+                                    class="fancy-select text-xs" style="width:160px; font-size:12px">
+                                <button @click="applyBulkNone" :disabled="!bulkStatusNone && !bulkNoteNone"
+                                    class="btn-primary text-xs px-3 py-2">
+                                    <i class="fa fa-bolt"></i> <span x-text="t('apply')"></span>
+                                </button>
+                                <button @click="clearNoneSelection" class="btn-ghost text-xs px-3 py-2"
+                                    x-text="t('cancel')"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th class="w-10"></th>
+                                    <th x-text="t('empName')"></th>
+                                    <th x-text="t('checkInOut')"></th>
+                                    <th class="w-36" x-text="t('status')"></th>
+                                    <th class="w-52" x-text="t('note')"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="rec in noneRecords" :key="rec.rowIndex">
+                                    <tr>
+                                        <td>
+                                            <div class="custom-check w-4 h-4"
+                                                :class="(selectedNone.includes(rec.empId) && !rec.isAlreadyReviewed) ? 'checked' : ''"
+                                                x-show="!rec.isAlreadyReviewed && !activeTrainingObj?.isLocked"
+                                                @click="toggleNoneSelect(rec.empId)">
+                                                <i x-show="selectedNone.includes(rec.empId)"
+                                                    class="fa fa-check text-white" style="font-size:9px"></i>
+                                            </div>
+                                            <div x-show="rec.isAlreadyReviewed"
+                                                class="w-4 h-4 flex items-center justify-center"
+                                                style="color:var(--emerald)">
+                                                <i class="fa fa-check-circle text-xs"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="font-bold text-sm" x-text="rec.empName"></div>
+                                            <div class="text-xs mt-0.5" style="color:var(--text3)" x-text="rec.empId"></div>
+                                        </td>
+                                        <td>
+                                            <div class="flex flex-col gap-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] font-bold w-12" style="color:var(--emerald)" x-text="t('checkIn')"></span>
+                                                    <input type="time" x-model="rec.start" 
+                                                        :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                                                        @input="saveAutoSave(rec)"
+                                                        class="fancy-select py-1 px-2 text-xs" style="width:110px">
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] font-bold w-12" style="color:var(--rose)" x-text="t('checkOut')"></span>
+                                                    <input type="time" x-model="rec.end" 
+                                                        :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                                                        @input="saveAutoSave(rec)"
+                                                        class="fancy-select py-1 px-2 text-xs" style="width:110px">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="relative">
+                                                <select x-model="rec.status"
+                                                    :disabled="rec.isAlreadyReviewed || activeTrainingObj?.isLocked"
+                                                    @change="saveAutoSave(rec)" class="fancy-select text-xs" :style="{
+                                                        color: rec.status==='No' ? 'var(--rose)' : rec.status==='Permission' ? '#a78bfa' : rec.status==='At Duty' ? 'var(--accent)' : rec.status==='Yes' ? 'var(--emerald)' : 'var(--text3)',
+                                                        background: rec.status==='No' ? 'rgba(248,81,73,0.08)' : rec.status==='Permission' ? 'rgba(167,139,250,0.08)' : rec.status==='At Duty' ? 'rgba(79,141,255,0.08)' : rec.status==='Yes' ? 'rgba(63,185,80,0.08)' : 'var(--glass)',
+                                                        borderColor: rec.status==='No' ? 'rgba(248,81,73,0.3)' : rec.status==='Permission' ? 'rgba(167,139,250,0.3)' : rec.status==='At Duty' ? 'rgba(79,141,255,0.3)' : rec.status==='Yes' ? 'rgba(63,185,80,0.3)' : 'var(--border)',
+                                                        fontWeight: '700'
+                                                    }">
+                                                    <option value="NONE" x-text="t('noData')"></option>
                                                     <option value="No" x-text="t('statusNo')"></option>
                                                     <option value="Permission" x-text="t('statusPerm')"></option>
                                                     <option value="At Duty" x-text="t('statusDuty')"></option>
@@ -1943,6 +2084,9 @@
                 attended: 'ئامادەبوو',
                 sameNote: 'هەمان تێبینی',
                 writeNote: 'تێبینی بنووسە...',
+                missingDataEmployees: 'کارمەندانی بێ تۆمار (بێ زانیاری)',
+                checkIn: 'هاتن',
+                checkOut: 'چوونە دەرەوە',
                 confirm: 'پشتڕاستکردنەوە',
                 back: 'گەڕانەوە',
                 yesSubmit: 'بەڵێ، پەسەندی بکە',
@@ -2027,6 +2171,9 @@
                 attended: 'Attended',
                 sameNote: 'Same note',
                 writeNote: 'Write note...',
+                missingDataEmployees: 'Missing Record Employees',
+                checkIn: 'Check In',
+                checkOut: 'Check Out',
                 confirm: 'Confirmation',
                 back: 'Go Back',
                 yesSubmit: 'Yes, Submit',
@@ -2103,10 +2250,13 @@
                 nowTimer: Date.now(),
 
                 selectedAbsent: [],
+                selectedNone: [],
                 selectedLate: [],
                 bulkStatusAbsent: '',
+                bulkStatusNone: '',
                 bulkStatusLate: '',
                 bulkNoteLate: '',
+                bulkNoteNone: '',
 
                 helpActive: false,
                 helpStep: 0,
@@ -2118,6 +2268,7 @@
                         { id: 'help-depts', title: this.t('h0t'), body: this.t('h0b') },
                         { id: 'help-trainings', title: this.t('h1t'), body: this.t('h1b') },
                         { id: 'help-absent', title: this.t('h2t'), body: this.t('h2b') },
+                        { id: 'help-none', title: this.lang === 'ckb' ? 'تەواوکردنی زانیارییەکان' : 'Complete Missing Data', body: this.lang === 'ckb' ? 'لێرەدا دەتوانیت کاتی هاتن و چوون بۆ ئەو کارمەندانە دابنێیت کە زانیارییان نییە.' : 'Here you can set check-in and check-out times for employees with missing records.' },
                         { id: 'help-late', title: this.t('h3t'), body: this.t('h3b') },
                         { id: 'help-submit-btn', title: this.t('h4t'), body: this.t('h4b') },
                     ];
@@ -2155,11 +2306,16 @@
                     }
                 },
 
-                get absentRecords() { return this.localRecords.filter(r => r.originalStatus !== 'Late'); },
+                get absentRecords() { return this.localRecords.filter(r => r.originalStatus === 'No'); },
+                get noneRecords() { return this.localRecords.filter(r => r.originalStatus === 'NONE'); },
                 get lateRecords() { return this.localRecords.filter(r => r.originalStatus === 'Late'); },
                 get isAllAbsentSelected() {
                     const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed);
                     return sel.length > 0 && sel.every(r => this.selectedAbsent.includes(r.empId));
+                },
+                get isAllNoneSelected() {
+                    const sel = this.noneRecords.filter(r => !r.isAlreadyReviewed);
+                    return sel.length > 0 && sel.every(r => this.selectedNone.includes(r.empId));
                 },
                 get isAllLateSelected() {
                     const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed);
@@ -2220,7 +2376,7 @@
                     } catch (e) { }
 
                     this.$watch('selectedTraining', () => {
-                        this.loadTargetRecords(); this.clearAbsentSelection(); this.clearLateSelection();
+                        this.loadTargetRecords(); this.clearAbsentSelection(); this.clearNoneSelection(); this.clearLateSelection();
                     });
                 },
 
@@ -2486,12 +2642,15 @@
                 },
 
                 toggleAbsentSelect(empId) { const idx = this.selectedAbsent.indexOf(empId); if (idx === -1) this.selectedAbsent.push(empId); else this.selectedAbsent.splice(idx, 1); },
+                toggleNoneSelect(empId) { const idx = this.selectedNone.indexOf(empId); if (idx === -1) this.selectedNone.push(empId); else this.selectedNone.splice(idx, 1); },
                 toggleLateSelect(empId) { const idx = this.selectedLate.indexOf(empId); if (idx === -1) this.selectedLate.push(empId); else this.selectedLate.splice(idx, 1); },
                 toggleSelectAll(type) {
                     if (type === 'absent') { const sel = this.absentRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId); this.selectedAbsent = this.isAllAbsentSelected ? [] : [...sel]; }
+                    else if (type === 'none') { const sel = this.noneRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId); this.selectedNone = this.isAllNoneSelected ? [] : [...sel]; }
                     else { const sel = this.lateRecords.filter(r => !r.isAlreadyReviewed).map(r => r.empId); this.selectedLate = this.isAllLateSelected ? [] : [...sel]; }
                 },
                 clearAbsentSelection() { this.selectedAbsent = []; this.bulkStatusAbsent = ''; },
+                clearNoneSelection() { this.selectedNone = []; this.bulkStatusNone = ''; this.bulkNoteNone = ''; },
                 clearLateSelection() { this.selectedLate = []; this.bulkNoteLate = ''; this.bulkStatusLate = ''; },
 
                 applyBulkAbsent() {
@@ -2499,6 +2658,19 @@
                     this.localRecords.forEach(rec => { if (this.selectedAbsent.includes(rec.empId) && !rec.isAlreadyReviewed) { rec.status = this.bulkStatusAbsent; this.saveAutoSave(rec); } });
                     this.clearAbsentSelection();
                     this.notify(this.lang === 'ckb' ? 'ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Status updated for selected employees');
+                },
+
+                applyBulkNone() {
+                    if (!this.bulkStatusNone && !this.bulkNoteNone) return;
+                    this.localRecords.forEach(rec => {
+                        if (this.selectedNone.includes(rec.empId) && !rec.isAlreadyReviewed) {
+                            if (this.bulkStatusNone) rec.status = this.bulkStatusNone;
+                            if (this.bulkNoteNone) rec.managerNote = this.bulkNoteNone;
+                            this.saveAutoSave(rec);
+                        }
+                    });
+                    this.clearNoneSelection();
+                    this.notify(this.lang === 'ckb' ? 'تێبینی و ستاتوسی کارمەندانی هەڵبژێردراو نوێکرایەوە' : 'Status and Note updated for selected employees');
                 },
 
                 applyBulkLate() {
@@ -2535,7 +2707,14 @@
                         const finalNote = (rec.managerNote || '').trim() || '.';
                         const noteWithAuthor = finalNote + ` (By: ${this.loggedInManagerName})`;
                         if (!rec.db_id) { hasError = true; errorDetails = 'Missing record ID for: ' + rec.empName; continue; }
-                        const { error } = await sb.from('TrainingRecord').update({ 'Status': finalStatus, 'M.not': noteWithAuthor }).eq('db_id', rec.db_id);
+                        
+                        const updateData = { 'Status': finalStatus, 'M.not': noteWithAuthor };
+                        if (rec.originalStatus === 'NONE') {
+                            updateData['Check in'] = rec.start;
+                            updateData['Check out'] = rec.end;
+                        }
+                        
+                        const { error } = await sb.from('TrainingRecord').update(updateData).eq('db_id', rec.db_id);
                         if (error) { errorDetails = error.message || error.code || JSON.stringify(error); hasError = true; }
                     }
 
@@ -2585,5 +2764,4 @@
         }
     </script>
 </body>
-
 </html>

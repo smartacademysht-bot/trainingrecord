@@ -535,7 +535,7 @@
                             class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg border-2 border-white z-10 flex items-center gap-1.5 animate-pulse">
                             <i class="fa fa-bell"></i>
                             <span>Not Reviewed</span>
-                            <span class="bg-white/20 px-1 py-0.5 rounded text-[9px] font-mono" x-text="getTrainingLockInfo(t).label"></span>
+                            <span class="bg-white/20 px-1 py-0.5 rounded text-[9px] font-mono" x-text="formatCountdown(getTrainingLockInfo(t).expiresAt, nowTimer)"></span>
                           </div>
                         </template>
                         <div>
@@ -2078,6 +2078,18 @@
                   <option :value="m" x-text="m"></option>
                 </template>
               </select>
+              <template x-if="lockManagerFilter">
+                <div class="flex items-center gap-2">
+                  <label class="text-xs font-bold text-gray-600 uppercase ml-2">Status Filter:</label>
+                  <select x-model="lockStatusFilter"
+                    class="border-2 border-orange-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-400 outline-none w-48 font-bold text-gray-800 bg-white">
+                    <option value="all">All Statuses</option>
+                    <option value="locked">Locked</option>
+                    <option value="active">Active (Hours left)</option>
+                    <option value="no_review">No Review Needed</option>
+                  </select>
+                </div>
+              </template>
               <button x-show="lockManagerFilter"
                 @click="loadLockTrainingsFromSupabase(lockManagerFilter, lockedTrainings)"
                 class="bg-orange-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-orange-600 transition flex items-center gap-2">
@@ -2119,7 +2131,13 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y">
-                  <template x-for="item in lockedTrainings" :key="item.key">
+                  <template x-for="item in lockedTrainings.filter(t => {
+                    if (lockStatusFilter === 'all') return true;
+                    if (lockStatusFilter === 'locked') return t.isReviewNeeded && t.isLocked;
+                    if (lockStatusFilter === 'active') return t.isReviewNeeded && !t.isLocked;
+                    if (lockStatusFilter === 'no_review') return !t.isReviewNeeded;
+                    return true;
+                  })" :key="item.key">
                     <tr class="hover:bg-orange-50 transition-colors" :class="item.isReviewNeeded && item.isLocked ? 'bg-red-50' : ''">
                       <td class="p-3 text-gray-700 font-medium" x-text="item.department"></td>
                       <td class="p-3 font-bold text-gray-800" x-text="item.course"></td>
@@ -2149,30 +2167,25 @@
                         </template>
                         <template x-if="item.isReviewNeeded && !item.isLocked">
                           <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
-                            <i class="fa fa-clock"></i> <span x-text="item.hoursLeft + 'h remaining'"></span>
+                            <i class="fa fa-clock"></i> <span x-text="formatCountdown(item.expiresAt, nowTimer)"></span>
                           </span>
                         </template>
                       </td>
                       <td class="p-3 text-center">
-                        <template x-if="item.isReviewNeeded">
-                          <div class="flex items-center justify-center gap-2">
-                            <button @click="updateLockStatusLocal(item, 0)"
-                              class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
-                              <i class="fa fa-lock"></i> Lock Now
-                            </button>
-                            <button @click="updateLockStatusLocal(item, 48)"
-                              class="bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
-                              <i class="fa fa-redo"></i> Renew 48h
-                            </button>
-                            <button @click="updateLockStatusLocal(item, 72)"
-                              class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
-                              <i class="fa fa-redo"></i> 72h
-                            </button>
-                          </div>
-                        </template>
-                        <template x-if="!item.isReviewNeeded">
-                          <span class="text-xs text-gray-400 font-medium">No actions</span>
-                        </template>
+                        <div class="flex items-center justify-center gap-2">
+                          <button @click="updateLockStatusLocal(item, 0)"
+                            class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                            <i class="fa fa-lock"></i> Lock Now
+                          </button>
+                          <button @click="updateLockStatusLocal(item, 48)"
+                            class="bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                            <i class="fa fa-redo"></i> Renew 48h
+                          </button>
+                          <button @click="updateLockStatusLocal(item, 72)"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                            <i class="fa fa-redo"></i> 72h
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   </template>
@@ -2410,6 +2423,10 @@
         showDeptModal: false, selectedSettingsDept: null,
 
         editingRecord: null,
+        lockManagerFilter: '',
+        lockedTrainings: [],
+        lockLoading: false,
+        lockStatusFilter: 'all',
         backupScheduleEnabled: false,
         backupScheduleType: 'weekly',
         backupScheduleDay: 'Saturday',
@@ -2424,9 +2441,9 @@
         gdriveScope: 'https://www.googleapis.com/auth/drive.readonly',
         driveAuthInitialized: false,
         isDriveSignedIn: false,
-
         showToast: false, toastMsg: '', toastType: 'success',
         confirmOpen: false, confirmMsg: '', confirmAction: () => { },
+        nowTimer: Date.now(),
 
         // Attendance Tool
         customMasterInput: '',
@@ -2464,10 +2481,15 @@
           this.loadBackupSchedule();
           this.initGoogleDriveClient(); // Silently sign in if already authorized
           
-          // Automatic backup interval check every 30 seconds
+           // Automatic backup interval check every 30 seconds
           setInterval(() => {
             this.checkBackupScheduler();
           }, 30000);
+          
+          // Start the 1-second ticking interval for countdown timers!
+          setInterval(() => {
+            this.nowTimer = Date.now();
+          }, 1000);
         },
 
         async sendLoginCode() {
@@ -3148,13 +3170,19 @@
             if (this.records && this.records.length > 0) {
               maxId = Math.max(...this.records.map(r => parseInt(r.db_id || 0) || 0));
             }
+            
+            // Start the 72-hour countdown immediately from the exact moment of upload!
+            const uploadTime = new Date();
+            const defaultExpiration = new Date(uploadTime.getTime() + 72 * 60 * 60 * 1000).toISOString();
+            
             const rows = this.previewData.records.map((r, idx) => ({
               db_id: maxId + idx + 1,
               Department: r.department, Name: r.empName, Trainer: r.trainer,
               'Trainer Type': r.trainerType, Topic: r.course, Date: r.date,
               'Duration of training': r.totalDuration, 'Check in': r.start || null,
               'Check out': r.end || null, 'Emp. Duration': r.partDuration,
-              Status: r.status, Userid: r.empId || null
+              Status: r.status, Userid: r.empId || null,
+              'M.status': defaultExpiration
             }));
             const { error } = await sb.from('TrainingRecord').insert(rows);
             if (error) throw error;
@@ -4553,10 +4581,10 @@
           });
 
           const now = new Date();
-          // If no lock time is explicitly set in Supabase yet, default to training date + 48 hours
+          // If no lock time is explicitly set in Supabase yet, default to training date + 72 hours
           if (!maxLockTime && t.date) {
-            const baseDate = new Date(t.date + 'T00:00:00');
-            maxLockTime = baseDate.getTime() + 48 * 60 * 60 * 1000;
+            let baseDate = new Date(t.date + 'T00:00:00');
+            maxLockTime = baseDate.getTime() + 72 * 60 * 60 * 1000;
           }
 
           const msRemaining = maxLockTime - now.getTime();
@@ -4568,8 +4596,20 @@
             isLocked: isLocked,
             hoursLeft: hoursRemaining,
             renewedCount: renewedCount,
+            expiresAt: maxLockTime,
             label: isLocked ? 'Locked' : `${hoursRemaining}h left`
           };
+        },
+
+        formatCountdown(expiresAt, currentTick) {
+          if (!expiresAt) return '00h 00m 00s';
+          const tick = currentTick || this.nowTimer || Date.now();
+          const diff = expiresAt - tick;
+          if (diff <= 0) return 'Expired';
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          return `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
         },
 
         async updateLockStatusLocal(item, hours) {
@@ -4688,6 +4728,7 @@
                 isReviewNeeded: lockInfo.needed,
                 isLocked: lockInfo.isLocked,
                 hoursLeft: lockInfo.hoursLeft,
+                expiresAt: lockInfo.expiresAt,
                 renewedCount: lockInfo.renewedCount,
                 lockLabel: lockInfo.label
               };

@@ -1480,7 +1480,7 @@
                                 <span style="color:var(--text3)" x-text="t('timeLeft')"></span>
                                 <span
                                     :style="activeTrainingObj?.hoursLeft < 12 ? 'color:var(--rose)' : 'color:var(--accent)'"
-                                    x-text="formatCountdown(activeTrainingObj?.expiresAt)"></span>
+                                    x-text="formatCountdown(activeTrainingObj?.expiresAt, nowTimer)"></span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill"
@@ -1969,6 +1969,34 @@
         </div>
     </div>
 
+    <!-- ===== WARNING MODAL ===== -->
+    <div x-show="showWarningModal" style="display:none"
+        class="fixed inset-0 z-[200] flex items-center justify-center p-4 fade-in"
+        style="background:rgba(0,0,0,0.75); backdrop-filter:blur(12px)">
+        <div class="glass-card w-full max-w-md p-8 fade-up" @click.outside="showWarningModal = false">
+            <div class="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                style="background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3)">
+                <i class="fa fa-exclamation-circle text-4xl" style="color:var(--rose)"></i>
+            </div>
+            <h3 class="text-2xl font-black text-center mb-4" style="color:var(--rose)" x-text="lang === 'ckb' ? 'ئاگاداری' : 'Warning'"></h3>
+            <div class="mb-8 max-h-72 overflow-y-auto" style="color:var(--text)">
+                <ul class="list-none p-0 m-0 space-y-3.5 text-sm font-bold leading-relaxed" style="text-align:initial" dir="auto">
+                    <template x-for="err in warningMessage.split('\n')" :key="err">
+                        <li class="flex items-start gap-2.5">
+                            <i class="fa fa-exclamation-triangle text-sm mt-0.5 flex-shrink-0" style="color:var(--amber)"></i>
+                            <span x-text="err"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+            <div class="flex gap-3">
+                <button @click="showWarningModal = false" class="btn-primary flex-1 justify-center py-3 text-sm font-bold" style="background:var(--rose); border-color:var(--rose); border-radius:12px">
+                    <i class="fa fa-times mr-1"></i> <span x-text="lang === 'ckb' ? 'باشە' : 'OK'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== TOAST ===== -->
     <div x-show="showToast" style="display:none" x-transition.opacity.duration.300ms class="toast">
         <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
@@ -2247,6 +2275,8 @@
                 toastMsg: '',
                 showConfirmModal: false,
                 confirmMessage: '',
+                showWarningModal: false,
+                warningMessage: '',
                 nowTimer: Date.now(),
 
                 selectedAbsent: [],
@@ -2380,9 +2410,10 @@
                     });
                 },
 
-                formatCountdown(expiresAt) {
+                formatCountdown(expiresAt, currentTick) {
                     if (!expiresAt) return '00h 00m 00s';
-                    const diff = expiresAt - this.nowTimer;
+                    const tick = currentTick || this.nowTimer || Date.now();
+                    const diff = expiresAt - tick;
                     if (diff <= 0) return this.t('expired');
                     const h = Math.floor(diff / 3600000);
                     const m = Math.floor((diff % 3600000) / 60000);
@@ -2543,7 +2574,7 @@
                         const isReviewed = hasReviewNote;
                         if (isReviewed) g.totalReviewed++; else g.totalPending++;
 
-                        const mStatusStr = String(r.mStatus || '').trim();
+                        const mStatusStr = String(r.mStatus || '').trim().split('|')[0];
                         let mStatusTime = 0;
                         if (mStatusStr && mStatusStr !== 'null' && mStatusStr !== 'undefined') {
                             const d = new Date(mStatusStr);
@@ -2572,12 +2603,19 @@
                         if (resetObj && resetObj.isHidden) return;
 
                         let baseTime = trainingDate.getTime();
-                        let maxHours = 48;
+                        let maxHours = 72;
                         if (resetObj && resetObj.timestamp) {
                             const resetDate = new Date(resetObj.timestamp);
                             if (!isNaN(resetDate.getTime()) && resetDate.getTime() > trainingDate.getTime()) {
                                 baseTime = resetDate.getTime();
-                                maxHours = Number(resetObj.duration) || 48;
+                                maxHours = Number(resetObj.duration) || 72;
+                            }
+                        } else {
+                            // If training date is today or in the future, and there's no custom reset lock yet,
+                            // start the 72h countdown from the current release/view time!
+                            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                            if (baseTime >= todayStart) {
+                                baseTime = now.getTime();
                             }
                         }
 
@@ -2591,7 +2629,7 @@
                             ...t,
                             pendingCount: t.totalPending,
                             isFullyReviewed: t.totalPending === 0,
-                            hoursLeft: Math.floor(hoursLeft),
+                            hoursLeft: Math.round(hoursLeft),
                             maxHours,
                             percentLeft: Math.min(100, Math.max(0, (msLeft / (maxHours * 3600000)) * 100)),
                             isLocked: msLeft <= 0,
@@ -2687,6 +2725,55 @@
                 },
 
                 submitNotes() {
+                    let hasMissingTimes = false;
+                    let hasMissingComments = false;
+                    let hasMissingStatus = false;
+
+                    for (const rec of this.localRecords) {
+                        if (rec.isAlreadyReviewed) continue;
+                        
+                        // 1. If status is 'No' (Absent), the manager note is required!
+                        if (rec.status === 'No') {
+                            if (!rec.managerNote || !rec.managerNote.trim()) {
+                                hasMissingComments = true;
+                            }
+                        }
+                        
+                        // 2. If original status was 'NONE' (missing data), check-in & check-out are required for Yes/Late/At Duty
+                        if (rec.originalStatus === 'NONE') {
+                            if (rec.status === 'NONE') {
+                                hasMissingStatus = true;
+                            } else if (['Yes', 'Late', 'At Duty'].includes(rec.status)) {
+                                if (!rec.start || !rec.start.trim() || !rec.end || !rec.end.trim()) {
+                                    hasMissingTimes = true;
+                                }
+                            }
+                        }
+                    }
+
+                    let errors = [];
+                    if (hasMissingTimes) {
+                        errors.push(this.lang === 'ckb'
+                            ? "تکایە کاتی هاتن یان چوون بۆ کارمەندەکانت پڕ بکەرەوە"
+                            : "Please fill checkin or checkout of your employees");
+                    }
+                    if (hasMissingComments) {
+                        errors.push(this.lang === 'ckb'
+                            ? "تکایە تێبینی بنووسە بۆ ئەو کارمەندانەی غائیبن یان دۆخەکەیان بگۆڕە"
+                            : "Please write a comment for absent employees or change their status");
+                    }
+                    if (hasMissingStatus) {
+                        errors.push(this.lang === 'ckb'
+                            ? "تکایە دۆخی کار بۆ کارمەندەکان دیاری بکە"
+                            : "Please select a status for all pending employees");
+                    }
+
+                    if (errors.length > 0) {
+                        this.warningMessage = errors.join('\n');
+                        this.showWarningModal = true;
+                        return;
+                    }
+
                     let unhandled = this.localRecords.filter(r => !r.isAlreadyReviewed && !r.managerNote?.trim() && r.status === r.originalStatus).length;
                     this.confirmMessage = unhandled > 0
                         ? `<span style="color:var(--accent); font-weight:900; display:block; margin-bottom:8px">${unhandled} ${this.lang === 'ckb' ? 'کارمەند بێ تێبینی ماوەتەوە.' : 'employee(s) without notes.'}</span> ${this.lang === 'ckb' ? 'دڵنیایت؟' : 'Are you sure?'}`
@@ -2764,4 +2851,5 @@
         }
     </script>
 </body>
+
 </html>

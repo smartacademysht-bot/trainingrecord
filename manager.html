@@ -2602,25 +2602,24 @@
                         const resetObj = this.resetTimes[resetKey];
                         if (resetObj && resetObj.isHidden) return;
 
-                        let baseTime = trainingDate.getTime();
+                        let expiresAtTime = 0;
                         let maxHours = 72;
-                        if (resetObj && resetObj.timestamp) {
-                            const resetDate = new Date(resetObj.timestamp);
-                            if (!isNaN(resetDate.getTime()) && resetDate.getTime() > trainingDate.getTime()) {
-                                baseTime = resetDate.getTime();
-                                maxHours = Number(resetObj.duration) || 72;
-                            }
-                        } else {
-                            // If training date is today or in the future, and there's no custom reset lock yet,
-                            // start the 72h countdown from the current release/view time!
-                            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-                            if (baseTime >= todayStart) {
-                                baseTime = now.getTime();
-                            }
-                        }
 
-                        let expiresAtTime = baseTime + maxHours * 3600000;
-                        if (t.maxMStatus > expiresAtTime) expiresAtTime = t.maxMStatus;
+                        if (t.maxMStatus && t.maxMStatus > 0) {
+                            expiresAtTime = t.maxMStatus;
+                            const diffHrs = (t.maxMStatus - trainingDate.getTime()) / 3600000;
+                            if (diffHrs > 0) maxHours = Math.ceil(diffHrs);
+                        } else {
+                            let baseTime = trainingDate.getTime();
+                            if (resetObj && resetObj.timestamp) {
+                                const resetDate = new Date(resetObj.timestamp);
+                                if (!isNaN(resetDate.getTime()) && resetDate.getTime() > trainingDate.getTime()) {
+                                    baseTime = resetDate.getTime();
+                                    maxHours = Number(resetObj.duration) || 72;
+                                }
+                            }
+                            expiresAtTime = baseTime + maxHours * 3600000;
+                        }
 
                         const msLeft = expiresAtTime - now.getTime();
                         const hoursLeft = Math.max(0, msLeft / 3600000);

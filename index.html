@@ -532,8 +532,10 @@
                         class="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-5 cursor-pointer transition flex flex-col justify-between h-32 relative group">
                         <template x-if="t.unreviewedProblemCount > 0">
                           <div
-                            class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white z-10 animate-pulse">
-                            <i class="fa fa-bell mr-1"></i>Not Reviewed
+                            class="absolute -top-3 -right-3 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg border-2 border-white z-10 flex items-center gap-1.5 animate-pulse">
+                            <i class="fa fa-bell"></i>
+                            <span>Not Reviewed</span>
+                            <span class="bg-white/20 px-1 py-0.5 rounded text-[9px] font-mono" x-text="getTrainingLockInfo(t).label"></span>
                           </div>
                         </template>
                         <div>
@@ -953,6 +955,7 @@
                         <th class="p-2 text-left">Start</th>
                         <th class="p-2 text-left">End</th>
                         <th class="p-2 text-left">Status</th>
+                        <th class="p-2 text-center">Move</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -963,6 +966,11 @@
                           <td class="p-2" x-text="r.start||'-'"></td>
                           <td class="p-2" x-text="r.end||'-'"></td>
                           <td class="p-2 font-bold text-green-600" x-text="r.status"></td>
+                          <td class="p-2 text-center">
+                            <button @click="moveFromAttendToNotAttend(r)" class="text-blue-600 hover:text-blue-800" title="Move to Not Attend">
+                              <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                          </td>
                         </tr>
                       </template>
                     </tbody>
@@ -970,22 +978,48 @@
                 </div>
               </div>
               <div class="border rounded overflow-hidden shadow-sm flex flex-col">
-                <div class="bg-red-100 p-2 text-center font-bold text-red-800 text-sm px-4">Not Attend <span
-                    class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full ml-1"
-                    x-text="previewData?.notAttend.length"></span></div>
+                <div class="bg-red-100 p-2 flex flex-wrap items-center justify-between gap-2 font-bold text-red-800 text-sm px-4">
+                  <div class="flex items-center gap-2">
+                    <span>Not Attend</span>
+                    <span class="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full" x-text="previewData?.notAttend.length"></span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <select :value="uploadNotAttendDeptFilter" @change="selectNotAttendByDept($event.target.value)" class="border rounded text-xs p-1 bg-white text-gray-700 font-bold max-w-[150px]">
+                      <option value="">-- Dept Dropdown --</option>
+                      <template x-for="dept in [...new Set(previewData?.notAttend.map(x => x.department))].sort()">
+                        <option :value="dept" x-text="dept"></option>
+                      </template>
+                    </select>
+                    <button x-show="selectedUploadNotAttend.length > 0" @click="deleteSelectedUploadNotAttend()" class="bg-red-600 hover:bg-red-700 text-white text-[10px] py-1 px-2.5 rounded font-black transition shadow flex items-center gap-1 uppercase">
+                      <i class="fa fa-trash"></i> Delete (<span x-text="selectedUploadNotAttend.length"></span>)
+                    </button>
+                  </div>
+                </div>
                 <div class="max-h-80 overflow-auto bg-white">
                   <table class="w-full text-xs divide-y">
                     <thead class="bg-gray-50 sticky top-0">
                       <tr>
+                        <th class="p-2 text-center w-8">
+                          <input type="checkbox" @change="toggleAllNotAttendPreview($event)" :checked="selectedUploadNotAttend.length === previewData?.notAttend.length && previewData?.notAttend.length > 0" class="rounded">
+                        </th>
                         <th class="p-2 text-left">Name</th>
                         <th class="p-2 text-left">Dept</th>
+                        <th class="p-2 text-center">Move</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y">
                       <template x-for="(r,idx) in previewData?.notAttend" :key="idx">
                         <tr class="hover:bg-gray-50">
+                          <td class="p-2 text-center">
+                            <input type="checkbox" :value="r.empName" x-model="selectedUploadNotAttend" class="rounded">
+                          </td>
                           <td class="p-2 font-medium" x-text="r.empName"></td>
                           <td class="p-2 text-gray-500" x-text="r.department"></td>
+                          <td class="p-2 text-center">
+                            <button @click="moveFromNotAttendToAttend(r)" class="text-green-600 hover:text-green-800" title="Move to Attend">
+                              <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                          </td>
                         </tr>
                       </template>
                     </tbody>
@@ -1105,7 +1139,7 @@
                     <option value="External">External</option>
                   </select>
                 </div>
-                <button
+                <button @click="updateZkTrainingTimes()"
                   class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center gap-1">
                   <i class="fa fa-sync"></i> Update
                 </button>
@@ -1152,19 +1186,26 @@
                     <td class="px-2 py-2 font-mono text-gray-400" x-text="zk.trEnd"></td>
                     <td class="px-2 py-2 font-black font-mono text-blue-600" x-text="zk.duration"></td>
                     <td class="px-2 py-2">
-                      <span x-show="zk.lateStr !== '-'" class="px-1 py-0.5 rounded bg-red-50 text-red-600 font-black text-[9px]" x-text="zk.lateStr"></span>
+                      <span x-show="zk.lateStr !== '-'"
+                        class="px-1 py-0.5 rounded bg-red-50 text-red-600 font-black text-[9px]"
+                        x-text="zk.lateStr"></span>
                       <span x-show="zk.lateStr === '-'" class="text-gray-300">-</span>
                     </td>
                     <td class="px-2 py-2 font-bold font-mono text-orange-600" x-text="zk.lateBy"></td>
                     <td class="px-2 py-2 text-center">
-                      <span x-show="zk.status === 'Yes'" class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase ring-1 ring-green-600/20">YES</span>
-                      <span x-show="zk.status === 'Late'" class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[9px] font-black uppercase ring-1 ring-yellow-600/20">LATE</span>
-                      <span x-show="zk.status !== 'Yes' && zk.status !== 'Late'" class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[9px] font-black uppercase ring-1 ring-gray-600/10">NONE</span>
+                      <span x-show="zk.status === 'Yes'"
+                        class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[9px] font-black uppercase ring-1 ring-green-600/20">YES</span>
+                      <span x-show="zk.status === 'Late'"
+                        class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[9px] font-black uppercase ring-1 ring-yellow-600/20">LATE</span>
+                      <span x-show="zk.status !== 'Yes' && zk.status !== 'Late'"
+                        class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[9px] font-black uppercase ring-1 ring-gray-600/10">NONE</span>
                     </td>
                     <td class="px-2 py-2 text-center">
                       <div class="flex items-center justify-center gap-1.5 text-xs">
-                        <button class="text-blue-400 hover:text-blue-600 transition-colors"><i class="fa fa-pen text-[10px]"></i></button>
-                        <button class="text-red-300 hover:text-red-500 transition-colors"><i class="fa fa-trash text-[10px]"></i></button>
+                        <button class="text-blue-400 hover:text-blue-600 transition-colors"><i
+                            class="fa fa-pen text-[10px]"></i></button>
+                        <button class="text-red-300 hover:text-red-500 transition-colors"><i
+                            class="fa fa-trash text-[10px]"></i></button>
                       </div>
                     </td>
                   </tr>
@@ -1616,7 +1657,7 @@
                           <tr class="hover:bg-gray-50">
                             <td class="p-3 font-medium" x-text="emp.name"></td>
                             <td class="p-3">
-                              <select x-model="emp.department" @change="if(isEditingSettings){updateEmpDepartment(emp)}"
+                              <select :value="emp.department" @change="if(isEditingSettings){updateEmpDepartment(emp, $event.target.value)}"
                                 :disabled="!isEditingSettings" class="border rounded text-xs p-1.5 font-bold"
                                 :class="isEditingSettings ? 'bg-white border-blue-300' : 'bg-gray-100 text-gray-500'">
                                 <option value="">-- Select --</option>
@@ -1710,7 +1751,7 @@
                       <td class="p-3 font-medium text-gray-800" x-text="emp.name"></td>
                       <td class="p-3 text-gray-600" x-text="emp.department"></td>
                       <td class="p-3 bg-blue-50">
-                        <select x-model="emp.department" @change="if(isEditingSettings){updateEmpDepartment(emp)}"
+                        <select :value="emp.department" @change="if(isEditingSettings){updateEmpDepartment(emp, $event.target.value)}"
                           :disabled="!isEditingSettings" class="border rounded text-xs p-1.5 font-bold"
                           :class="isEditingSettings ? 'bg-white border-blue-300' : 'bg-gray-100 text-gray-500'">
                           <option value="">-- Select --</option>
@@ -1882,10 +1923,9 @@
           <div x-show="settingsView === 'backup_schedule'" class="flex-1 flex flex-col space-y-4 fade-in">
             <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
               <h4 class="font-bold text-emerald-900 text-lg mb-2 flex items-center gap-2">
-                <i class="fa fa-calendar-days text-emerald-600"></i> Google Drive Backup Schedule
+                <i class="fa fa-calendar-days text-emerald-600"></i> Supabase Automatic Excel Backup (To PC)
               </h4>
-              <p class="text-sm text-emerald-700">Manage automatic backup scheduling for the backup data file to Google
-                Drive.</p>
+              <p class="text-sm text-emerald-700">Configure the automatic backup schedule to fetch Supabase tables and download them as Excel files directly to your PC.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1930,15 +1970,28 @@
                     class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none" />
                 </div>
 
+                <div class="space-y-2">
+                  <label class="block text-xs font-bold text-gray-700">Table to Backup</label>
+                  <select x-model="backupSelectedTable"
+                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <option value="TrainingRecord">Training Record</option>
+                    <option value="Employees">Employees</option>
+                    <option value="Settings">Settings</option>
+                    <option value="ZKTecoLogs">ZKTeco Logs</option>
+                    <option value="ManagerLocks">Manager Locks</option>
+                    <option value="All Tables">All Tables (Separate Sheets)</option>
+                  </select>
+                </div>
+
                 <div class="flex flex-wrap gap-3">
                   <button @click="saveBackupSchedule()"
                     class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold transition">Save
                     Backup Schedule</button>
-                  <button @click="runGoogleDriveBackupNow()"
+                  <button @click="runAutomaticBackupDownload(true)"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold transition">Backup
                     Now</button>
                   <button
-                    @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; saveBackupSchedule();"
+                    @click="backupScheduleEnabled=false; backupScheduleType='weekly'; backupScheduleDay='Monday'; backupScheduleDate=''; backupScheduleTime='02:00'; backupSelectedTable='TrainingRecord'; saveBackupSchedule();"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-5 py-3 rounded-lg font-semibold transition">Reset</button>
                 </div>
               </div>
@@ -1947,8 +2000,7 @@
                 <div class="text-sm font-semibold text-gray-600 mb-3">Next scheduled backup</div>
                 <div class="text-lg font-bold text-emerald-800" x-text="backupNextRunLabel()"></div>
                 <div class="text-sm text-gray-500 mt-4">
-                  This schedule is stored locally in your browser and controls when the backup data file should be
-                  synced to Google Drive.
+                  This schedule is stored locally in your browser and automatically downloads the selected Supabase tables as an Excel file directly to your PC.
                 </div>
               </div>
             </div>
@@ -2052,7 +2104,7 @@
                   <span x-text="'Manager: ' + lockManagerFilter"></span>
                 </span>
                 <span class="text-xs text-orange-700 font-bold"
-                  x-text="lockedTrainings.length + ' training(s) pending review'"></span>
+                  x-text="lockedTrainings.length + ' training(s) listed'"></span>
               </div>
               <table class="w-full text-sm">
                 <thead class="bg-gray-50 sticky top-0 shadow-sm">
@@ -2060,54 +2112,74 @@
                     <th class="p-3 text-left text-gray-700 font-bold">Department</th>
                     <th class="p-3 text-left text-gray-700 font-bold">Course</th>
                     <th class="p-3 text-left text-gray-700 font-bold">Date</th>
-                    <th class="p-3 text-left text-gray-700 font-bold">Unreviewed</th>
+                    <th class="p-3 text-left text-gray-700 font-bold">Review Summary</th>
+                    <th class="p-3 text-center text-gray-700 font-bold">Renewals</th>
                     <th class="p-3 text-left text-gray-700 font-bold">Status</th>
                     <th class="p-3 text-center text-gray-700 font-bold">Action</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y">
                   <template x-for="item in lockedTrainings" :key="item.key">
-                    <tr class="hover:bg-orange-50 transition-colors" :class="item.isLocked ? 'bg-red-50' : ''">
+                    <tr class="hover:bg-orange-50 transition-colors" :class="item.isReviewNeeded && item.isLocked ? 'bg-red-50' : ''">
                       <td class="p-3 text-gray-700 font-medium" x-text="item.department"></td>
                       <td class="p-3 font-bold text-gray-800" x-text="item.course"></td>
                       <td class="p-3 text-gray-500 font-mono text-xs" x-text="item.date"></td>
+                      <td class="p-3">
+                        <div class="flex flex-col gap-1">
+                          <span class="bg-green-100 text-green-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-green-200 w-fit"
+                            x-text="'Reviewed: ' + item.reviewedCount"></span>
+                          <span class="bg-red-100 text-red-800 text-[11px] font-bold px-2 py-0.5 rounded-full border border-red-200 w-fit"
+                            x-text="'Not Reviewed: ' + item.unreviewedCount"></span>
+                        </div>
+                      </td>
                       <td class="p-3 text-center">
-                        <span
-                          class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200"
-                          x-text="item.unreviewedCount + ' records'"></span>
+                        <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-full border border-purple-200"
+                          x-text="'Renewed: ' + item.renewedCount + ' times'"></span>
                       </td>
                       <td class="p-3">
-                        <template x-if="item.isLocked">
-                          <span
-                            class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 w-fit">
-                            <i class="fa fa-lock"></i> Locked — 48hr Expired
+                        <template x-if="!item.isReviewNeeded">
+                          <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full border border-gray-200 flex items-center gap-1 w-fit">
+                            <i class="fa fa-info-circle text-gray-400"></i> No Review Needed
                           </span>
                         </template>
-                        <template x-if="!item.isLocked">
-                          <span
-                            class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
+                        <template x-if="item.isReviewNeeded && item.isLocked">
+                          <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200 flex items-center gap-1 w-fit">
+                            <i class="fa fa-lock"></i> Locked — Expired
+                          </span>
+                        </template>
+                        <template x-if="item.isReviewNeeded && !item.isLocked">
+                          <span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full border border-yellow-200 flex items-center gap-1 w-fit">
                             <i class="fa fa-clock"></i> <span x-text="item.hoursLeft + 'h remaining'"></span>
                           </span>
                         </template>
                       </td>
                       <td class="p-3 text-center">
-                        <div class="flex items-center justify-center gap-2">
-                          <button @click="renewLockLocal(item, 48, lockedTrainings)"
-                            class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
-                            <i class="fa fa-redo"></i> Renew 48hr
-                          </button>
-                          <button @click="renewLockLocal(item, 72, lockedTrainings)"
-                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow transition flex items-center gap-1">
-                            <i class="fa fa-redo"></i> 72hr
-                          </button>
-                        </div>
+                        <template x-if="item.isReviewNeeded">
+                          <div class="flex items-center justify-center gap-2">
+                            <button @click="updateLockStatusLocal(item, 0)"
+                              class="bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                              <i class="fa fa-lock"></i> Lock Now
+                            </button>
+                            <button @click="updateLockStatusLocal(item, 48)"
+                              class="bg-green-600 hover:bg-green-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                              <i class="fa fa-redo"></i> Renew 48h
+                            </button>
+                            <button @click="updateLockStatusLocal(item, 72)"
+                              class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+                              <i class="fa fa-redo"></i> 72h
+                            </button>
+                          </div>
+                        </template>
+                        <template x-if="!item.isReviewNeeded">
+                          <span class="text-xs text-gray-400 font-medium">No actions</span>
+                        </template>
                       </td>
                     </tr>
                   </template>
                   <tr x-show="!lockLoading && lockedTrainings.length === 0 && lockManagerFilter">
-                    <td colspan="6" class="p-10 text-center text-gray-400">
+                    <td colspan="7" class="p-10 text-center text-gray-400">
                       <i class="fa fa-check-circle text-green-400 text-3xl mb-2 block"></i>
-                      <p class="font-bold">No pending review trainings found for this manager.</p>
+                      <p class="font-bold">No trainings found for this manager.</p>
                     </td>
                   </tr>
                 </tbody>
@@ -2296,6 +2368,7 @@
         trainingSchedule: [],
         zkSelectedTrainingId: '',
         zkSelectedTrainingTimes: { start: '', end: '' },
+        zkSelectedTrainingRawTimes: { start: '', end: '' },
 
         menuItems: [
           { id: 'dashboard', label: 'Dashboard', icon: 'fa-solid fa-gauge' },
@@ -2321,6 +2394,8 @@
         uploadForm: { course: '', trainer: '', date: '', startTime: '', endTime: '', trainerType: 'Internal' },
         manualRows: [],
         previewData: null,
+        selectedUploadNotAttend: [],
+        uploadNotAttendDeptFilter: '',
         isMultiGroup: false,
 
         zktecoTab: 'floor14', zktecoSearch: '', zktecoFilterDept: '',
@@ -2340,6 +2415,7 @@
         backupScheduleDay: 'Saturday',
         backupScheduleDate: '',
         backupScheduleTime: '08:00',
+        backupSelectedTable: 'TrainingRecord',
         driveFolderId: '',
         driveBackupFiles: [],
         driveLoading: false,
@@ -2387,6 +2463,11 @@
           await this.fetchExternalGoogleSheet();
           this.loadBackupSchedule();
           this.initGoogleDriveClient(); // Silently sign in if already authorized
+          
+          // Automatic backup interval check every 30 seconds
+          setInterval(() => {
+            this.checkBackupScheduler();
+          }, 30000);
         },
 
         async sendLoginCode() {
@@ -2495,8 +2576,8 @@
                 trainer: r[3]?.replace(/"/g, '').trim(),
                 dept: r[4]?.replace(/"/g, '').trim() || '',
                 floor: r[5]?.replace(/"/g, '').trim() || '',
-                start: r[6]?.replace(/"/g, '').trim() || '',
-                end: r[7]?.replace(/"/g, '').trim() || ''
+                start: this.convertTo24Hour(r[6]?.replace(/"/g, '').trim() || ''),
+                end: this.convertTo24Hour(r[7]?.replace(/"/g, '').trim() || '')
               });
             }
             this.trainingSchedule = result.filter(t => t.course && t.date);
@@ -2549,7 +2630,7 @@
             this.zkSelectedTrainingDept = selected.dept || '---';
             this.zkSelectedTrainingFloor = selected.floor || '---';
             this.showNotification(`Training Selected: ${selected.course}`);
-            this.fetchZKTecoData(); 
+            this.fetchZKTecoData();
           }
         },
 
@@ -2559,7 +2640,7 @@
 
           // 1. Initial filter by date
           const dayLogs = this.zktecoData.filter(row => row.dateOnly === this.zktecoFilterDate);
-          
+
           // 2. Group by UserID
           const groups = {};
           dayLogs.forEach(row => {
@@ -2587,7 +2668,7 @@
             const sorted = g.punches.sort();
             const cin = sorted[0];
             const cout = sorted.length > 1 ? sorted[sorted.length - 1] : '-';
-            
+
             let duration = '-', lateBy = '-', status = 'NONE';
             let empMins = 0;
 
@@ -2802,17 +2883,17 @@
           }).sort((a, b) => a.department.localeCompare(b.department));
         },
 
-        getTrainingsForDept(dept) {
+         getTrainingsForDept(dept) {
           if (!dept) return [];
           const map = new Map();
           this.records.filter(r => r.department === dept).forEach(r => {
             const key = r.course + '|' + r.date;
-            if (!map.has(key)) map.set(key, { course: r.course, date: r.date, trainer: r.trainer, attend: [], notAttend: [], problemCount: 0, unreviewedProblemCount: 0, reviewedCount: 0 });
+            if (!map.has(key)) map.set(key, { course: r.course, date: r.date, trainer: r.trainer, department: dept, attend: [], notAttend: [], problemCount: 0, unreviewedProblemCount: 0, reviewedCount: 0 });
             const g = map.get(key);
             if (r.status === 'No') g.notAttend.push(r); else g.attend.push(r);
             if (r.status === 'No' || r.status === 'Late') {
               g.problemCount++;
-              if (!r.managerNote || r.managerNote.trim() === '') g.unreviewedProblemCount++;
+              if ((!r.managerNote || r.managerNote.trim() === '') && r.seen !== 'true' && r.seen !== 'Reviewed') g.unreviewedProblemCount++;
             }
             if (r.managerNote && r.managerNote.trim() !== '') g.reviewedCount++;
           });
@@ -3052,6 +3133,8 @@
             });
           });
 
+          this.selectedUploadNotAttend = [];
+          this.uploadNotAttendDeptFilter = '';
           this.previewData = { records: newRecords, attend: newRecords.filter(r => r.status !== 'No'), notAttend: newRecords.filter(r => r.status === 'No') };
           this.stopLoading();
         },
@@ -3077,12 +3160,111 @@
             if (error) throw error;
             this.showNotification(`Saved ${rows.length} records!`);
             this.previewData = null; this.manualRows = [];
+            this.selectedUploadNotAttend = [];
+            this.uploadNotAttendDeptFilter = '';
             if (document.getElementById('uploadFile')) document.getElementById('uploadFile').value = '';
             await this.fetchData();
           } catch (e) {
             this.stopLoading();
             this.showNotification('Save failed: ' + e.message, 'error');
           }
+        },
+
+        selectNotAttendByDept(dept) {
+          this.uploadNotAttendDeptFilter = dept;
+          if (!dept) {
+            this.selectedUploadNotAttend = [];
+            return;
+          }
+          this.selectedUploadNotAttend = this.previewData.notAttend
+            .filter(r => r.department === dept)
+            .map(r => r.empName);
+        },
+
+        deleteSelectedUploadNotAttend() {
+          if (!this.selectedUploadNotAttend.length) return;
+          const namesToDelete = new Set(this.selectedUploadNotAttend);
+          
+          this.previewData.records = this.previewData.records.filter(r => !namesToDelete.has(r.empName));
+          this.previewData.notAttend = this.previewData.notAttend.filter(r => !namesToDelete.has(r.empName));
+          this.previewData.attend = this.previewData.records.filter(r => r.status !== 'No');
+          
+          this.selectedUploadNotAttend = [];
+          this.uploadNotAttendDeptFilter = '';
+          this.showNotification(`Removed selected names from preview`);
+        },
+
+        toggleAllNotAttendPreview(e) {
+          this.selectedUploadNotAttend = e.target.checked 
+            ? this.previewData.notAttend.map(r => r.empName) 
+            : [];
+        },
+
+        moveFromNotAttendToAttend(row) {
+          this.previewData.notAttend = this.previewData.notAttend.filter(r => r.empName !== row.empName);
+          const rec = this.previewData.records.find(r => r.empName === row.empName);
+          if (rec) {
+            rec.status = 'Yes';
+          }
+          this.previewData.attend = this.previewData.records.filter(r => r.status !== 'No');
+          this.previewData.notAttend = this.previewData.records.filter(r => r.status === 'No');
+          this.selectedUploadNotAttend = [];
+          this.uploadNotAttendDeptFilter = '';
+          this.showNotification(`Moved ${row.empName} to Attend table`);
+        },
+
+        moveFromAttendToNotAttend(row) {
+          this.previewData.attend = this.previewData.attend.filter(r => r.empName !== row.empName);
+          const rec = this.previewData.records.find(r => r.empName === row.empName);
+          if (rec) {
+            rec.status = 'No';
+            rec.start = '';
+            rec.end = '';
+            rec.partDuration = 0;
+          }
+          this.previewData.attend = this.previewData.records.filter(r => r.status !== 'No');
+          this.previewData.notAttend = this.previewData.records.filter(r => r.status === 'No');
+          this.selectedUploadNotAttend = [];
+          this.uploadNotAttendDeptFilter = '';
+          this.showNotification(`Moved ${row.empName} to Not Attend table`);
+        },
+
+        convertTo24Hour(timeStr) {
+          if (!timeStr) return '';
+          timeStr = timeStr.trim();
+          const ampmMatch = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+          if (ampmMatch) {
+            let hours = parseInt(ampmMatch[1], 10);
+            const minutes = ampmMatch[2];
+            const ampm = ampmMatch[3].toUpperCase();
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+            return `${String(hours).padStart(2, '0')}:${minutes}`;
+          }
+          const normalMatch = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+          if (normalMatch) {
+            const hours = parseInt(normalMatch[1], 10);
+            const minutes = normalMatch[2];
+            return `${String(hours).padStart(2, '0')}:${minutes}`;
+          }
+          return timeStr;
+        },
+
+        updateZkTrainingTimes() {
+          if (!this.zkSelectedTrainingRawTimes.start || !this.zkSelectedTrainingRawTimes.end) {
+            this.showNotification('Please enter both start and end times', 'error');
+            return;
+          }
+          const rawStart = this.convertTo24Hour(this.zkSelectedTrainingRawTimes.start);
+          const rawEnd = this.convertTo24Hour(this.zkSelectedTrainingRawTimes.end);
+          this.zkSelectedTrainingRawTimes.start = rawStart;
+          this.zkSelectedTrainingRawTimes.end = rawEnd;
+
+          this.zkSelectedTrainingTimes = {
+            start: this.adjustTime(rawStart, -15),
+            end: this.adjustTime(rawEnd, 15)
+          };
+          this.showNotification('Training times and attendance statuses updated!');
         },
 
         // ==================== SETTINGS ====================
@@ -3110,6 +3292,7 @@
             this.backupScheduleDate = config.date || '';
             this.backupScheduleTime = config.time || '02:00';
             this.driveFolderId = config.driveFolderId || '';
+            this.backupSelectedTable = config.backupSelectedTable || 'TrainingRecord';
           } catch (e) {
             console.error('Failed to load backup schedule:', e);
           }
@@ -3122,10 +3305,84 @@
             day: this.backupScheduleDay,
             date: this.backupScheduleDate,
             time: this.backupScheduleTime,
-            driveFolderId: this.driveFolderId
+            driveFolderId: this.driveFolderId,
+            backupSelectedTable: this.backupSelectedTable || 'TrainingRecord'
           };
           localStorage.setItem('kasBackupSchedule', JSON.stringify(config));
           this.showNotification('Backup schedule saved!');
+        },
+
+        checkBackupScheduler() {
+          if (!this.backupScheduleEnabled) return;
+          
+          const now = new Date();
+          const currentHour = now.getHours();
+          const currentMinute = now.getMinutes();
+          
+          const [schedHour, schedMinute] = (this.backupScheduleTime || '02:00').split(':').map(Number);
+          
+          // Check if hour and minute matches
+          if (currentHour !== schedHour || currentMinute !== schedMinute) return;
+          
+          // Check frequency constraint
+          if (this.backupScheduleType === 'weekly') {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayDay = days[now.getDay()];
+            if (todayDay !== this.backupScheduleDay) return;
+          } else if (this.backupScheduleType === 'monthly') {
+            const dayNum = Math.max(1, Math.min(31, parseInt(this.backupScheduleDate, 10) || 1));
+            if (now.getDate() !== dayNum) return;
+          }
+          
+          // Check if already run for this minute to prevent multiple triggers within the same minute
+          const currentMinuteStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}_${currentHour}:${currentMinute}`;
+          const lastRun = localStorage.getItem('kasLastAutomaticBackupMinute');
+          if (lastRun === currentMinuteStr) return;
+          
+          localStorage.setItem('kasLastAutomaticBackupMinute', currentMinuteStr);
+          this.runAutomaticBackupDownload(false);
+        },
+
+        async runAutomaticBackupDownload(isManual = false) {
+          this.startLoading();
+          try {
+            const table = this.backupSelectedTable || 'TrainingRecord';
+            const wb = XLSX.utils.book_new();
+            
+            if (table === 'All Tables') {
+              const tables = ['TrainingRecord', 'Employees', 'Settings', 'ZKTecoLogs', 'ManagerLocks'];
+              for (const tbl of tables) {
+                try {
+                  const data = await this.fetchAllRows(tbl);
+                  if (data && data.length > 0) {
+                    const ws = XLSX.utils.json_to_sheet(data);
+                    XLSX.utils.book_append_sheet(wb, ws, tbl);
+                  }
+                } catch (err) {
+                  console.warn(`Failed to fetch table ${tbl} for backup:`, err);
+                }
+              }
+            } else {
+              const data = await this.fetchAllRows(table);
+              if (data && data.length > 0) {
+                const ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, table);
+              } else {
+                throw new Error(`Table ${table} has no rows or failed to fetch.`);
+              }
+            }
+            
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `KAS_${table.replace(/\s+/g, '_')}_Backup_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            this.showNotification(isManual ? `Backup completed! File saved as ${fileName}` : `Automatic scheduled backup completed! File saved to PC: ${fileName}`);
+          } catch (e) {
+            console.error('Backup failed:', e);
+            this.showNotification('Backup failed: ' + e.message, 'error');
+          } finally {
+            this.stopLoading();
+          }
         },
 
         async initGoogleDriveClient() {
@@ -3431,7 +3688,7 @@
             // Step 1: Fetch Employees from Supabase to get fresh name/department
             // We MUST use fetchAllRows because Supabase limits .select('*') to 1000 rows!
             const empData = await this.fetchAllRows('Employees');
-            
+
             // Build a lookup map: employee id (as string) => {name, department}
             const empMap = {};
             (empData || []).forEach(e => {
@@ -3633,19 +3890,24 @@
           }
         },
 
-        async updateEmpDepartment(emp) {
-          if (!emp.department) {
+        async updateEmpDepartment(emp, newDept) {
+          if (!newDept) {
             this.showNotification('Please select a department', 'error');
             return;
           }
+          this.startLoading();
           try {
             const { error } = await sb.from('Employees')
-              .update({ 'Department': emp.department })
+              .update({ 'Department': newDept })
               .eq('db_id', emp.db_id);
             if (error) throw error;
-            this.showNotification(`${emp.name} → ${emp.department} ✓`);
+            emp.department = newDept;
+            this.showNotification(`${emp.name} → ${newDept} ✓`);
+            await this.fetchData();
           } catch (e) {
+            this.stopLoading();
             this.showNotification('Update failed: ' + e.message, 'error');
+            await this.fetchData();
           }
         },
 
@@ -3770,7 +4032,7 @@
             this.records.forEach(r => {
               if (!depts.includes(r.department)) return;
               // Only consider No or NONE status without a manager note = unreviewed
-              const isUnreviewed = (r.status === 'No' || r.status === 'NONE') && (!r.managerNote || r.managerNote.trim() === '');
+              const isUnreviewed = (r.status === 'No' || r.status === 'NONE') && (!r.managerNote || r.managerNote.trim() === '') && r.seen !== 'true' && r.seen !== 'Reviewed';
               if (!isUnreviewed) return;
 
               const key = `${r.department}|${r.course}|${r.date}`;
@@ -4128,13 +4390,13 @@
 
         markAsReviewed(training, dept) {
           if (!training) return;
-          const unreviewedRecords = [...training.attend, ...training.notAttend].filter(r => (r.status === 'No' || r.status === 'NONE') && (!r.managerNote || r.managerNote.trim() === ''));
+          const unreviewedRecords = [...training.attend, ...training.notAttend].filter(r => (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') && (!r.managerNote || r.managerNote.trim() === '') && r.seen !== 'true' && r.seen !== 'Reviewed');
           if (unreviewedRecords.length === 0) return this.showNotification('All records already have review notes.', 'info');
           this.askConfirm(`Mark ${unreviewedRecords.length} unreviewed records as reviewed?`, async () => {
             this.startLoading();
             try {
               for (const rec of unreviewedRecords) {
-                await sb.from('TrainingRecord').update({ 'M.not': 'Reviewed' }).eq('db_id', rec.db_id);
+                await sb.from('TrainingRecord').update({ 'seen': 'true' }).eq('db_id', rec.db_id);
               }
               this.showNotification(`Marked ${unreviewedRecords.length} records as reviewed!`);
               await this.fetchData();
@@ -4230,13 +4492,13 @@
         markDeptAsReviewed(dept) {
           if (!dept) return;
           const unreviewedRecords = this.records.filter(r =>
-            r.department === dept.department && (r.status === 'No' || r.status === 'NONE') && (!r.managerNote || r.managerNote.trim() === ''));
+            r.department === dept.department && (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') && (!r.managerNote || r.managerNote.trim() === '') && r.seen !== 'true' && r.seen !== 'Reviewed');
           if (unreviewedRecords.length === 0) return this.showNotification('All records in this department are reviewed.', 'info');
           this.askConfirm(`Mark ${unreviewedRecords.length} unreviewed records in ${dept.department} as reviewed?`, async () => {
             this.startLoading();
             try {
               for (const rec of unreviewedRecords) {
-                await sb.from('TrainingRecord').update({ 'M.not': 'Reviewed' }).eq('db_id', rec.db_id);
+                await sb.from('TrainingRecord').update({ 'seen': 'true' }).eq('db_id', rec.db_id);
               }
               this.showNotification(`Marked ${unreviewedRecords.length} records as reviewed!`);
               await this.fetchData();
@@ -4252,33 +4514,124 @@
           this.isEditingSettings = false;
         },
 
-        // ==================== MANAGER LOCK FIX ====================
-        renewLockLocal(item, hours, lockedTrainings) {
+        getTrainingLockInfo(t) {
+          if (!t) return { needed: false, label: 'No Review Needed' };
+          
+          const dept = t.department || t.Department || '';
+          
+          // Fetch all records for this training to see if any have status 'No'
+          const recs = this.records.filter(r => r.course === t.course && r.date === t.date && r.department === dept);
+          const hasNoStatusEmployees = recs.some(r => r.status === 'No');
+          
+          if (!hasNoStatusEmployees) {
+            return {
+              needed: false,
+              isLocked: false,
+              hoursLeft: 0,
+              renewedCount: 0,
+              label: 'No Review Needed'
+            };
+          }
+
+          // Determine the expiration time and renewals
+          let maxLockTime = 0;
+          let renewedCount = 0;
+          
+          recs.forEach(r => {
+            const mStatusStr = String(r.mStatus || '').trim();
+            if (mStatusStr && mStatusStr !== 'null' && mStatusStr !== 'undefined' && mStatusStr !== '.') {
+              const parts = mStatusStr.split('|');
+              const timeStr = parts[0];
+              const rCount = parts.length > 1 ? parseInt(parts[1], 10) || 0 : 0;
+              if (rCount > renewedCount) renewedCount = rCount;
+              
+              const d = new Date(timeStr);
+              if (!isNaN(d.getTime()) && d.getTime() > maxLockTime) {
+                maxLockTime = d.getTime();
+              }
+            }
+          });
+
           const now = new Date();
-          const renewUntil = new Date(now.getTime() + hours * 60 * 60 * 1000);
-          this.askConfirm(`Renew lock for ${hours} hours?`, async () => {
+          // If no lock time is explicitly set in Supabase yet, default to training date + 48 hours
+          if (!maxLockTime && t.date) {
+            const baseDate = new Date(t.date + 'T00:00:00');
+            maxLockTime = baseDate.getTime() + 48 * 60 * 60 * 1000;
+          }
+
+          const msRemaining = maxLockTime - now.getTime();
+          const hoursRemaining = Math.max(0, Math.round(msRemaining / (60 * 60 * 1000)));
+          const isLocked = msRemaining <= 0;
+
+          return {
+            needed: true,
+            isLocked: isLocked,
+            hoursLeft: hoursRemaining,
+            renewedCount: renewedCount,
+            label: isLocked ? 'Locked' : `${hoursRemaining}h left`
+          };
+        },
+
+        async updateLockStatusLocal(item, hours) {
+          const now = new Date();
+          let renewUntil;
+          let actionLabel = '';
+          
+          if (hours === 0) {
+            renewUntil = new Date('2000-01-01T00:00:00Z');
+            actionLabel = 'immediately lock';
+          } else {
+            renewUntil = new Date(now.getTime() + hours * 60 * 60 * 1000);
+            actionLabel = `renew lock for ${hours} hours`;
+          }
+
+          this.askConfirm(`Are you sure you want to ${actionLabel} for "${item.course}"?`, async () => {
+            this.startLoading();
             try {
-              const unreviewedIds = item.unreviewedRecs.map(r => r.db_id);
-              for (const id of unreviewedIds) {
-                await sb.from('TrainingRecord').update({ 'M.status': renewUntil.toISOString() }).eq('db_id', id);
+              // Fetch all records for this training
+              const recs = this.records.filter(r => r.course === item.course && r.date === item.date && r.department === item.department);
+              
+              // Get current max renew count
+              let maxCount = 0;
+              recs.forEach(r => {
+                const parts = String(r.mStatus || '').split('|');
+                if (parts.length > 1) {
+                  const c = parseInt(parts[1], 10) || 0;
+                  if (c > maxCount) maxCount = c;
+                }
+              });
+
+              // Increment count if renewing or locking
+              const newCount = maxCount + 1;
+              const newStatusValue = `${renewUntil.toISOString()}|${newCount}`;
+
+              // Update M.status for ALL records of this training in Supabase
+              for (const r of recs) {
+                await sb.from('TrainingRecord').update({ 'M.status': newStatusValue }).eq('db_id', r.db_id);
               }
 
-              // Also sync to ManagerLocks table for maximum compatibility with portal
+              // Also sync to ManagerLocks table for compatibility with legacy components
               try {
                 await sb.from('ManagerLocks').upsert({
-                  manager: this.loggedInManagerName,
+                  manager: this.lockManagerFilter || 'Manager',
                   course: item.course,
                   date: item.date,
                   timestamp: renewUntil.toISOString(),
                   duration: hours,
                   is_hidden: false
                 }, { onConflict: 'manager,course,date' });
-              } catch (lockErr) { console.warn('ManagerLocks sync failed:', lockErr); }
-              item.isLocked = false;
-              item.hoursLeft = hours;
-              this.showNotification(`Lock renewed for ${hours} hours!`);
+              } catch (lockErr) { console.warn('ManagerLocks sync skipped/failed:', lockErr); }
+
+              this.showNotification(`Lock status updated successfully!`);
+              await this.fetchData(); // Refresh local records
+              
+              // Refresh manager lock view if lockManagerFilter is set
+              if (this.lockManagerFilter) {
+                await this.loadLockTrainingsFromSupabase(this.lockManagerFilter, this.lockedTrainings);
+              }
             } catch (e) {
-              this.showNotification('Renewal failed: ' + e.message, 'error');
+              this.stopLoading();
+              this.showNotification('Lock update failed: ' + e.message, 'error');
             }
           });
         },
@@ -4288,42 +4641,67 @@
           try {
             const deptSettings = this.settings.filter(s => s.Manager === managerName);
             const depts = deptSettings.map(s => s.Department);
-            const now = new Date();
-            let allUnreviewed = [];
-            for (const dept of depts) {
-              const unreviewedInDept = this.records.filter(r =>
-                r.department === dept &&
-                (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') &&
-                (!r.managerNote || r.managerNote.trim() === '')
-              );
-              allUnreviewed.push(...unreviewedInDept);
-            }
+            
+            // Get all records for these departments
+            const allDeptRecs = this.records.filter(r => depts.includes(r.department));
+            
+            // Group by course, date, department
             const grouped = new Map();
-            allUnreviewed.forEach(r => {
+            allDeptRecs.forEach(r => {
               const key = `${r.course}|${r.date}|${r.department}`;
               if (!grouped.has(key)) {
-                grouped.set(key, { key, course: r.course, date: r.date, department: r.department, unreviewedCount: 0, unreviewedRecs: [], isLocked: false, hoursLeft: 0 });
+                grouped.set(key, {
+                  key,
+                  course: r.course,
+                  date: r.date,
+                  department: r.department,
+                  records: []
+                });
               }
-              const g = grouped.get(key);
-              g.unreviewedCount++;
-              g.unreviewedRecs.push(r);
-
-              const mStatusStr = String(r.mStatus || '').trim();
-              let mStatusTime = 0;
-              if (mStatusStr && mStatusStr !== 'null' && mStatusStr !== 'undefined') {
-                const d = new Date(mStatusStr);
-                if (!isNaN(d.getTime())) mStatusTime = d.getTime();
-              }
-
-              const recordLockTime = mStatusTime ? mStatusTime : now.getTime();
-              if (recordLockTime > (g.maxLockTime || 0)) {
-                g.maxLockTime = recordLockTime;
-                const hoursRemaining = Math.max(0, Math.round((recordLockTime - now.getTime()) / (60 * 60 * 1000)));
-                g.isLocked = hoursRemaining <= 0;
-                g.hoursLeft = hoursRemaining;
-              }
+              grouped.get(key).records.push(r);
             });
-            lockedTrainings.splice(0, lockedTrainings.length, ...Array.from(grouped.values()));
+
+            // Map each group to its status and lock info
+            const resultList = Array.from(grouped.values()).map(g => {
+              const recs = g.records;
+              
+              // Calculate reviewed vs unreviewed
+              const unreviewedRecs = recs.filter(r => 
+                (r.status === 'No' || r.status === 'NONE' || r.status === 'Late') && 
+                (!r.managerNote || r.managerNote.trim() === '') && 
+                r.seen !== 'true' && r.seen !== 'Reviewed'
+              );
+              const unreviewedCount = unreviewedRecs.length;
+              const reviewedCount = recs.length - unreviewedCount;
+              
+              // Get lock info
+              const lockInfo = this.getTrainingLockInfo(g);
+              
+              return {
+                key: g.key,
+                course: g.course,
+                date: g.date,
+                department: g.department,
+                unreviewedCount,
+                reviewedCount,
+                unreviewedRecs,
+                isReviewNeeded: lockInfo.needed,
+                isLocked: lockInfo.isLocked,
+                hoursLeft: lockInfo.hoursLeft,
+                renewedCount: lockInfo.renewedCount,
+                lockLabel: lockInfo.label
+              };
+            });
+
+            // Sort trainings: put those needing review first, then sort by date descending
+            resultList.sort((a, b) => {
+              if (a.isReviewNeeded !== b.isReviewNeeded) {
+                return a.isReviewNeeded ? -1 : 1;
+              }
+              return new Date(b.date) - new Date(a.date);
+            });
+
+            lockedTrainings.splice(0, lockedTrainings.length, ...resultList);
           } catch (e) {
             this.showNotification('Failed to load trainings: ' + e.message, 'error');
           }

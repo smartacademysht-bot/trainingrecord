@@ -2658,10 +2658,18 @@
 
         get filteredZKTecoData() {
           if (!this.zktecoData.length) return [];
-          if (!this.zkSelectedTrainingId) return this.zktecoData; // Show raw if no training selected
+          
+          // ALWAYS filter by floor first - this is critical!
+          const targetFloor = this.zktecoTab === 'floor14' ? '14' : '15';
+          let data = this.zktecoData.filter(row => {
+            const deviceName = String(row.DeviceName || row.device_name || '');
+            return deviceName.includes(targetFloor);
+          });
+          
+          if (!this.zkSelectedTrainingId) return data; // Show floor-filtered data if no training selected
 
-          // 1. Initial filter by date
-          const dayLogs = this.zktecoData.filter(row => row.dateOnly === this.zktecoFilterDate);
+          // 1. Initial filter by date (already floor-filtered)
+          const dayLogs = data.filter(row => row.dateOnly === this.zktecoFilterDate);
 
           // 2. Group by UserID
           const groups = {};
@@ -2956,6 +2964,7 @@
 
         get sortedSelectedAttend() {
           if (!this.selectedTraining) return [];
+          
           const order = { 'Yes': 1, 'Late': 2, 'Permission': 3, 'At Duty': 4, 'NONE': 5 };
           return [...this.selectedTraining.attend].sort((a, b) => {
             const sA = order[a.status] || 99, sB = order[b.status] || 99;

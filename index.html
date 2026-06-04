@@ -3762,7 +3762,11 @@
             const { data, error } = await sb.from('ZKTecoLogs')
               .select('*')
               .gte('timestamp', this.zkFromMonth + '-01')
-              .lte('timestamp', this.zkToMonth + '-31')
+              .lte('timestamp', (() => {
+  const [y, m] = this.zkToMonth.split('-').map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  return `${this.zkToMonth}-${lastDay}`;
+})())
               .order('timestamp', { ascending: false });
             if (error) throw error;
 

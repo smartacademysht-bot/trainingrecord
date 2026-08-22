@@ -9,7 +9,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script src="https://apis.google.com/js/api.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -140,42 +139,24 @@
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8">
       <div class="mb-6 text-center">
         <h2 class="text-2xl font-bold text-slate-900 mb-2">Admin Login</h2>
-        <p class="text-sm text-slate-500">Enter one of the allowed emails and verify the 4-digit code to access the
-          dashboard.</p>
+        <p class="text-sm text-slate-500">Enter your allowed email address to access the dashboard.</p>
         <p class="text-xs text-slate-400 mt-2">Allowed emails: smart.academy.sht@gmail.com, kurdishapps0@gmail.com</p>
       </div>
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Email</label>
-          <input x-model="adminEmail" type="email"
+          <input x-model="adminEmail" type="email" @keydown.enter="login()"
             class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             placeholder="name@example.com" />
-        </div>
-        <div class="flex flex-col sm:flex-row items-stretch gap-2">
-          <button @click="sendLoginCode()"
-            class="whitespace-nowrap bg-blue-600 text-white rounded-xl px-4 py-3 text-sm font-semibold hover:bg-blue-700 transition">Send
-            Code</button>
-        </div>
-        <div x-show="loginStep === 2" class="flex flex-col sm:flex-row items-stretch gap-2" x-cloak>
-          <div class="flex-1">
-            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Verification Code</label>
-            <input x-model="adminCodeInput" type="text" maxlength="4"
-              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="1234" />
-          </div>
         </div>
         <label class="inline-flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" x-model="rememberMe"
             class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
           Remember me
         </label>
-        <div x-show="loginStatusMsg" class="text-sm text-slate-700 font-medium" x-text="loginStatusMsg"></div>
         <div x-show="loginError" class="text-sm text-red-600 font-semibold" x-text="loginError"></div>
-        <button x-show="loginStep === 2" x-cloak @click="verifyLoginCode()"
-          class="w-full bg-slate-800 text-white rounded-xl py-3 font-semibold shadow hover:bg-slate-900 transition">Verify
-          and Sign in</button>
-        <p class="text-xs text-slate-500 text-center">A 4-digit code will be sent to your email when you click Send
-          Code. Then enter it above and verify.</p>
+        <button @click="login()"
+          class="w-full bg-blue-600 text-white rounded-xl py-3 font-semibold shadow hover:bg-blue-700 transition">Sign in</button>
       </div>
     </div>
   </div>
@@ -1451,11 +1432,6 @@
                   class="border border-gray-300 rounded-lg pl-8 pr-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-48">
                 <i class="fa fa-search absolute left-2.5 top-2.5 text-gray-400"></i>
               </div>
-              <!-- <select x-model="punishmentFilterDept" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none w-40">
-              <option value="">All Departments</option>
-              <template x-for="d in uniqueDeptsSettings"><option :value="d" x-text="d"></option></template>
-            </select> -->
-              <!-- Multi-dept selector with dropdown -->
               <div class="relative" x-data="{open:false}">
                 <button @click="open=!open"
                   class="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white flex items-center gap-2 min-w-[160px] focus:ring-2 focus:ring-red-500">
@@ -2459,19 +2435,10 @@
 
         isAdminAuthenticated: localStorage.getItem('kasAdminAuthenticated') === 'true',
         adminEmail: localStorage.getItem('kasAdminRememberEmail') || '',
-        adminCodeInput: '',
-        generatedCode: null,
-        loginStep: 1,
         loginError: '',
         loginStatusMsg: '',
         rememberMe: localStorage.getItem('kasAdminRememberMe') === 'true',
-        emailService: {
-          allowedRecipients: ['smart.academy.sht@gmail.com', 'kurdishapps0@gmail.com'],
-          fromAddress: 'smart.academy.sht@gmail.com',
-          emailjsUserId: 'DGqoUdKqNpjihD6xC',
-          emailjsServiceId: 'service_q1pysaa',
-          emailjsTemplateId: 'template_url8f8o'
-        },
+        allowedRecipients: ['smart.academy.sht@gmail.com', 'kurdishapps0@gmail.com'],
 
         // ==================== INIT ====================
         async init() {
@@ -2492,50 +2459,15 @@
           }, 1000);
         },
 
-        async sendLoginCode() {
+        login() {
           this.loginError = '';
           this.loginStatusMsg = '';
           if (!this.adminEmail || !this.adminEmail.includes('@')) {
             this.loginError = 'Please enter a valid email address.';
             return;
           }
-          if (!this.emailService.allowedRecipients.includes(this.adminEmail.trim().toLowerCase())) {
+          if (!this.allowedRecipients.includes(this.adminEmail.trim().toLowerCase())) {
             this.loginError = 'This email is not allowed to access the system.';
-            return;
-          }
-
-          const canUseEmailJS = window.emailjs && this.emailService.emailjsUserId && this.emailService.emailjsUserId !== 'YOUR_EMAILJS_USER_ID' && this.emailService.emailjsServiceId && this.emailService.emailjsServiceId !== 'YOUR_EMAILJS_SERVICE_ID' && this.emailService.emailjsTemplateId && this.emailService.emailjsTemplateId !== 'YOUR_EMAILJS_TEMPLATE_ID';
-          if (!canUseEmailJS) {
-            this.loginError = 'Email service is not configured. Please add your EmailJS credentials.';
-            return;
-          }
-
-          const code = String(Math.floor(1000 + Math.random() * 9000));
-          this.generatedCode = code;
-          this.loginStep = 2;
-          const subject = 'KAS Training Dashboard Login Code';
-
-          try {
-            emailjs.init(this.emailService.emailjsUserId);
-            await emailjs.send(this.emailService.emailjsServiceId, this.emailService.emailjsTemplateId, {
-              email: this.adminEmail,
-              to_email: this.adminEmail,
-              passcode: code,
-              time: new Date().toLocaleString(),
-              from_email: this.emailService.fromAddress,
-              subject,
-            });
-            this.loginStatusMsg = `Verification code sent to ${this.adminEmail}.`;
-          } catch (err) {
-            console.error('EmailJS send error:', err);
-            this.loginError = 'Unable to send email. Please check configuration.';
-          }
-        },
-
-        verifyLoginCode() {
-          if (this.adminCodeInput !== String(this.generatedCode)) {
-            this.loginError = 'Invalid verification code';
-            this.loginStatusMsg = '';
             return;
           }
 
@@ -2549,11 +2481,8 @@
             localStorage.removeItem('kasAdminRememberEmail');
           }
 
-          this.adminCodeInput = '';
-          this.loginStep = 1;
           this.loginError = '';
           this.loginStatusMsg = '';
-          this.generatedCode = null;
           this.showNotification('Admin login successful.');
           this.init();
         },
@@ -2566,8 +2495,6 @@
             localStorage.removeItem('kasAdminRememberMe');
             this.adminEmail = '';
           }
-          this.adminCodeInput = '';
-          this.generatedCode = null;
           this.loginStatusMsg = '';
           this.loginError = '';
           this.showNotification('Logged out successfully.');
@@ -2850,11 +2777,6 @@
             this.showNotification('Database Error: ' + e.message, 'error');
           }
         },
-
-        // ==================== ZKTECO — FIXED ====================
-        // FIX: ZKTecoLogs table uses "Timestamp" column, not "date"
-        // We derive dateOnly from Timestamp itself
-
 
         get filteredZkTecoData() {
           let data = this.zktecoData;

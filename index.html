@@ -2465,13 +2465,13 @@
         loginError: '',
         loginStatusMsg: '',
         rememberMe: localStorage.getItem('kasAdminRememberMe') === 'true',
-        //emailService: {
-       //   allowedRecipients: ['smart.academy.sht@gmail.com', 'kurdishapps0@gmail.com'],
-        //  fromAddress: 'smart.academy.sht@gmail.com',
-       //   emailjsUserId: 'DGqoUdKqNpjihD6xC',
-       //   emailjsServiceId: 'service_q1pysaa',
-       //   emailjsTemplateId: 'template_url8f8o'
-      //  },
+        emailService: {
+          allowedRecipients: ['smart.academy.sht@gmail.com', 'kurdishapps0@gmail.com'],
+          fromAddress: 'smart.academy.sht@gmail.com',
+          emailjsUserId: 'DGqoUdKqNpjihD6xC',
+          emailjsServiceId: 'service_q1pysaa',
+          emailjsTemplateId: 'template_url8f8o'
+        },
 
         // ==================== INIT ====================
         async init() {
@@ -2492,52 +2492,52 @@
           }, 1000);
         },
 
-      //  async sendLoginCode() {
-      //    this.loginError = '';
-      //    this.loginStatusMsg = '';
-      //    if (!this.adminEmail || !this.adminEmail.includes('@')) {
-      //      this.loginError = 'Please enter a valid email address.';
-      //      return;
-      //    }
-      //    if (!this.emailService.allowedRecipients.includes(this.adminEmail.trim().toLowerCase())) {
-      //      this.loginError = 'This email is not allowed to access the system.';
-      //      return;
-     //     }
+        async sendLoginCode() {
+          this.loginError = '';
+          this.loginStatusMsg = '';
+          if (!this.adminEmail || !this.adminEmail.includes('@')) {
+            this.loginError = 'Please enter a valid email address.';
+            return;
+          }
+          if (!this.emailService.allowedRecipients.includes(this.adminEmail.trim().toLowerCase())) {
+            this.loginError = 'This email is not allowed to access the system.';
+            return;
+          }
 
-     //     const canUseEmailJS = window.emailjs && this.emailService.emailjsUserId && this.emailService.emailjsUserId !== 'YOUR_EMAILJS_USER_ID' && this.emailService.emailjsServiceId && this.emailService.emailjsServiceId !== 'YOUR_EMAILJS_SERVICE_ID' && this.emailService.emailjsTemplateId && this.emailService.emailjsTemplateId !== 'YOUR_EMAILJS_TEMPLATE_ID';
-      //    if (!canUseEmailJS) {
-      //      this.loginError = 'Email service is not configured. Please add your EmailJS credentials.';
-      //      return;
-      //    }
+          const canUseEmailJS = window.emailjs && this.emailService.emailjsUserId && this.emailService.emailjsUserId !== 'YOUR_EMAILJS_USER_ID' && this.emailService.emailjsServiceId && this.emailService.emailjsServiceId !== 'YOUR_EMAILJS_SERVICE_ID' && this.emailService.emailjsTemplateId && this.emailService.emailjsTemplateId !== 'YOUR_EMAILJS_TEMPLATE_ID';
+          if (!canUseEmailJS) {
+            this.loginError = 'Email service is not configured. Please add your EmailJS credentials.';
+            return;
+          }
 
-     //     const code = String(Math.floor(1000 + Math.random() * 9000));
-     //     this.generatedCode = code;
-     //     this.loginStep = 2;
-     //     const subject = 'KAS Training Dashboard Login Code';
+          const code = String(Math.floor(1000 + Math.random() * 9000));
+          this.generatedCode = code;
+          this.loginStep = 2;
+          const subject = 'KAS Training Dashboard Login Code';
 
-     //     try {
-     //       emailjs.init(this.emailService.emailjsUserId);
-     //       await emailjs.send(this.emailService.emailjsServiceId, this.emailService.emailjsTemplateId, {
-     //         email: this.adminEmail,
-     //         to_email: this.adminEmail,
-     //         passcode: code,
-     //         time: new Date().toLocaleString(),
-     //         from_email: this.emailService.fromAddress,
-     //         subject,
-    //        });
-     //       this.loginStatusMsg = `Verification code sent to ${this.adminEmail}.`;
-     //     } catch (err) {
-      //      console.error('EmailJS send error:', err);
-      //      this.loginError = 'Unable to send email. Please check configuration.';
-     //     }
-    //    },
+          try {
+            emailjs.init(this.emailService.emailjsUserId);
+            await emailjs.send(this.emailService.emailjsServiceId, this.emailService.emailjsTemplateId, {
+              email: this.adminEmail,
+              to_email: this.adminEmail,
+              passcode: code,
+              time: new Date().toLocaleString(),
+              from_email: this.emailService.fromAddress,
+              subject,
+            });
+            this.loginStatusMsg = `Verification code sent to ${this.adminEmail}.`;
+          } catch (err) {
+            console.error('EmailJS send error:', err);
+            this.loginError = 'Unable to send email. Please check configuration.';
+          }
+        },
 
-    //    verifyLoginCode() {
-     //     if (this.adminCodeInput !== String(this.generatedCode)) {
-     //       this.loginError = 'Invalid verification code';
-     //       this.loginStatusMsg = '';
-      //      return;
-      //    }
+        verifyLoginCode() {
+          if (this.adminCodeInput !== String(this.generatedCode)) {
+            this.loginError = 'Invalid verification code';
+            this.loginStatusMsg = '';
+            return;
+          }
 
           this.isAdminAuthenticated = true;
           localStorage.setItem('kasAdminAuthenticated', 'true');
